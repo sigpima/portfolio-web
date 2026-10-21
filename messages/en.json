@@ -14,5 +14,77 @@
   },
   "a11y": {
     "skipToContent": "Skip to main content"
+  },
+  "kb": {
+    "flowLabel": "Bot reasoning flow",
+    "flowTitle": "Reasoning flow",
+    "runStatus": {
+      "idle": "Ready",
+      "running": "Running",
+      "done": "Done",
+      "error": "Error"
+    },
+    "nodes": {
+      "question": {
+        "label": "Question",
+        "sublabel": "yours"
+      },
+      "model": {
+        "label": "Gemini picks a tool",
+        "sublabel": "function calling"
+      },
+      "tool": {
+        "label": "MCP tool",
+        "sublabel": "read-only"
+      },
+      "database": {
+        "label": "Postgres",
+        "sublabel": "read-only role"
+      },
+      "answer": {
+        "label": "Answer",
+        "sublabel": "cites figures"
+      }
+    },
+    "rowCount": "{count, plural, one {# row} other {# rows}}",
+    "extraCall": "Tool call {n}",
+    "statusLabels": {
+      "idle": "Waiting",
+      "active": "Running",
+      "done": "Done",
+      "error": "Error",
+      "skipped": "Skipped"
+    },
+    "chatLabel": "Chat with the bot",
+    "you": "You",
+    "bot": "Bot",
+    "emptyHint": "Ask the bot about Sơn Việt Demo Co.'s quotations, or pick a suggested question below.",
+    "thinking": "The bot is working…",
+    "inputLabel": "Your question",
+    "placeholder": "Ask about the quotations…",
+    "send": "Send",
+    "chipsLabel": "Suggested questions",
+    "chips": {
+      "c1": "How much is the latest quotation?",
+      "c2": "Why is the floor-painting unit price higher on project A than on project B?",
+      "c3": "What percentage of the largest quotation is labour?"
+    },
+    "newConversation": "New conversation",
+    "loading": "Checking the demo status…",
+    "paused": {
+      "title": "Demo paused",
+      "body": "The Q&A bot is paused right now. You can still read the project write-up; please check back later."
+    },
+    "notes": {
+      "synthetic": "All data is synthetic: the company \"Sơn Việt Demo Co.\", 24 projects, 126 work items.",
+      "privacy": "Your questions are not stored."
+    },
+    "errors": {
+      "tooLong": "Your question is longer than 500 characters. Please shorten it.",
+      "invalidQuestion": "That question can't be processed. Please rephrase it.",
+      "sessionFull": "This conversation is long enough. Please start a new conversation.",
+      "model": "The bot couldn't answer right now. Please try again in a moment.",
+      "generic": "Something went wrong. Please try again."
+    }
   }
 }

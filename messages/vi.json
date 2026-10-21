@@ -14,5 +14,77 @@
   },
   "a11y": {
     "skipToContent": "Chuyển tới nội dung chính"
+  },
+  "kb": {
+    "flowLabel": "Luồng suy luận của bot",
+    "flowTitle": "Luồng suy luận",
+    "runStatus": {
+      "idle": "Sẵn sàng",
+      "running": "Đang chạy",
+      "done": "Xong",
+      "error": "Lỗi"
+    },
+    "nodes": {
+      "question": {
+        "label": "Câu hỏi",
+        "sublabel": "của bạn"
+      },
+      "model": {
+        "label": "Gemini chọn tool",
+        "sublabel": "function calling"
+      },
+      "tool": {
+        "label": "MCP tool",
+        "sublabel": "chỉ đọc"
+      },
+      "database": {
+        "label": "Postgres",
+        "sublabel": "role chỉ đọc"
+      },
+      "answer": {
+        "label": "Trả lời",
+        "sublabel": "dẫn số liệu"
+      }
+    },
+    "rowCount": "{count} dòng",
+    "extraCall": "Lần gọi tool {n}",
+    "statusLabels": {
+      "idle": "Chờ",
+      "active": "Đang chạy",
+      "done": "Xong",
+      "error": "Lỗi",
+      "skipped": "Bỏ qua"
+    },
+    "chatLabel": "Chat với bot",
+    "you": "Bạn",
+    "bot": "Bot",
+    "emptyHint": "Hỏi bot về báo giá của Sơn Việt Demo Co., hoặc chọn một câu gợi ý bên dưới.",
+    "thinking": "Bot đang xử lý…",
+    "inputLabel": "Câu hỏi của bạn",
+    "placeholder": "Nhập câu hỏi về báo giá…",
+    "send": "Gửi",
+    "chipsLabel": "Câu hỏi gợi ý",
+    "chips": {
+      "c1": "Báo giá mới nhất có giá bao nhiêu?",
+      "c2": "Vì sao đơn giá hạng mục sơn nền công trình A cao hơn công trình B?",
+      "c3": "Nhân công chiếm bao nhiêu % ở báo giá lớn nhất?"
+    },
+    "newConversation": "Cuộc trò chuyện mới",
+    "loading": "Đang kiểm tra trạng thái demo…",
+    "paused": {
+      "title": "Demo tạm nghỉ",
+      "body": "Bot hỏi đáp đang tạm dừng. Bạn vẫn có thể đọc phần mô tả dự án; hãy quay lại sau nhé."
+    },
+    "notes": {
+      "synthetic": "Toàn bộ là dữ liệu giả lập: công ty \"Sơn Việt Demo Co.\", 24 công trình, 126 hạng mục.",
+      "privacy": "Câu hỏi của bạn không được lưu."
+    },
+    "errors": {
+      "tooLong": "Câu hỏi dài quá 500 ký tự. Hãy rút gọn lại.",
+      "invalidQuestion": "Câu hỏi không hợp lệ. Hãy thử diễn đạt lại.",
+      "sessionFull": "Cuộc trò chuyện này đã đủ dài. Hãy bắt đầu cuộc trò chuyện mới.",
+      "model": "Bot chưa trả lời được lúc này. Hãy thử lại sau giây lát.",
+      "generic": "Có lỗi xảy ra. Hãy thử lại."
+    }
   }
 }
