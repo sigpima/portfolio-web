@@ -1,13 +1,30 @@
 # portfolio-web
 
 **EN:** Bilingual (Vietnamese / English) portfolio website built with Next.js 16 (`output: "standalone"`).
-Projects are registry-driven (`src/content`). The Knowledge Base project has a live demo that streams a real
-tool-using chat bot through same-origin proxy routes (`/api/chat/stream`, `/api/chat/status`) to a separate backend;
-the Twistfit and Gia pha demos are a replay and a simulation and are labelled as such.
+Projects are registry-driven (`src/content`). The Knowledge Base demo runs live only for visitors who opened an
+invite link (`/i/<token>`); everyone else sees a replay of recorded real runs. The server-side routes talk to the
+internal `portfolio-api` service (invite links, sessions, per-link usage log, admin at `/admin`), which is the only
+thing that calls the chat bot. The Twistfit and Gia pha demos are a replay and a simulation and are labelled as such.
 
 **VI:** Website portfolio song ngữ (Việt / Anh) dựng bằng Next.js 16. Nội dung dự án lấy từ `src/content`.
-Dự án Knowledge Base có demo trực tiếp gọi một bot chat thật qua các route proxy cùng origin; demo Twistfit
-(phát lại) và Gia phả (mô phỏng) được gắn nhãn đúng bản chất.
+Demo Knowledge Base chỉ chạy thật với người đã mở link mời (`/i/<mã>`); người khác xem bản phát lại các lần chạy thật đã ghi.
+Các route phía máy chủ gọi dịch vụ nội bộ `portfolio-api` (link mời, phiên, nhật ký theo link, trang quản trị `/admin`);
+chỉ `portfolio-api` gọi bot chat. Demo Twistfit (phát lại) và Gia phả (mô phỏng) được gắn nhãn đúng bản chất.
+
+## Environment / Biến môi trường
+
+See `.env.example` (placeholders only; never commit `.env`).
+
+| Variable | Required | Meaning |
+| --- | --- | --- |
+| `PORTFOLIO_API_KEY` | yes | Shared internal key with `portfolio-api`; the SAME value in both services, >= 32 visible ASCII chars. |
+| `SITE_URL` | yes in production | Public origin, needed at build time AND runtime (canonical URLs, invite redirects, links shown on `/admin`). |
+| `PORTFOLIO_API_URL` | no | Default `http://portfolio-api:8100`. |
+| `PORTFOLIO_API_NETWORK` | no (compose) | Docker network of the `portfolio-api` stack, default `portfolio-api_default`; check with `docker network ls`. |
+| `PORTFOLIO_PORT` | no (compose) | Host port on 127.0.0.1, default `3100`. |
+
+Start order: knowledge_base `chat` -> `portfolio-api` -> this web app. The web container joins only the
+`portfolio-api` network and cannot reach `chat:8003` directly.
 
 ## Commands
 

@@ -1,15 +1,29 @@
-# Portfolio web. The owner runs nginx on the host outside Docker, so this service
-# only publishes a port on 127.0.0.1 (see deploy/nginx.conf.example).
+# Portfolio web (Next.js). nginx chạy trên host, ngoài Docker, nên service này chỉ
+# publish một cổng trên 127.0.0.1 (xem deploy/nginx.conf.example và docs/RUNBOOK.md).
 #
-# The Knowledge Base demo calls the backend `chat` service of the knowledge_base
-# stack by service name, so this service joins that stack's network. Check the name
-# with `docker network ls` (default on this machine: knowledge_base_default) and
-# override with KB_NETWORK if it differs. Start the backend first:
-#   (in knowledge_base)  GEMINI_API_KEY=... docker compose --profile chat up -d
+# Kiến trúc: trình duyệt -> nginx -> web (service này) -> portfolio-api -> chat.
+# Web KHÔNG gọi thẳng service `chat` của knowledge_base: mọi lời gọi chat, link mời,
+# phiên và trang quản trị đều đi qua portfolio-api (kèm PORTFOLIO_API_KEY). Vì vậy
+# service này chỉ gắn vào mạng mặc định của stack portfolio-api, KHÔNG gắn vào mạng
+# của knowledge_base (từ container web không với tới được chat:8003 để lách cổng).
 #
-# Build and run:
-#   SITE_URL=https://your-domain docker compose up -d --build
-# SITE_URL is needed at BUILD time (see docs/RUNBOOK.md).
+# Thứ tự bật:
+#   1. knowledge_base (service chat):
+#        cd ../../knowledge_base && GEMINI_API_KEY=... docker compose --profile chat up -d
+#   2. portfolio-api:
+#        cd ../api && PORTFOLIO_API_KEY=... ADMIN_PASSWORD=... docker compose up -d --build
+#   3. web (file này):
+#        SITE_URL=https://ten-mien-cua-ban PORTFOLIO_API_KEY=... docker compose up -d --build
+#
+# PORTFOLIO_API_KEY phải GIỐNG HỆT giá trị đặt cho portfolio-api (>= 32 ký tự ASCII nhìn
+# thấy được). SITE_URL cần cả lúc BUILD và lúc chạy (xem docs/RUNBOOK.md).
+#
+# Mạng của portfolio-api: kiểm tra tên bằng `docker network ls`. Mặc định ở đây là
+# portfolio-api_default, tức <tên project của portfolio-api>_default; tên project mặc định
+# là tên thư mục (`api` -> mạng `api_default`), nên hãy đặt COMPOSE_PROJECT_NAME=portfolio-api
+# trong .env của portfolio-api, hoặc ghi đè ở đây bằng PORTFOLIO_API_NETWORK=api_default.
+# Mạng phải tồn tại (portfolio-api đã chạy) trước khi bật web, nếu không compose báo
+# "network ... not found".
 
 services:
   portfolio:
@@ -22,10 +36,11 @@ services:
     ports:
       - "127.0.0.1:${PORTFOLIO_PORT:-3100}:3000"
     environment:
-      CHAT_BACKEND_URL: http://chat:8003
+      PORTFOLIO_API_URL: ${PORTFOLIO_API_URL:-http://portfolio-api:8100}
+      PORTFOLIO_API_KEY: ${PORTFOLIO_API_KEY:?đặt PORTFOLIO_API_KEY (>= 32 ký tự, cùng giá trị với portfolio-api)}
       SITE_URL: ${SITE_URL:-}
     networks:
-      - kb
+      - portfolio_api
     restart: unless-stopped
     logging:
       driver: json-file
@@ -34,6 +49,7 @@ services:
         max-file: "3"
 
 networks:
-  kb:
-    name: ${KB_NETWORK:-knowledge_base_default}
+  # Mạng mặc định của stack portfolio-api (mạng ngoài, do stack đó tạo).
+  portfolio_api:
+    name: ${PORTFOLIO_API_NETWORK:-portfolio-api_default}
     external: true

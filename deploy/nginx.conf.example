@@ -1,8 +1,30 @@
 # THAM KHẢO: nginx chạy ngoài Docker trên host. File này không chạy trong container nào.
-# Sao chép vào cấu hình nginx của host (ví dụ /etc/nginx/sites-available/<ten-mien>),
-# thay các giá trị TODO, rồi `nginx -t` và reload.
+# Sao chép vào cấu hình nginx của host (ví dụ /etc/nginx/sites-available/<ten-mien>, file này
+# được include bên trong khối `http { }`), thay các giá trị TODO, rồi `nginx -t` và reload.
 #
 # 127.0.0.1:3100 là cổng service `portfolio` publish ra host (docker-compose.yml).
+# Chỉ web được đưa ra internet; portfolio-api (127.0.0.1:8100) và chat (127.0.0.1:8003)
+# KHÔNG BAO GIỜ được proxy ra ngoài.
+#
+# Địa chỉ IP thật của người xem:
+#   Ứng dụng lấy khoá giới hạn tần suất từ header `X-Real-IP` (dự phòng: phần tử CUỐI của
+#   `X-Forwarded-For`). Vì vậy MỌI location proxy bên dưới đặt cả hai header bằng
+#   $remote_addr (địa chỉ kết nối thật tới nginx), thay vì $proxy_add_x_forwarded_for:
+#   biến đó nối thêm vào chuỗi do client tự gửi, nên client có thể tự khai IP giả để né giới
+#   hạn. Thiếu `X-Real-IP` thì mọi người xem dùng chung MỘT khoá giới hạn.
+#
+#   Nếu chạy sau CDN/proxy khác (Cloudflare, ...): $remote_addr lúc đó là IP của CDN, mọi
+#   người xem sẽ chung một khoá (và chung một bộ limit_req). Bật module real_ip trong khối
+#   `server` (hoặc `http`) với ĐÚNG dải IP của CDN, ví dụ:
+#     set_real_ip_from 173.245.48.0/20;     # TODO: danh sách dải IP chính thức của CDN
+#     real_ip_header   CF-Connecting-IP;    # hoặc X-Forwarded-For + real_ip_recursive on;
+#   Sau đó $remote_addr / $binary_remote_addr là IP người xem. Đừng bật real_ip với
+#   set_real_ip_from 0.0.0.0/0: ai cũng tự khai được IP.
+
+# Giới hạn tần suất theo IP (ngữ cảnh `http`). Mỗi câu hỏi chat tốn một lượt gọi Gemini của bạn.
+limit_req_zone $binary_remote_addr zone=chat_stream:10m rate=6r/m;
+limit_req_zone $binary_remote_addr zone=invite_open:10m rate=30r/m;
+limit_req_zone $binary_remote_addr zone=admin_login:10m rate=10r/m;
 
 server {
     listen 80;
@@ -18,31 +40,92 @@ server {
     ssl_certificate     /etc/letsencrypt/live/example.com/fullchain.pem;   # TODO: đường dẫn chứng chỉ TLS
     ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;     # TODO: đường dẫn khoá TLS
 
+    # Thân yêu cầu lớn nhất của site là vài KB (câu hỏi chat, đăng nhập, tạo link).
+    client_max_body_size 64k;
+    # Bị limit_req chặn thì trả 429 (mặc định nginx trả 503).
+    limit_req_status 429;
+
     # SSE của demo Knowledge Base: phải tắt buffer để các sự kiện chảy liền.
-    # Đặt TRƯỚC `location /` không bắt buộc (nginx chọn theo độ dài tiền tố), nhưng để đây cho dễ đọc.
     location /api/chat/stream {
+        limit_req zone=chat_stream burst=4 nodelay;
+
         proxy_pass http://127.0.0.1:3100;
         proxy_http_version 1.1;
         proxy_set_header Connection "";
         proxy_buffering off;
         proxy_cache off;
         proxy_read_timeout 120s;
-        client_max_body_size 64k;
 
         proxy_set_header Host $host;
+        # IP thật, không nối thêm vào chuỗi client gửi (xem đầu file).
         proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-For $remote_addr;
         proxy_set_header X-Forwarded-Proto $scheme;
     }
+
+    # Link mời /i/<mã>: MÃ LINK NẰM TRÊN ĐƯỜNG DẪN. Access log của nginx ghi nguyên đường dẫn,
+    # nên phải tắt log ở đây, nếu không mọi mã link (đủ để vào demo) nằm trong file log.
+    # Nhớ kiểm tra mọi proxy/CDN/công cụ phân tích khác đứng trước nginx cũng không ghi đường dẫn này.
+    location /i/ {
+        access_log off;
+        limit_req zone=invite_open burst=10 nodelay;
+
+        proxy_pass http://127.0.0.1:3100;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # ---- Trang quản trị -------------------------------------------------------------------
+    # KHUYẾN NGHỊ MẠNH: chỉ cho IP của bạn vào /admin và /api/admin/ (bỏ dấu # ở hai dòng
+    # `allow`/`deny` trong ba location dưới và thay <IP CỦA BẠN>; có thể thêm nhiều dòng allow).
+    # Đây là biện pháp CHÍNH chống lộ trang quản trị và chống bị khoá-chết đăng nhập: portfolio-api
+    # giới hạn đăng nhập 5 lần/15 phút theo IP (đã băm) VÀ 60 lần/15 phút cho cả hệ thống, nên người
+    # lạ dò mật khẩu từ nhiều IP có thể khiến chính bạn bị chặn (429) cho tới hết cửa sổ.
+    # Chặn ở nginx thì người lạ không chạm tới được API.
+    # Nếu bị khoá: trên máy chủ chạy `docker compose up -d` trong thư mục portfolio-api
+    # (tạo lại container, xoá bộ giới hạn và mọi phiên quản trị; link và nhật ký giữ nguyên).
+    location /admin {
+        # allow <IP CỦA BẠN>;
+        # deny all;
+
+        proxy_pass http://127.0.0.1:3100;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location = /api/admin/login {
+        # allow <IP CỦA BẠN>;
+        # deny all;
+        limit_req zone=admin_login burst=5 nodelay;
+
+        proxy_pass http://127.0.0.1:3100;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /api/admin/ {
+        # allow <IP CỦA BẠN>;
+        # deny all;
+
+        proxy_pass http://127.0.0.1:3100;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    # ---------------------------------------------------------------------------------------
 
     location / {
         proxy_pass http://127.0.0.1:3100;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-For $remote_addr;
         proxy_set_header X-Forwarded-Proto $scheme;
     }
-
-    # TODO (khuyến nghị): giới hạn tần suất cho /api/chat/stream bằng limit_req_zone/limit_req,
-    # vì mỗi câu hỏi tốn một lượt gọi Gemini của bạn.
 }
