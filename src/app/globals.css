@@ -126,6 +126,28 @@
   --spacing-space-md: 1rem;
   --spacing-space-lg: 1.5rem;
   --spacing-space-xl: 2.5rem;
+
+  /* FlowPlayer animations (each one is switched off with motion-reduce: in the component) */
+  --animate-flow-pulse: flow-pulse 1s linear infinite;
+  --animate-flow-detail-in: flow-detail-in 0.4s ease-out;
+
+  @keyframes flow-pulse {
+    from {
+      background-position: 100% 0;
+    }
+    to {
+      background-position: -100% 0;
+    }
+  }
+
+  @keyframes flow-detail-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
 }
 
 :root {
@@ -168,7 +190,6 @@ samp,
 :focus-visible {
   outline: 2px solid var(--color-secondary);
   outline-offset: 2px;
-  border-radius: var(--radius);
 }
 
 main:focus {
