@@ -1,6 +1,11 @@
 import { parseSse } from "./sse";
 import type { ChatEvent } from "./types";
 
+/**
+ * Non-2xx answer from `/api/chat/stream`. `code` is the server's JSON code, notably
+ * `invite_required` (401, no valid invite session), `rate_limited` (429), `too_long` (413)
+ * and `demo_disabled` (503); `internal` when the body had none.
+ */
 export class ChatHttpError extends Error {
   readonly code: string;
   readonly status: number;
