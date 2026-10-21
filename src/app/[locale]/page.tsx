@@ -3,7 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { ProjectCard, chipClass, DEMO_CHIP_STYLE } from "@/components/ProjectCard";
+import { HomeProjectSections, splitHomeProjects } from "@/components/HomeProjects";
+import { chipClass, DEMO_CHIP_STYLE } from "@/components/ProjectCard";
 import { listProjects } from "@/content/registry";
 import { site } from "@/content/site";
 import type { DemoKind, Locale } from "@/content/types";
@@ -45,8 +46,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const t = await getTranslations({ locale });
 
   const projects = listProjects();
-  const featured = projects.find((p) => p.slug === "knowledge-base") ?? projects.find((p) => p.featured);
-  const websites = projects.filter((p) => p.group === "website");
+  const featured = splitHomeProjects(projects).featured[0];
   const tech = Array.from(new Set(projects.flatMap((p) => p.tech)));
 
   const contacts: { key: string; label: string; value: string | null; href: string | null }[] = [
@@ -69,7 +69,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               {t("home.hero.headline")}
             </h1>
             <div className="flex flex-wrap gap-3">
-              {featured ? (
+              {featured && featured.demoKind !== "none" ? (
                 <Link
                   href={`/${locale}/projects/${featured.slug}#demo`}
                   className="rounded-lg bg-primary px-4 py-2.5 text-body-md font-semibold text-on-primary transition-colors hover:bg-primary-fixed"
@@ -112,85 +112,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         </div>
       </section>
 
-      {/* Featured: Knowledge Base */}
-      {featured ? (
-        <section aria-labelledby="featured-heading" className={containerClass}>
-          <div className="mb-6 flex flex-col gap-2">
-            <p className={eyebrowClass}>{t("home.featured.eyebrow")}</p>
-            <h2 id="featured-heading" className={sectionTitleClass}>
-              {t("home.featured.title")}
-            </h2>
-          </div>
-          <article className="grid overflow-hidden rounded-xl border border-outline-variant bg-surface-container-low lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
-            <div className="flex flex-col gap-4 p-6 md:p-8">
-              <p className="flex flex-wrap gap-2">
-                <span className={`${chipClass} border-outline-variant text-on-surface`}>
-                  {t(`groups.${featured.group}`)}
-                </span>
-                {featured.demoKind !== "none" ? (
-                  <span className={`${chipClass} ${DEMO_CHIP_STYLE[featured.demoKind]}`}>
-                    {t(`demo.badge.${featured.demoKind}.label`)}
-                  </span>
-                ) : null}
-              </p>
-              <h3 className="text-headline-lg-mobile text-on-surface md:text-headline-lg">
-                {featured.title[locale]}
-              </h3>
-              <p className="text-body-lg text-on-surface-variant">{featured.tagline[locale]}</p>
-              <ul className="flex flex-col gap-2">
-                {featured.highlights[locale].slice(0, 3).map((item) => (
-                  <li key={item} className="flex gap-2 text-body-md text-on-surface-variant">
-                    <span aria-hidden="true" className="text-secondary">
-                      ▹
-                    </span>
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-              <ul className="flex flex-wrap gap-1.5">
-                {featured.tech.map((item) => (
-                  <li key={item} className={`${chipClass} border-outline-variant bg-surface-container text-on-surface-variant`}>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-2 flex flex-wrap gap-3">
-                <Link
-                  href={`/${locale}/projects/${featured.slug}#demo`}
-                  className="rounded-lg bg-primary px-4 py-2.5 text-body-md font-semibold text-on-primary transition-colors hover:bg-primary-fixed"
-                >
-                  {t("home.featured.cta")}
-                </Link>
-                <Link
-                  href={`/${locale}/projects/${featured.slug}`}
-                  className="rounded-lg border border-outline-variant px-4 py-2.5 text-body-md font-semibold text-on-surface transition-colors hover:border-outline"
-                >
-                  {t("home.featured.readMore")}
-                </Link>
-              </div>
-            </div>
-            <div className="relative min-h-56 border-t border-outline-variant bg-surface-container-lowest lg:border-t-0 lg:border-l">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={featured.cover} alt="" className="absolute inset-0 h-full w-full object-cover" />
-            </div>
-          </article>
-        </section>
-      ) : null}
-
-      {/* Websites */}
-      <section aria-labelledby="websites-heading" className={containerClass}>
-        <div className="mb-6 flex flex-col gap-2">
-          <p className={eyebrowClass}>{t("home.websites.eyebrow")}</p>
-          <h2 id="websites-heading" className={sectionTitleClass}>
-            {t("home.websites.title")}
-          </h2>
-        </div>
-        <div className="grid gap-6 md:grid-cols-2">
-          {websites.map((project) => (
-            <ProjectCard key={project.slug} project={project} locale={locale} />
-          ))}
-        </div>
-      </section>
+      <HomeProjectSections projects={projects} locale={locale} />
 
       {/* Tech strip */}
       <section aria-labelledby="stack-heading" className={containerClass}>

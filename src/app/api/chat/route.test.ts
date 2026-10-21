@@ -8,11 +8,13 @@ afterEach(() => {
 });
 
 function chatRequest(body: string, init: RequestInit = {}): Request {
+  const headers = new Headers({ "content-type": "application/json" });
+  new Headers(init.headers).forEach((value, key) => headers.set(key, value));
   return new Request("http://localhost/api/chat/stream", {
     method: "POST",
     body,
-    headers: { "content-type": "text/plain" },
     ...init,
+    headers,
   });
 }
 
@@ -78,6 +80,39 @@ describe("POST /api/chat/stream", () => {
     expect(await res.json()).toEqual({ code: "demo_disabled" });
   });
 
+  it.each(["text/plain", "application/x-www-form-urlencoded", "multipart/form-data; boundary=x", ""])(
+    "rejects content-type %j with 415 without contacting upstream",
+    async (contentType) => {
+      const fetchMock = vi.fn();
+      vi.stubGlobal("fetch", fetchMock);
+      const req = new Request("http://localhost/api/chat/stream", {
+        method: "POST",
+        body: '{"message":"x","session_id":null}',
+        headers: contentType ? { "content-type": contentType } : {},
+      });
+      if (!contentType) req.headers.delete("content-type");
+      const res = await streamRoute.POST(req);
+      expect(res.status).toBe(415);
+      expect(await res.json()).toEqual({ code: "unsupported_media_type" });
+      expect(fetchMock).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["application/json; charset=utf-8", "Application/JSON"])(
+    "accepts content-type %j",
+    async (contentType) => {
+      const fetchMock = vi.fn(
+        async () => new Response("", { status: 200, headers: { "content-type": "text/event-stream" } }),
+      );
+      vi.stubGlobal("fetch", fetchMock);
+      const res = await streamRoute.POST(
+        chatRequest('{"message":"x","session_id":null}', { headers: { "content-type": contentType } }),
+      );
+      expect(res.status).toBe(200);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    },
+  );
+
   it("rejects an oversized body with 413 without contacting upstream", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
@@ -93,6 +128,7 @@ describe("POST /api/chat/stream", () => {
     const big = new TextEncoder().encode("x".repeat(33 * 1024));
     const streamed = new Request("http://localhost/api/chat/stream", {
       method: "POST",
+      headers: { "content-type": "application/json" },
       body: new ReadableStream<Uint8Array>({
         start(c) {
           c.enqueue(big);

@@ -43,7 +43,7 @@
       },
       "answer": {
         "label": "Trả lời",
-        "sublabel": "dẫn số liệu"
+        "sublabel": "câu trả lời"
       }
     },
     "rowCount": "{count} dòng",
@@ -66,7 +66,7 @@
     "chipsLabel": "Câu hỏi gợi ý",
     "chips": {
       "c1": "Báo giá mới nhất có giá bao nhiêu?",
-      "c2": "Vì sao đơn giá hạng mục sơn nền công trình A cao hơn công trình B?",
+      "c2": "Vì sao đơn giá chống thấm sân thượng ở Biệt thự Sen Vàng cao hơn Biệt thự Lúa Non?",
       "c3": "Nhân công chiếm bao nhiêu % ở báo giá lớn nhất?"
     },
     "newConversation": "Cuộc trò chuyện mới",
@@ -162,7 +162,7 @@
     "hero": {
       "headline": "Tôi xây hệ thống LLM và agent, cùng các sản phẩm web xung quanh chúng.",
       "lead": "Mỗi dự án dưới đây có bài viết về bài toán, cách làm và một demo được ghi nhãn rõ: chạy thật, phát lại hay mô phỏng.",
-      "ctaDemo": "Thử demo Knowledge Base",
+      "ctaDemo": "Thử demo nổi bật",
       "ctaProjects": "Xem tất cả dự án"
     },
     "labels": {
@@ -171,13 +171,9 @@
     },
     "featured": {
       "eyebrow": "Dự án nổi bật",
-      "title": "Agent AI có demo chạy thật",
-      "cta": "Mở demo chạy thật",
+      "title": "Bắt đầu từ đây",
+      "cta": "Mở demo",
       "readMore": "Đọc chi tiết dự án"
-    },
-    "websites": {
-      "eyebrow": "Website",
-      "title": "Hai website sản phẩm"
     },
     "stack": {
       "eyebrow": "Công nghệ",
@@ -192,6 +188,10 @@
       "github": "GitHub",
       "cv": "CV",
       "pending": "chưa cập nhật"
+    },
+    "others": {
+      "eyebrow": "Thêm dự án",
+      "title": "Các dự án khác"
     }
   },
   "projectsPage": {

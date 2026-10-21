@@ -43,7 +43,7 @@
       },
       "answer": {
         "label": "Answer",
-        "sublabel": "cites figures"
+        "sublabel": "final answer"
       }
     },
     "rowCount": "{count, plural, one {# row} other {# rows}}",
@@ -66,7 +66,7 @@
     "chipsLabel": "Suggested questions",
     "chips": {
       "c1": "How much is the latest quotation?",
-      "c2": "Why is the floor-painting unit price higher on project A than on project B?",
+      "c2": "Why is the rooftop waterproofing unit price at Biệt thự Sen Vàng higher than at Biệt thự Lúa Non?",
       "c3": "What percentage of the largest quotation is labour?"
     },
     "newConversation": "New conversation",
@@ -162,7 +162,7 @@
     "hero": {
       "headline": "I build LLM and agent systems, and the web products around them.",
       "lead": "Each project below has a write-up of the problem and the approach, plus a demo that is clearly labelled as live, a replay or a simulation.",
-      "ctaDemo": "Try the Knowledge Base demo",
+      "ctaDemo": "Try the featured demo",
       "ctaProjects": "View all projects"
     },
     "labels": {
@@ -171,13 +171,9 @@
     },
     "featured": {
       "eyebrow": "Featured project",
-      "title": "An AI agent with a live demo",
-      "cta": "Open the live demo",
+      "title": "Start here",
+      "cta": "Open the demo",
       "readMore": "Read the project write-up"
-    },
-    "websites": {
-      "eyebrow": "Websites",
-      "title": "Two product websites"
     },
     "stack": {
       "eyebrow": "Tech",
@@ -192,6 +188,10 @@
       "github": "GitHub",
       "cv": "CV",
       "pending": "not set yet"
+    },
+    "others": {
+      "eyebrow": "More projects",
+      "title": "Other projects"
     }
   },
   "projectsPage": {

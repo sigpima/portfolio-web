@@ -37,7 +37,18 @@ async function readBodyCapped(request: Request, limit: number): Promise<string |
   return new TextDecoder().decode(bytes);
 }
 
+/** True for `application/json`, case-insensitive, with optional parameters (e.g. charset). */
+function isJsonContentType(value: string | null): boolean {
+  if (!value) return false;
+  return value.split(";")[0].trim().toLowerCase() === "application/json";
+}
+
 export async function POST(request: Request): Promise<Response> {
+  // Only JSON: a cross-site "simple" POST (text/plain, form) must not reach the
+  // backend, since this proxy rewrites the content type upstream.
+  if (!isJsonContentType(request.headers.get("content-type"))) {
+    return jsonError("unsupported_media_type", 415);
+  }
   // Never log the body: it contains the visitor's question.
   const body = await readBodyCapped(request, MAX_BODY_BYTES);
   if (body === null) return jsonError("too_long", 413);

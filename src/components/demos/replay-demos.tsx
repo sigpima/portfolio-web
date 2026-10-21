@@ -1,5 +1,6 @@
 "use client";
 
+import type { ComponentType } from "react";
 import { useTranslations } from "next-intl";
 import { giaPhaReplay } from "@/content/replays/gia-pha";
 import { twistfitReplay } from "@/content/replays/twistfit";
@@ -23,3 +24,12 @@ export function GiaPhaSimulationDemo({ locale }: { locale: Locale }) {
     />
   );
 }
+
+/**
+ * Replay/simulation demos by `Project.demo.component` key. Keep in sync with
+ * `replaysByDemoComponent` in `src/content/replays/index.ts` (a test enforces it).
+ */
+export const replayDemoComponents: Record<string, ComponentType<{ locale: Locale }>> = {
+  "twistfit-replay": TwistfitReplayDemo,
+  "gia-pha-simulation": GiaPhaSimulationDemo,
+};

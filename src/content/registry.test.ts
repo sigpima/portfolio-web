@@ -16,13 +16,15 @@ describe("project registry", () => {
     expect(getProject("nope")).toBeUndefined();
   });
 
-  it("lists exactly two website projects", () => {
+  it("lists the known website projects in the website group", () => {
     const slugs = listProjects("website").map((p) => p.slug);
-    expect(slugs).toEqual(["twistfit", "gia-pha"]);
+    expect(slugs).toEqual(expect.arrayContaining(["twistfit", "gia-pha"]));
+    expect(listProjects("website").every((p) => p.group === "website")).toBe(true);
   });
 
-  it("lists the ai-agent group", () => {
-    expect(listProjects("ai-agent").map((p) => p.slug)).toEqual(["knowledge-base"]);
+  it("lists Knowledge Base in the ai-agent group", () => {
+    expect(listProjects("ai-agent").map((p) => p.slug)).toContain("knowledge-base");
+    expect(listProjects("ai-agent").every((p) => p.group === "ai-agent")).toBe(true);
   });
 
   it("returns a copy so callers cannot reorder the registry", () => {
@@ -42,8 +44,20 @@ describe("project registry", () => {
 
   it("puts Knowledge Base first overall", () => {
     const all = listProjects();
-    expect(all).toHaveLength(3);
+    expect(all.map((p) => p.slug)).toEqual(
+      expect.arrayContaining(["knowledge-base", "twistfit", "gia-pha"]),
+    );
     expect(all[0].slug).toBe("knowledge-base");
     expect(all[0].featured).toBe(true);
+  });
+
+  it("says the KB bot answers in the language of the question, not only in Vietnamese", () => {
+    const kb = getProject("knowledge-base")!;
+    const vi = [kb.summary.vi, kb.approach.vi, kb.tagline.vi, ...kb.highlights.vi].join(" ");
+    const en = [kb.summary.en, kb.approach.en, kb.tagline.en, ...kb.highlights.en].join(" ");
+    expect(vi).not.toMatch(/(trả lời|diễn giải) bằng tiếng Việt/);
+    expect(en).not.toMatch(/(answers|explains the result) in Vietnamese/);
+    expect(kb.summary.vi).toContain("ngôn ngữ của câu hỏi");
+    expect(kb.summary.en).toContain("language of the question");
   });
 });

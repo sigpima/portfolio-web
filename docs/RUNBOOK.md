@@ -94,6 +94,7 @@ curl -s localhost:3100/api/chat/status # qua portfolio, cũng phải in {"enable
 ```
 
 Nếu `localhost:8003` vẫn in `{"enabled":true}` thì công tắc chưa tới được container: dùng `docker compose --profile chat stop chat`.
+Sau khi tắt cứng bằng `stop`, chỉ kiểm tra dòng `localhost:3100/api/chat/status` (phải in `{"enabled":false}`); `localhost:8003` lúc đó từ chối kết nối, đó là đúng.
 Tắt hẳn và xoá service chat: `docker compose --profile chat down` (`docker compose down` không kèm profile sẽ để lại container `chat`).
 
 Lưu ý vận hành:
@@ -116,13 +117,19 @@ Kiểm tra bằng `npx vitest run src/content src/components/demos`, rồi build
 
 1. Tạo `src/content/projects/<slug>.ts` xuất một `Project` (kiểu ở `src/content/types.ts`; có thể chép `twistfit.ts` làm mẫu). Mọi trường chữ đều phải đủ `vi` và `en`.
    Chọn `group` (`website` hoặc `ai-agent`), `demoKind` (`live`, `replay`, `simulation`, `none`), `order`, và đặt ảnh bìa SVG vào `public/projects/<slug>.svg` (đường dẫn ghi ở `cover`).
-2. Đăng ký ở `src/content/registry.ts`: thêm `import` và đưa vào mảng `projects`. Danh sách, trang chi tiết và trang `/vi`, `/en` đều lấy từ đây.
+2. Đăng ký ở `src/content/registry.ts`: thêm `import` và đưa vào mảng `projects`. Trang danh sách, trang chi tiết và trang chủ `/vi`, `/en` đều lấy từ đây:
+   trang chủ hiện mọi dự án có `featured: true` ở mục nổi bật (xếp theo `order`, dự án nổi bật đầu tiên là đích của nút demo ở phần mở đầu),
+   và mọi dự án còn lại (mọi nhóm) dưới dạng thẻ ở mục "Các dự án khác", xếp theo `order`. Dải công nghệ là hợp của `tech` mọi dự án.
 3. Nếu có demo (`demoKind` khác `none`) thì đặt `demo: { component: "<khoá>" }` trong file dự án, rồi:
    - thêm component vào `src/components/demos/registry.ts` (`demoComponents["<khoá>"]`);
    - nếu là demo phát lại hay mô phỏng: viết dữ liệu mẫu ở `src/content/replays/<slug>.ts`, đăng ký ở `src/content/replays/index.ts` (`replaysByDemoComponent["<khoá>"]`),
      và thêm một bọc component trong `src/components/demos/replay-demos.tsx` bằng cách sao chép bọc có sẵn (`TwistfitReplayDemo` hoặc `GiaPhaSimulationDemo`): component nhận `{ locale }`
-     và truyền `definition` (dữ liệu mẫu của bạn), `kind` (`"replay"` hoặc `"simulation"`) và `locale` cho `<ReplayDemo>`.
-4. Cập nhật các test đang liệt kê cứng: danh sách demo đã biết trong `src/content/registry.test.ts` và `src/components/demos/ReplayDemo.test.tsx` (test "demo registry"), cùng các test đếm dự án nếu có.
+     và truyền `definition` (dữ liệu mẫu của bạn), `kind` (`"replay"` hoặc `"simulation"`) và `locale` cho `<ReplayDemo>`; đăng ký bọc đó trong `replayDemoComponents` cùng file (không cần sửa `registry.ts`).
+4. Các test có ghi tên slug hay khoá demo cụ thể (không có test nào đếm tổng số dự án):
+   - `src/content/registry.test.ts`: danh sách khoá demo truyền cho `validateProjects` (thêm khoá mới của bạn vào đó); các test khác chỉ kiểm tra ba slug hiện có (`knowledge-base`, `twistfit`, `gia-pha`) vẫn có mặt và Knowledge Base đứng đầu.
+   - `src/components/demos/ReplayDemo.test.tsx` (test "demo registry"): liệt kê đúng các khoá trong `demoComponents`; thêm khoá mới vào.
+   - `src/components/demos/registry.test.ts`: tự kiểm tra khoá trong `replaysByDemoComponent` và `replayDemoComponents` (`replay-demos.tsx`) trùng nhau; đăng ký thiếu một bên là test hỏng.
+   - `src/content/replays/placeholder.test.ts` và `src/components/ProjectCard.test.tsx` ghi tên `twistfit`, `knowledge-base`, `gia-pha` để kiểm tra nhãn giữ chỗ; không cần sửa khi thêm dự án.
 5. Chạy `npx vitest run && npm run build`, rồi build lại image.
 
 ## 9. Liệt kê mọi giá trị còn `TODO:`
@@ -139,8 +146,11 @@ Cần backend đã bật bằng khoá Gemini thật (phần 3) và portfolio đ�
 2. Hỏi: **"Báo giá mới nhất giá bao nhiêu?"**
 3. Quan sát năm nút của sơ đồ luồng sáng lần lượt theo từng bước, và bảng chi tiết hiện tool đã gọi, tham số (args) và kết quả.
 4. Đối chiếu: tool, tham số và kết quả hiện ra phải khớp với nội dung câu trả lời của bot. Nếu lệch thì đó là lỗi, đừng công bố.
-5. Mở `/en`, vào cùng dự án, hỏi lại (ví dụ "What is the latest quotation price?") và kiểm tra giao diện, nhãn sơ đồ đọc được bằng tiếng Anh.
-6. Thử tắt backend (phần 6) và tải lại trang: phải thấy bảng "demo tạm nghỉ" thay vì lỗi.
+5. Bấm câu gợi ý thứ hai: **"Vì sao đơn giá chống thấm sân thượng ở Biệt thự Sen Vàng cao hơn Biệt thự Lúa Non?"**. Bot phải tìm được cả hai công trình
+   (thường gọi `run_readonly_sql` rồi `compare_work_item_detail`) và nêu nguyên nhân là vật tư (PU đàn hồi so với gốc xi măng polymer), khớp ví dụ 3 trong README của `knowledge_base`.
+6. Mở `/en`, vào cùng dự án, hỏi bằng tiếng Anh (ví dụ "What percentage of the largest quotation is labour?"): bot phải trả lời bằng tiếng Anh, nhãn sơ đồ đọc được bằng tiếng Anh.
+7. Kiểm tra cách hiển thị câu trả lời có markdown: demo hiện chữ thuần, nên nếu Gemini trả `**đậm**`, danh sách hay bảng thì ký tự markdown sẽ hiện nguyên. Ghi lại nếu khó đọc (xem việc cần làm tiếp ở cuối tài liệu).
+8. Thử tắt backend (phần 6) và tải lại trang: phải thấy bảng "demo tạm nghỉ" thay vì lỗi.
 
 ## 11. Quy tắc trung thực cần giữ
 
@@ -156,3 +166,9 @@ Cần backend đã bật bằng khoá Gemini thật (phần 3) và portfolio đ�
 - **Hosting của Flux**: chưa xác nhận Flux chạy ở đâu; không viết ra nơi chạy cho tới khi bạn xác nhận.
 - **Liên kết repo**: cả ba dự án đang để `links: []` (có `TODO:` trong `src/content/projects/*.ts`); chỉ thêm khi bạn xác nhận repo được công khai.
 - **Thông tin cá nhân** trong `src/content/site.ts`: tên, giới thiệu, email, GitHub đang là `TODO:`; `cv` là `null`.
+- **Câu định vị ở phần mở đầu trang chủ** (`home.hero.headline` trong `messages/vi.json` và `messages/en.json`: "Tôi xây hệ thống LLM và agent, cùng các sản phẩm web xung quanh chúng." / "I build LLM and agent systems, and the web products around them."):
+  do người dựng site viết thay bạn; hãy xác nhận hoặc viết lại.
+
+### Việc cần làm tiếp
+
+- **Markdown trong câu trả lời của bot**: Gemini hay trả lời bằng markdown, còn demo hiển thị chữ thuần (an toàn, không chèn HTML). Chọn một trong hai: yêu cầu backend (system prompt) trả lời bằng chữ thuần, hoặc sau này hiển thị một tập con markdown an toàn ở frontend.
