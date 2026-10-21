@@ -4,20 +4,10 @@ import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import SiteHeader from "@/components/SiteHeader";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import SiteFooter from "@/components/SiteFooter";
+import { metadataBase } from "@/lib/alternates";
+import { fontVariables } from "../fonts";
 import "../globals.css";
-
-const inter = Inter({
-  subsets: ["latin", "latin-ext", "vietnamese"],
-  variable: "--font-inter",
-  display: "swap",
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin", "latin-ext", "vietnamese"],
-  variable: "--font-jetbrains-mono",
-  display: "swap",
-});
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -31,7 +21,11 @@ export async function generateMetadata({
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) return {};
   const t = await getTranslations({ locale, namespace: "meta" });
-  return { title: t("title"), description: t("description") };
+  return {
+    metadataBase,
+    title: { default: t("title"), template: `%s · ${t("title")}` },
+    description: t("description"),
+  };
 }
 
 export default async function LocaleLayout({
@@ -48,16 +42,17 @@ export default async function LocaleLayout({
   const t = await getTranslations({ locale, namespace: "a11y" });
 
   return (
-    <html lang={locale} className={`${inter.variable} ${jetbrainsMono.variable}`}>
-      <body>
+    <html lang={locale} className={fontVariables}>
+      <body className="flex min-h-screen flex-col">
         <NextIntlClientProvider locale={locale} messages={messages}>
           <a href="#main" className="skip-link">
             {t("skipToContent")}
           </a>
           <SiteHeader locale={locale} />
-          <main id="main" tabIndex={-1}>
+          <main id="main" tabIndex={-1} className="flex-1">
             {children}
           </main>
+          <SiteFooter locale={locale} />
         </NextIntlClientProvider>
       </body>
     </html>

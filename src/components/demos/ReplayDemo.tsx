@@ -7,7 +7,7 @@ import type { ReplayDefinition, ReplaySample } from "@/content/replays/types";
 import type { Locale, Localized } from "@/content/types";
 import type { NodeStatus } from "@/lib/flow/model";
 import { useReplay } from "@/lib/replay/use-replay";
-import { DemoBadge } from "./DemoBadge";
+import { DemoBadge, DemoBadgeQualifier, usePageBadge } from "./DemoBadge";
 
 const NODE_STATUSES: NodeStatus[] = ["idle", "active", "done", "error", "skipped"];
 const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
@@ -173,10 +173,15 @@ export function ReplayDemo({ definition, kind, locale: _locale, footnote }: Repl
 
   const placeholder = sample.placeholder === true;
   const ribbon = t("placeholder.ribbon");
+  const pageBadge = usePageBadge();
 
   return (
     <div lang={locale} className="flex flex-col gap-4">
-      <DemoBadge kind={kind} locale={locale} qualifier={placeholder ? "placeholder" : undefined} />
+      {pageBadge ? (
+        placeholder ? <DemoBadgeQualifier qualifier="placeholder" /> : null
+      ) : (
+        <DemoBadge kind={kind} locale={locale} qualifier={placeholder ? "placeholder" : undefined} />
+      )}
 
       {definition.samples.length > 1 ? (
         <div role="group" aria-label={t("samplesLabel")} className="flex flex-wrap gap-1.5">

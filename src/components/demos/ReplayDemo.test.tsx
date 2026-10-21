@@ -7,6 +7,7 @@ import type { Locale } from "@/content/types";
 import viMessages from "../../../messages/vi.json";
 import enMessages from "../../../messages/en.json";
 import { ReplayDemo } from "./ReplayDemo";
+import { PageBadgeProvider } from "./DemoBadge";
 import { demoComponents } from "./registry";
 
 function imageSample(id: string, placeholder: boolean | undefined): ReplaySample {
@@ -265,5 +266,20 @@ describe("demo registry", () => {
     );
     expect(screen.getByText("Phát lại từ lần chạy thật")).toBeInTheDocument();
     expect(screen.getAllByText("ảnh giữ chỗ").length).toBeGreaterThan(0);
+  });
+
+  it("under a page-level badge, shows no second label but keeps the placeholder qualifier", () => {
+    render(
+      <NextIntlClientProvider locale="en" messages={enMessages}>
+        <PageBadgeProvider>
+          <ReplayDemo definition={definition} kind="replay" locale="en" />
+        </PageBadgeProvider>
+      </NextIntlClientProvider>,
+    );
+    expect(screen.queryByText("Replay of a real run")).toBeNull();
+    expect(screen.getByText("Placeholder images and facts")).toBeInTheDocument();
+    expect(screen.getByText("Placeholder sample: no record of a real run is attached yet.")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Sample two" }));
+    expect(screen.queryByText("Placeholder images and facts")).toBeNull();
   });
 });

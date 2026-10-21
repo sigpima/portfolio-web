@@ -144,5 +144,92 @@
         "description": "Mẫu giữ chỗ: chưa có bản ghi của lần chạy thật nào được gắn vào."
       }
     }
+  },
+  "groups": {
+    "website": "Website",
+    "ai-agent": "AI / LLM / Agent"
+  },
+  "filter": {
+    "label": "Lọc theo nhóm",
+    "all": "Tất cả"
+  },
+  "card": {
+    "caseStudy": "Xem dự án",
+    "noDemo": "Không có demo"
+  },
+  "home": {
+    "metaTitle": "Trang chủ",
+    "hero": {
+      "headline": "Tôi xây hệ thống LLM và agent, cùng các sản phẩm web xung quanh chúng.",
+      "lead": "Mỗi dự án dưới đây có bài viết về bài toán, cách làm và một demo được ghi nhãn rõ: chạy thật, phát lại hay mô phỏng.",
+      "ctaDemo": "Thử demo Knowledge Base",
+      "ctaProjects": "Xem tất cả dự án"
+    },
+    "labels": {
+      "eyebrow": "Cách ghi nhãn demo",
+      "title": "Mỗi demo nói rõ nó là gì"
+    },
+    "featured": {
+      "eyebrow": "Dự án nổi bật",
+      "title": "Agent AI có demo chạy thật",
+      "cta": "Mở demo chạy thật",
+      "readMore": "Đọc chi tiết dự án"
+    },
+    "websites": {
+      "eyebrow": "Website",
+      "title": "Hai website sản phẩm"
+    },
+    "stack": {
+      "eyebrow": "Công nghệ",
+      "title": "Công cụ dùng trong các dự án",
+      "lead": "Danh sách lấy từ phần công nghệ của từng dự án trên trang này."
+    },
+    "contact": {
+      "eyebrow": "Liên hệ",
+      "title": "Trao đổi về một dự án",
+      "lead": "Liên hệ qua các kênh dưới đây.",
+      "email": "Email",
+      "github": "GitHub",
+      "cv": "CV",
+      "pending": "chưa cập nhật"
+    }
+  },
+  "projectsPage": {
+    "metaTitle": "Dự án",
+    "metaDescription": "Các dự án website và AI / LLM / Agent, kèm demo được ghi nhãn trung thực.",
+    "eyebrow": "Danh mục dự án",
+    "title": "Dự án",
+    "lead": "Website sản phẩm và hệ thống AI / LLM / Agent. Mỗi dự án có bài viết và demo được ghi nhãn.",
+    "empty": "Không có dự án nào trong nhóm này."
+  },
+  "detail": {
+    "back": "Tất cả dự án",
+    "facts": {
+      "group": "Nhóm",
+      "demo": "Demo",
+      "stack": "Công nghệ chính"
+    },
+    "demoTitle": "Demo",
+    "problem": "Bài toán",
+    "approach": "Cách làm",
+    "highlights": "Điểm nổi bật",
+    "tech": "Công nghệ",
+    "links": "Liên kết",
+    "noLinks": "Chưa có liên kết công khai.",
+    "pagerLabel": "Dự án khác",
+    "prev": "Dự án trước",
+    "next": "Dự án sau",
+    "toDemo": "Xem demo"
+  },
+  "notFound": {
+    "metaTitle": "Không tìm thấy trang",
+    "title": "Không tìm thấy trang",
+    "body": "Trang bạn tìm không tồn tại hoặc đã được chuyển đi.",
+    "home": "Về trang chủ",
+    "projects": "Xem các dự án"
+  },
+  "footer": {
+    "note": "Demo trên trang được ghi nhãn: chạy thật, phát lại hoặc mô phỏng.",
+    "navLabel": "Liên kết cuối trang"
   }
 }

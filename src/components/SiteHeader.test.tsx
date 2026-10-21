@@ -7,12 +7,18 @@ import enMessages from "../../messages/en.json";
 import type { Locale } from "@/content/types";
 
 let mockPathname = "/vi/projects";
+let mockSearch = "";
 vitest.mock("next/navigation", () => ({
   usePathname: () => mockPathname,
+  useSearchParams: () => new URLSearchParams(mockSearch),
+  useRouter: () => ({ push: () => {}, replace: () => {}, prefetch: () => {} }),
+  redirect: () => {},
+  permanentRedirect: () => {},
 }));
 
-function renderHeader(locale: Locale, pathname: string) {
+function renderHeader(locale: Locale, pathname: string, search = "") {
   mockPathname = pathname;
+  mockSearch = search;
   const messages = locale === "vi" ? viMessages : enMessages;
   return render(
     <NextIntlClientProvider locale={locale} messages={messages}>
@@ -55,5 +61,13 @@ describe("SiteHeader", () => {
     renderHeader("en", "/en/projects");
     expect(screen.getByRole("link", { name: "Projects" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("link", { name: "Home" })).not.toHaveAttribute("aria-current");
+  });
+
+  it("keeps the query string when switching language", () => {
+    renderHeader("en", "/en/projects", "group=website");
+    expect(screen.getByRole("link", { name: "Tiếng Việt" })).toHaveAttribute(
+      "href",
+      "/vi/projects?group=website",
+    );
   });
 });

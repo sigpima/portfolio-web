@@ -144,5 +144,92 @@
         "description": "Placeholder sample: no record of a real run is attached yet."
       }
     }
+  },
+  "groups": {
+    "website": "Website",
+    "ai-agent": "AI / LLM / Agent"
+  },
+  "filter": {
+    "label": "Filter by group",
+    "all": "All"
+  },
+  "card": {
+    "caseStudy": "View project",
+    "noDemo": "No demo"
+  },
+  "home": {
+    "metaTitle": "Home",
+    "hero": {
+      "headline": "I build LLM and agent systems, and the web products around them.",
+      "lead": "Each project below has a write-up of the problem and the approach, plus a demo that is clearly labelled as live, a replay or a simulation.",
+      "ctaDemo": "Try the Knowledge Base demo",
+      "ctaProjects": "View all projects"
+    },
+    "labels": {
+      "eyebrow": "How demos are labelled",
+      "title": "Every demo says what it is"
+    },
+    "featured": {
+      "eyebrow": "Featured project",
+      "title": "An AI agent with a live demo",
+      "cta": "Open the live demo",
+      "readMore": "Read the project write-up"
+    },
+    "websites": {
+      "eyebrow": "Websites",
+      "title": "Two product websites"
+    },
+    "stack": {
+      "eyebrow": "Tech",
+      "title": "Tools used across these projects",
+      "lead": "Collected from the tech list of each project on this site."
+    },
+    "contact": {
+      "eyebrow": "Contact",
+      "title": "Talk about a project",
+      "lead": "Reach out through the channels below.",
+      "email": "Email",
+      "github": "GitHub",
+      "cv": "CV",
+      "pending": "not set yet"
+    }
+  },
+  "projectsPage": {
+    "metaTitle": "Projects",
+    "metaDescription": "Website and AI / LLM / Agent projects, with honestly labelled demos.",
+    "eyebrow": "Project index",
+    "title": "Projects",
+    "lead": "Product websites and AI / LLM / Agent systems. Each project has a write-up and a labelled demo.",
+    "empty": "No projects in this group."
+  },
+  "detail": {
+    "back": "All projects",
+    "facts": {
+      "group": "Group",
+      "demo": "Demo",
+      "stack": "Core stack"
+    },
+    "demoTitle": "Demo",
+    "problem": "Problem",
+    "approach": "Approach",
+    "highlights": "Highlights",
+    "tech": "Tech",
+    "links": "Links",
+    "noLinks": "No public links yet.",
+    "pagerLabel": "More projects",
+    "prev": "Previous project",
+    "next": "Next project",
+    "toDemo": "Go to the demo"
+  },
+  "notFound": {
+    "metaTitle": "Page not found",
+    "title": "Page not found",
+    "body": "The page you are looking for does not exist or has moved.",
+    "home": "Back to home",
+    "projects": "Browse projects"
+  },
+  "footer": {
+    "note": "Demos on this site are labelled: live, replay or simulation.",
+    "navLabel": "Footer links"
   }
 }

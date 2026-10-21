@@ -1,5 +1,6 @@
 "use client";
 
+import { createContext, useContext, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import type { DemoKind, Locale } from "@/content/types";
 
@@ -58,6 +59,37 @@ function KindIcon({ kind }: { kind: BadgeKind }) {
         </svg>
       );
   }
+}
+
+const PageBadgeContext = createContext(false);
+
+/**
+ * Marks a demo area whose badge is already rendered by the page (ProjectDetail).
+ * Demos inside it skip their own label and only add a qualifier when needed.
+ */
+export function PageBadgeProvider({ children }: { children: ReactNode }) {
+  return <PageBadgeContext.Provider value={true}>{children}</PageBadgeContext.Provider>;
+}
+
+/** True when the surrounding page already shows the demo badge. */
+export function usePageBadge(): boolean {
+  return useContext(PageBadgeContext);
+}
+
+/** Only the qualifier part of a badge (chip + description), for demos under a page-level badge. */
+export function DemoBadgeQualifier({ qualifier }: { qualifier: "placeholder" }) {
+  const t = useTranslations("demo");
+  const activeLocale = useLocale();
+  return (
+    <div lang={activeLocale} data-qualifier={qualifier} className="flex flex-col items-start gap-1.5">
+      <p className="inline-flex items-center rounded-full border border-error bg-error-container px-3.5 py-1.5 text-body-md font-semibold text-on-error-container">
+        {t(`badgeQualifier.${qualifier}.chip`)}
+      </p>
+      <p data-role="badge-description" className="text-body-md text-on-surface-variant">
+        {t(`badgeQualifier.${qualifier}.description`)}
+      </p>
+    </div>
+  );
 }
 
 /** Honesty label for a demo: what kind of demo this is, with a one-sentence explanation. */

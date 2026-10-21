@@ -1,19 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-hidden="true">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" aria-hidden="true">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+    <linearGradient id="gp-bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#0f131c"/>
       <stop offset="1" stop-color="#181b25"/>
     </linearGradient>
-    <linearGradient id="line" x1="0" y1="0" x2="1" y2="0">
+    <linearGradient id="gp-line" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0" stop-color="#8083ff"/>
       <stop offset="1" stop-color="#4cd7f6"/>
     </linearGradient>
   </defs>
-  <rect width="1200" height="675" fill="url(#bg)"/>
+  <rect width="1200" height="675" fill="url(#gp-bg)"/>
   <g fill="none" stroke="#464554" stroke-width="1" opacity="0.5">
     <path d="M0 169H1200M0 338H1200M0 507H1200M300 0V675M600 0V675M900 0V675"/>
   </g>
-  <g fill="none" stroke="url(#line)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <g fill="none" stroke="url(#gp-line)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
     <path d="M600 160V230M600 230H330M600 230H870M330 230V300M870 230V300M330 300H210M330 300H450M870 300H750M870 300H990M210 300V390M450 300V390M750 300V390M990 300V390M210 390H150M210 390H270M450 390H390M450 390H510M750 390H690M750 390H810M990 390H930M990 390H1050"/>
     <circle cx="600" cy="140" r="26"/>
     <circle cx="330" cy="300" r="20"/>
