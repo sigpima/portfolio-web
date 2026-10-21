@@ -1,0 +1,24 @@
+node_modules
+.next
+out
+build
+.git
+.gitignore
+.superpowers
+.claude
+.env*
+!.env.example
+*.tsbuildinfo
+npm-debug.log*
+.DS_Store
+# Not needed to build the image
+docs
+deploy
+README.md
+Dockerfile
+.dockerignore
+docker-compose.yml
+# Screenshots and scratch captures
+screenshots
+*.screenshot.png
+.playwright*

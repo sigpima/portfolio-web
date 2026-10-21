@@ -1,0 +1,39 @@
+# Portfolio web. The owner runs nginx on the host outside Docker, so this service
+# only publishes a port on 127.0.0.1 (see deploy/nginx.conf.example).
+#
+# The Knowledge Base demo calls the backend `chat` service of the knowledge_base
+# stack by service name, so this service joins that stack's network. Check the name
+# with `docker network ls` (default on this machine: knowledge_base_default) and
+# override with KB_NETWORK if it differs. Start the backend first:
+#   (in knowledge_base)  GEMINI_API_KEY=... docker compose --profile chat up -d
+#
+# Build and run:
+#   SITE_URL=https://your-domain docker compose up -d --build
+# SITE_URL is needed at BUILD time (see docs/RUNBOOK.md).
+
+services:
+  portfolio:
+    image: portfolio-web:local
+    build:
+      context: .
+      args:
+        SITE_URL: ${SITE_URL:-}
+        REQUIRE_SITE_URL: ${REQUIRE_SITE_URL:-1}
+    ports:
+      - "127.0.0.1:${PORTFOLIO_PORT:-3100}:3000"
+    environment:
+      CHAT_BACKEND_URL: http://chat:8003
+      SITE_URL: ${SITE_URL:-}
+    networks:
+      - kb
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  kb:
+    name: ${KB_NETWORK:-knowledge_base_default}
+    external: true
