@@ -89,6 +89,7 @@
       "inviteRequired": "This invite link is no longer valid."
     },
     "replayNotice": "You are watching a replay. Open an invite link to try it live.",
+    "replayNoticeNoChat": "Live chat is not enabled for your invite link yet. You are watching a replay.",
     "modeLoading": "Loading the demo…"
   },
   "demo": {

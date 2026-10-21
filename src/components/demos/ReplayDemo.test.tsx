@@ -111,6 +111,31 @@ describe("ReplayDemo", () => {
     }
   });
 
+  it("marks question and answer bubbles with their own language only when the sample says so", () => {
+    const base = imageSample("q", undefined);
+    const make = (lang?: "vi"): ReplayDefinition => ({
+      id: "qa",
+      samples: [
+        {
+          ...base,
+          input: { kind: "question", text: { vi: "Câu hỏi", en: "Câu hỏi" }, lang },
+          result: { kind: "text", text: { vi: "Trả lời", en: "Trả lời" }, lang },
+        },
+      ],
+    });
+    const { container, unmount } = renderDemo(make("vi"), "replay", "en");
+    fireEvent.click(screen.getByRole("button", { name: "Play" }));
+    act(() => vi.advanceTimersByTime(300));
+    expect(container.querySelector('[data-role="user"]')).toHaveAttribute("lang", "vi");
+    expect(container.querySelector('[data-role="bot"]')).toHaveAttribute("lang", "vi");
+    unmount();
+    const plain = renderDemo(make(), "replay", "en");
+    fireEvent.click(screen.getByRole("button", { name: "Play" }));
+    act(() => vi.advanceTimersByTime(300));
+    expect(plain.container.querySelector('[data-role="user"]')).not.toHaveAttribute("lang");
+    expect(plain.container.querySelector('[data-role="bot"]')).not.toHaveAttribute("lang");
+  });
+
   it("plays the flow, then shows the result and a Replay button", () => {
     const { container } = renderDemo();
     fireEvent.click(screen.getByRole("button", { name: "Chạy" }));

@@ -109,6 +109,8 @@ async function recordOne(
     title: q.title,
     // The bot answers in the question's language, so the question is shown as asked.
     question: { vi: q.question, en: q.question },
+    // The questions (and so the answers) are Vietnamese, like the data.
+    lang: "vi",
   });
 }
 

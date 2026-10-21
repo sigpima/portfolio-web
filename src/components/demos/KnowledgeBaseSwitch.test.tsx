@@ -63,6 +63,7 @@ describe("KnowledgeBaseSwitch", () => {
       const fetchMock = stubFetch({ invited: false, features: OFF });
       const { container } = renderSwitch(locale);
       expect(await screen.findByText(m.kb.replayNotice)).toBeInTheDocument();
+      expect(screen.queryByText(m.kb.replayNoticeNoChat)).toBeNull();
       expect(screen.getByText(m.demo.badge.replay.label)).toBeInTheDocument();
       expect(screen.queryByText(m.demo.badge.live.label, { exact: true })).toBeNull();
       expect(container.querySelector('[data-role="user"]')).not.toBeNull();
@@ -71,12 +72,16 @@ describe("KnowledgeBaseSwitch", () => {
     });
   }
 
-  it("an invited visitor without the chat feature still gets the replay", async () => {
-    const fetchMock = stubFetch({ invited: true, features: OFF });
-    renderSwitch();
-    expect(await screen.findByText(viMessages.kb.replayNotice)).toBeInTheDocument();
-    expect(chatCalls(fetchMock)).toEqual([]);
-  });
+  for (const locale of ["vi", "en"] as const) {
+    const m = locale === "vi" ? viMessages : enMessages;
+    it(`an invited visitor without the chat feature gets the replay with its own notice (${locale})`, async () => {
+      const fetchMock = stubFetch({ invited: true, features: OFF });
+      renderSwitch(locale);
+      expect(await screen.findByText(m.kb.replayNoticeNoChat)).toBeInTheDocument();
+      expect(screen.queryByText(m.kb.replayNotice)).toBeNull();
+      expect(chatCalls(fetchMock)).toEqual([]);
+    });
+  }
 
   it("with an invite that includes chat, shows the live demo", async () => {
     const fetchMock = stubFetch({ invited: true, features: ON });
@@ -97,7 +102,9 @@ describe("KnowledgeBaseSwitch", () => {
     expect(chatCalls(fetchMock)).toEqual([]);
   });
 
-  it("falls back to the replay, without a reload, when the invite stops working mid-visit", async () => {
+  // Also covers an invite revoked right after `/api/session`: the status call cannot tell
+  // (it needs no session), so the very first question is where invite_required shows up.
+  it("falls back to the replay, without a reload, when the first question finds the invite revoked", async () => {
     const fetchMock = stubFetch({ invited: true, features: ON }, () =>
       Response.json({ code: "invite_required" }, { status: 401 }),
     );
@@ -107,7 +114,10 @@ describe("KnowledgeBaseSwitch", () => {
     await waitFor(() => expect(input).toBeEnabled());
     await user.type(input, "Báo giá mới nhất?{Enter}");
     const lost = await screen.findByText(viMessages.kb.errors.inviteRequired);
-    expect(screen.getByText(viMessages.kb.replayNotice)).toBeInTheDocument();
+    // Only the "no longer valid" message: no "open an invite link" sentence on top of it.
+    expect(screen.queryByText(viMessages.kb.replayNotice)).toBeNull();
+    expect(screen.queryByText(viMessages.kb.replayNoticeNoChat)).toBeNull();
+    expect(screen.getByText(viMessages.demo.badge.replay.label)).toBeInTheDocument();
     expect(screen.queryByRole("textbox")).toBeNull();
     await waitFor(() => expect(lost.closest("[tabindex='-1']")).toHaveFocus());
     expect(chatCalls(fetchMock).filter(([url]) => url === "/api/chat/stream")).toHaveLength(1);

@@ -54,11 +54,15 @@ export function KnowledgeBaseSwitch({ locale }: { locale: Locale }) {
     <div data-kb-mode="replay" lang={activeLocale} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1 rounded-lg border border-outline-variant bg-surface-container px-3 py-2 text-body-md">
         {inviteLost ? (
+          // The link stopped working: say so, without inviting them to "open an invite link" again.
           <p ref={lostRef} tabIndex={-1} role="status" className="font-semibold text-on-surface">
             {t("errors.inviteRequired")}
           </p>
-        ) : null}
-        <p className="text-on-surface-variant">{t("replayNotice")}</p>
+        ) : (
+          <p className="text-on-surface-variant">
+            {invited ? t("replayNoticeNoChat") : t("replayNotice")}
+          </p>
+        )}
       </div>
       <ReplayDemo definition={knowledgeBaseReplay} kind="replay" locale={locale} />
     </div>

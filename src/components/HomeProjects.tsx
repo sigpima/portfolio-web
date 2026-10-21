@@ -2,7 +2,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { isPlaceholderDemo } from "@/content/replays";
 import type { Locale, Project } from "@/content/types";
-import { DEMO_CHIP_STYLE, ProjectCard, chipClass, placeholderChipClass } from "./ProjectCard";
+import { DEMO_CHIP_STYLE, ProjectCard, chipClass, placeholderChipClass, staticDemoLabelKey } from "./ProjectCard";
 
 const eyebrowClass = "font-mono text-label-mono-sm uppercase text-secondary";
 const sectionTitleClass = "text-headline-lg-mobile text-on-surface md:text-headline-lg";
@@ -19,7 +19,9 @@ export function splitHomeProjects(projects: Project[]): { featured: Project[]; o
 
 function FeaturedCard({ project, locale }: { project: Project; locale: Locale }) {
   const t = useTranslations();
-  const placeholder = isPlaceholderDemo(project);
+  // Same rules as ProjectCard: a live demo is "live · invite only", and its replay
+  // fallback's placeholder status is qualified inside the demo, not here.
+  const placeholder = project.demoKind !== "live" && isPlaceholderDemo(project);
   return (
     <article className="grid overflow-hidden rounded-xl border border-outline-variant bg-surface-container-low lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
       <div className="flex flex-col gap-4 p-6 md:p-8">
@@ -27,7 +29,7 @@ function FeaturedCard({ project, locale }: { project: Project; locale: Locale })
           <span className={`${chipClass} border-outline-variant text-on-surface`}>{t(`groups.${project.group}`)}</span>
           {project.demoKind !== "none" ? (
             <span className={`${chipClass} ${DEMO_CHIP_STYLE[project.demoKind]}`}>
-              {t(`demo.badge.${project.demoKind}.label`)}
+              {t(`demo.badge.${staticDemoLabelKey(project.demoKind)}.label`)}
             </span>
           ) : null}
           {placeholder ? (

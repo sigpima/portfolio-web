@@ -119,6 +119,10 @@ export function KnowledgeBaseDemo({ onInviteRequired }: KnowledgeBaseDemoProps) 
 
   useEffect(() => {
     let cancelled = false;
+    // No invite check here on purpose: `/api/chat/status` needs no session and always answers
+    // 200 `{enabled}`, so it cannot report `invite_required`. An invite revoked between
+    // `/api/session` and now surfaces on the first question (401 from `/api/chat/stream`),
+    // which calls `onInviteRequired` and falls back to the replay.
     fetchChatStatus().then(({ enabled }) => {
       if (!cancelled) setStatus(enabled ? "enabled" : "paused");
     });

@@ -1,5 +1,5 @@
 import type { NodeStatus } from "@/lib/flow/model";
-import type { Localized } from "../types";
+import type { Locale, Localized } from "../types";
 
 export interface ReplaySample {
   id: string;
@@ -9,8 +9,11 @@ export interface ReplaySample {
   input:
     | { kind: "images"; items: { src: string; alt: Localized }[] }
     | { kind: "file"; fileName: string; excerpt: Localized<string[]> }
-    /** A chat question, shown as the visitor's bubble. */
-    | { kind: "question"; text: Localized };
+    /**
+     * A chat question, shown as the visitor's bubble. `lang` marks text that is in one
+     * language whatever the UI locale (a recorded run asked in Vietnamese).
+     */
+    | { kind: "question"; text: Localized; lang?: Locale };
   /**
    * Diagram nodes in display order. Nodes without `row` sit on the first row (`r1`);
    * the others are grouped into extra rows (e.g. a second tool call), in first-seen order.
@@ -24,8 +27,8 @@ export interface ReplaySample {
         kind: "people";
         people: { id: string; name: string; birthYear?: number; deathYear?: number; parentIds: string[] }[];
       }
-    /** The bot's answer, shown as a bot bubble once the run is done. */
-    | { kind: "text"; text: Localized };
+    /** The bot's answer, shown as a bot bubble once the run is done (`lang` as for the question). */
+    | { kind: "text"; text: Localized; lang?: Locale };
 }
 
 export interface ReplayDefinition {

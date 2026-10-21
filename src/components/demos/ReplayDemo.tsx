@@ -214,6 +214,7 @@ export function ReplayDemo({ definition, kind, locale: _locale, footnote }: Repl
         ) : sample.input.kind === "question" ? (
           <p
             data-role="user"
+            lang={sample.input.lang}
             className="max-w-[82%] self-end rounded-xl bg-surface-container-high px-3.5 py-2.5 text-body-md break-words text-on-surface"
           >
             <span className="sr-only">{t("chat.you")}: </span>
@@ -280,6 +281,7 @@ export function ReplayDemo({ definition, kind, locale: _locale, footnote }: Repl
         ) : sample.result.kind === "text" ? (
           <p
             data-role="bot"
+            lang={sample.result.lang}
             className="max-w-[82%] self-start rounded-xl border border-primary-container/50 bg-primary-container/20 px-3.5 py-2.5 text-body-md break-words whitespace-pre-wrap text-on-surface"
           >
             <span className="sr-only">{t("chat.bot")}: </span>

@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { listProjects } from "@/content/registry";
 import type { Project } from "@/content/types";
 import enMessages from "../../messages/en.json";
+import viMessages from "../../messages/vi.json";
 import { HomeProjectSections, splitHomeProjects } from "./HomeProjects";
 
 const base = listProjects();
@@ -60,4 +61,24 @@ describe("HomeProjectSections", () => {
     }
     expect(within(others).queryByRole("heading", { name: kb.title.en })).toBeNull();
   });
+});
+
+describe("HomeProjectSections: the invite-only Knowledge Base featured card", () => {
+  for (const [locale, messages, bare] of [
+    ["vi", viMessages, /Chạy thật(?! · cần link mời)/],
+    ["en", enMessages, /\bLive\b(?! · invite only)/],
+  ] as const) {
+    it(`says "${messages.demo.badge.liveInvite.label}", never the bare live label, and has no placeholder chip (${locale})`, () => {
+      render(
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <HomeProjectSections projects={base} locale={locale} />
+        </NextIntlClientProvider>,
+      );
+      const featured = screen.getByRole("heading", { name: kb.title[locale] }).closest("article") as HTMLElement;
+      expect(within(featured).getByText(messages.demo.badge.liveInvite.label, { exact: true })).toBeInTheDocument();
+      expect(within(featured).queryByText(messages.demo.badge.live.label, { exact: true })).toBeNull();
+      expect(featured.textContent).not.toMatch(bare);
+      expect(within(featured).queryByText(messages.demo.badgeQualifier.placeholder.chip)).toBeNull();
+    });
+  }
 });

@@ -92,6 +92,15 @@ describe("buildReplaySample", () => {
     expect("placeholder" in sample).toBe(false);
   });
 
+  it("passes an explicit language to the question and the answer, and none by default", () => {
+    const marked = buildReplaySample(happy, { ...options, lang: "vi" });
+    expect(marked.input).toMatchObject({ kind: "question", lang: "vi" });
+    expect(marked.result).toMatchObject({ kind: "text", lang: "vi" });
+    const plain = buildReplaySample(happy, options);
+    expect("lang" in plain.input).toBe(false);
+    expect("lang" in plain.result).toBe(false);
+  });
+
   it("marks the running node as error on an error event, with our own localized text", () => {
     const sample = buildReplaySample(
       timed([

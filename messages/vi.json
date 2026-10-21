@@ -89,6 +89,7 @@
       "inviteRequired": "Link mời không còn hiệu lực."
     },
     "replayNotice": "Bạn đang xem bản phát lại. Mở link mời để thử trực tiếp.",
+    "replayNoticeNoChat": "Tính năng trò chuyện trực tiếp hiện chưa bật cho link của bạn. Bạn đang xem bản phát lại.",
     "modeLoading": "Đang tải demo…"
   },
   "demo": {

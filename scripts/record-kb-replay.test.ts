@@ -68,6 +68,8 @@ describe("record-kb-replay", () => {
     expect(text).toContain("export const recordedSamples: ReplaySample[] =");
     expect(text).not.toContain("placeholder");
     expect(text).toContain("Câu trả lời thật.");
+    // Vietnamese questions and answers are marked as such for the English UI.
+    expect(text.match(/"lang": "vi"/g)).toHaveLength(6);
   });
 
   for (const [name, impl, message] of [

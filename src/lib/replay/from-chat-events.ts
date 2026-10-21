@@ -47,7 +47,13 @@ function nodesOf(state: FlowState): { node: FlowNode; rowId: string; rowTitle?: 
  */
 export function buildReplaySample(
   events: TimedChatEvent[],
-  options: { id: string; title: Localized; question: Localized },
+  options: {
+    id: string;
+    title: Localized;
+    question: Localized;
+    /** Language of the question and answer when it does not follow the UI (recorded runs). */
+    lang?: Locale;
+  },
 ): ReplaySample {
   let flows: Record<Locale, FlowState> = {
     vi: initialChatFlow(LABELS.vi),
@@ -116,9 +122,10 @@ export function buildReplaySample(
   return {
     id: options.id,
     title: options.title,
-    input: { kind: "question", text: options.question },
+    input: { kind: "question", text: options.question, ...(options.lang ? { lang: options.lang } : {}) },
     nodes,
     steps,
-    result: { kind: "text", text },
+    // An error text is ours, localized per UI language: only a real answer carries `lang`.
+    result: { kind: "text", text, ...(options.lang && answer ? { lang: options.lang } : {}) },
   };
 }
