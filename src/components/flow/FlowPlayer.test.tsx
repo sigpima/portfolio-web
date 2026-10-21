@@ -98,12 +98,44 @@ describe("FlowPlayer", () => {
     renderPlayer();
     const pre = node("tool").querySelector("pre") as HTMLElement;
     expect(pre).toHaveAttribute("tabindex", "0");
-    expect(pre).toHaveAttribute("aria-label");
-    expect(pre.getAttribute("aria-label")).toContain("find_quotations");
+    expect(pre).toHaveAttribute("role", "group");
+    expect(pre).not.toHaveAttribute("aria-label");
+    expect(pre).toHaveAccessibleName("find_quotations");
+    expect(screen.queryAllByRole("region")).toHaveLength(1); // only the wrapper section is a landmark
     expect(pre.className).toMatch(/overflow-auto/);
     expect(pre.className).toMatch(/max-h-/);
     expect(pre.className).toMatch(/break-words|wrap-/);
     expect(pre.className).toMatch(/whitespace-pre-wrap/);
+  });
+
+  it("names each detail group by its node label only, with unique ids across instances", () => {
+    const { container } = render(
+      <>
+        <FlowPlayer state={state} label="A" statusLabels={statusLabels} />
+        <FlowPlayer state={state} label="B" statusLabels={statusLabels} />
+      </>,
+    );
+    const ids = [...container.querySelectorAll("[id]")].map((e) => e.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const pre of container.querySelectorAll("pre")) {
+      const name = pre.closest("li")!.querySelector("[id$='-label']")!.textContent;
+      expect(pre).toHaveAccessibleName(name!);
+    }
+  });
+
+  it("keeps explicit list semantics on each row", () => {
+    renderPlayer();
+    for (const ol of screen.getAllByRole("list")) expect(ol).toHaveAttribute("role", "list");
+  });
+
+  it("does not fade text on skipped nodes (contrast)", () => {
+    renderPlayer();
+    const li = node("extra");
+    expect(li.className).not.toMatch(/opacity-/);
+    for (const el of li.querySelectorAll("*")) {
+      if (el.closest("svg") || el.getAttribute("aria-hidden") === "true") continue;
+      expect(el.getAttribute("class") ?? "").not.toMatch(/(^|\s)opacity-/);
+    }
   });
 
   it("does not render an empty detail box for nodes without detail", () => {

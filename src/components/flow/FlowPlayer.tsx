@@ -15,7 +15,7 @@ const BOX_BY_STATUS: Record<NodeStatus, string> = {
     "border-secondary bg-secondary/10 shadow-[0_0_0_3px_color-mix(in_srgb,var(--color-secondary)_15%,transparent),0_0_18px_color-mix(in_srgb,var(--color-secondary)_35%,transparent)]",
   done: "border-primary-container bg-primary-container/15",
   error: "border-error bg-error-container/30",
-  skipped: "border-dashed border-outline-variant bg-surface-container-low opacity-70",
+  skipped: "border-dashed border-outline-variant bg-surface-container-low",
 };
 
 const CONNECTOR_BY_STATUS: Record<NodeStatus, string> = {
@@ -77,12 +77,15 @@ function StatusIcon({ status }: { status: NodeStatus }) {
 function FlowNodeItem({
   node,
   isLast,
+  idPrefix,
   statusLabels,
 }: {
   node: FlowNode;
   isLast: boolean;
+  idPrefix: string;
   statusLabels: Record<NodeStatus, string>;
 }) {
+  const labelId = `${idPrefix}-${node.id}-label`;
   const hasDetail = typeof node.detail === "string" && node.detail.length > 0;
   return (
     <li
@@ -96,10 +99,12 @@ function FlowNodeItem({
         >
           <span className="flex max-w-full items-center justify-center gap-1.5 text-on-surface">
             <StatusIcon status={node.status} />
-            <span className="min-w-0 break-words">{node.label}</span>
+            <span id={labelId} className="min-w-0 break-words">
+              {node.label}
+            </span>
           </span>
           {node.sublabel ? (
-            <span className="max-w-full break-words font-mono text-label-mono-xs text-outline">
+            <span className="max-w-full break-words font-mono text-label-mono-xs text-on-surface-variant">
               {node.sublabel}
             </span>
           ) : null}
@@ -115,8 +120,8 @@ function FlowNodeItem({
       {hasDetail ? (
         <pre
           tabIndex={0}
-          role="region"
-          aria-label={`${node.label}: ${statusLabels[node.status]}`}
+          role="group"
+          aria-labelledby={labelId}
           className="mt-2 max-h-40 overflow-auto rounded-md border border-outline-variant bg-surface-container-lowest p-1.5 font-mono text-[11px] leading-4 break-words whitespace-pre-wrap text-on-surface-variant animate-flow-detail-in motion-reduce:animate-none max-[720px]:mt-0"
         >
           {node.detail}
@@ -134,6 +139,7 @@ function FlowRowView({
   statusLabels: Record<NodeStatus, string>;
 }) {
   const titleId = useId();
+  const idPrefix = useId();
   const style = { "--flow-cols": row.nodes.length } as CSSProperties;
   return (
     <div className="flex flex-col gap-2">
@@ -143,6 +149,7 @@ function FlowRowView({
         </p>
       ) : null}
       <ol
+        role="list"
         aria-labelledby={row.title ? titleId : undefined}
         style={style}
         className="m-0 grid list-none grid-cols-1 gap-2.5 p-0 min-[720px]:grid-cols-[repeat(var(--flow-cols),minmax(0,1fr))] min-[720px]:items-start min-[720px]:gap-0"
@@ -152,6 +159,7 @@ function FlowRowView({
             key={node.id}
             node={node}
             isLast={i === row.nodes.length - 1}
+            idPrefix={idPrefix}
             statusLabels={statusLabels}
           />
         ))}
