@@ -65,17 +65,36 @@ Khi backend tắt hoặc không với tới được, `/api/chat/status` trả `
 
 ## 6. Bật/tắt demo chat
 
-Công tắc nằm ở backend: biến `CHAT_DEMO_ENABLED` của service `chat` (trong repo `knowledge_base`). Biến này **chỉ được đọc lúc khởi động**, nên đổi xong phải tạo lại container:
+**Tắt khẩn cấp (làm việc này TRƯỚC, nếu còn nghi ngờ thì cứ dừng):**
 
 ```bash
 cd /home/nuc/Documents/project/knowledge_base
-CHAT_DEMO_ENABLED=false GEMINI_API_KEY=... docker compose --profile chat up -d   # tắt demo
-GEMINI_API_KEY=... docker compose --profile chat up -d                           # bật lại (mặc định true)
+docker compose --profile chat stop chat
 ```
 
-(Nếu bạn đặt biến trong file `.env` cạnh compose của `knowledge_base` thì sửa ở đó rồi chạy lại lệnh `up -d`.)
-Tắt hẳn service chat: `docker compose --profile chat down` (`docker compose down` không kèm profile sẽ để lại container `chat`).
-Không cần build lại hay khởi động lại portfolio: nó hỏi `/api/chat/status` mỗi lần.
+Dừng container `chat` là cách tắt chắc chắn nhất, không phụ thuộc cấu hình nào. Portfolio sẽ hiện bảng "demo tạm nghỉ" (nó hỏi `/api/chat/status` mỗi lần; không cần build lại hay khởi động lại portfolio).
+Bật lại: `GEMINI_API_KEY=... docker compose --profile chat up -d`.
+
+**Công tắc mềm `CHAT_DEMO_ENABLED`** (service `chat` vẫn chạy nhưng báo `enabled: false`). Biến này **chỉ được đọc lúc khởi động**, nên phải tạo lại container:
+
+```bash
+cd /home/nuc/Documents/project/knowledge_base
+CHAT_DEMO_ENABLED=false GEMINI_API_KEY=... docker compose --profile chat up -d   # tắt demo (tạo lại container)
+GEMINI_API_KEY=... docker compose --profile chat up -d                           # bật lại: chạy lại KHÔNG kèm biến (mặc định true)
+```
+
+Yêu cầu: cách này chỉ hoạt động khi backend đã có commit "pass the CHAT_* operator switches into the chat container" (nhánh `feat/chat-stream-api` của `knowledge_base`), vì trước đó compose của `chat` không chuyển `CHAT_DEMO_ENABLED` vào container (file `.env` cũng không giúp được, compose chỉ dùng nó để thay biến trong file compose).
+Cho tới khi commit đó được merge và triển khai, hãy dùng lệnh `stop` ở trên.
+
+**Kiểm tra công tắc đã có tác dụng** (đừng tin lệnh chạy xong là đủ):
+
+```bash
+curl -s localhost:8003/chat/status    # trên máy chủ, phải in {"enabled":false}
+curl -s localhost:3100/api/chat/status # qua portfolio, cũng phải in {"enabled":false}
+```
+
+Nếu `localhost:8003` vẫn in `{"enabled":true}` thì công tắc chưa tới được container: dùng `docker compose --profile chat stop chat`.
+Tắt hẳn và xoá service chat: `docker compose --profile chat down` (`docker compose down` không kèm profile sẽ để lại container `chat`).
 
 Lưu ý vận hành:
 
@@ -101,7 +120,8 @@ Kiểm tra bằng `npx vitest run src/content src/components/demos`, rồi build
 3. Nếu có demo (`demoKind` khác `none`) thì đặt `demo: { component: "<khoá>" }` trong file dự án, rồi:
    - thêm component vào `src/components/demos/registry.ts` (`demoComponents["<khoá>"]`);
    - nếu là demo phát lại hay mô phỏng: viết dữ liệu mẫu ở `src/content/replays/<slug>.ts`, đăng ký ở `src/content/replays/index.ts` (`replaysByDemoComponent["<khoá>"]`),
-     và thêm một bọc component nhỏ trong `src/components/demos/replay-demos.tsx` dùng `<ReplayDemo kind="replay" | "simulation" />`.
+     và thêm một bọc component trong `src/components/demos/replay-demos.tsx` bằng cách sao chép bọc có sẵn (`TwistfitReplayDemo` hoặc `GiaPhaSimulationDemo`): component nhận `{ locale }`
+     và truyền `definition` (dữ liệu mẫu của bạn), `kind` (`"replay"` hoặc `"simulation"`) và `locale` cho `<ReplayDemo>`.
 4. Cập nhật các test đang liệt kê cứng: danh sách demo đã biết trong `src/content/registry.test.ts` và `src/components/demos/ReplayDemo.test.tsx` (test "demo registry"), cùng các test đếm dự án nếu có.
 5. Chạy `npx vitest run && npm run build`, rồi build lại image.
 

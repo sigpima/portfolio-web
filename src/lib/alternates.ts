@@ -41,7 +41,8 @@ export function resolveSiteUrl(
   if (env.NODE_ENV === "production") {
     const message =
       `SITE_URL is not set: canonical and hreflang URLs will point at ${DEV_SITE_URL}. ` +
-      "Set SITE_URL (for example https://example.com) when building for production.";
+      "Set SITE_URL (for example https://example.com) when building for production " +
+      "(for a throwaway local image only, pass REQUIRE_SITE_URL=0 to skip this check).";
     if (env.REQUIRE_SITE_URL === "1") throw new Error(message);
     warn(`[portfolio-web] WARNING: ${message}`);
   }

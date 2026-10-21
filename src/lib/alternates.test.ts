@@ -9,6 +9,12 @@ describe("resolveSiteUrl", () => {
     expect(warn).not.toHaveBeenCalled();
   });
 
+  it("trims whitespace and keeps a trailing slash as the URL root", () => {
+    const url = resolveSiteUrl({ SITE_URL: " https://example.com/ " }, vi.fn());
+    expect(url.href).toBe("https://example.com/");
+    expect(url.origin).toBe("https://example.com");
+  });
+
   it("falls back to localhost silently outside production", () => {
     const warn = vi.fn();
     expect(resolveSiteUrl({ NODE_ENV: "development" }, warn).href).toBe("http://localhost:3000/");
