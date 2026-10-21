@@ -98,6 +98,18 @@ export function flagKeyMismatch(): void {
   console.error("[portfolio-web] portfolio-api rejected the internal key: PORTFOLIO_API_KEY does not match.");
 }
 
+/**
+ * Refuses (403 `forbidden`) a request the browser marks as not same-origin. Browsers send
+ * `Sec-Fetch-Site` on every fetch/form post; clients without it (curl, older browsers) pass, the
+ * JSON-only content type and SameSite=Lax cookies still apply to them. Use it first in every
+ * cookie-authenticated POST.
+ */
+export function rejectCrossSite(request: Request): NextResponse | null {
+  const site = request.headers.get("sec-fetch-site");
+  if (site === null) return null;
+  return site.trim().toLowerCase() === "same-origin" ? null : jsonError("forbidden", 403);
+}
+
 /** The admin session from the `pf_admin` cookie, or null when absent or malformed. */
 export function adminSessionFrom(request: NextRequest): string | null {
   const value = request.cookies.get(ADMIN_COOKIE)?.value;
@@ -110,7 +122,20 @@ export function clearAdminCookie(response: NextResponse): NextResponse {
 }
 
 /**
- * Forward one admin call. No cookie -> 401 `admin_required` without contacting the API. A 2xx
+ * The admin session, or the 401 to answer at once (before any content-type or body check):
+ * no cookie -> `admin_required`; a cookie that cannot be a session -> the same 401 AND the
+ * cookie is cleared (/admin shows the dashboard whenever the cookie merely exists).
+ */
+export function requireAdminSession(request: NextRequest): string | NextResponse {
+  const adminSession = adminSessionFrom(request);
+  if (adminSession) return adminSession;
+  const response = jsonError("admin_required", 401);
+  return request.cookies.has(ADMIN_COOKIE) ? clearAdminCookie(response) : response;
+}
+
+/**
+ * Forward one admin call. No (valid) cookie -> 401 `admin_required` without contacting the API
+ * (see `requireAdminSession`). A 2xx
  * goes through `onSuccess` (which builds the browser response) and slides the cookie; errors
  * become `{code}` only.
  */
@@ -120,8 +145,8 @@ export async function forwardAdmin(
   init: Omit<ApiFetchInit, "adminSession" | "session" | "clientKey">,
   onSuccess: (upstream: Response) => Promise<NextResponse | null>,
 ): Promise<NextResponse> {
-  const adminSession = adminSessionFrom(request);
-  if (!adminSession) return jsonError("admin_required", 401);
+  const adminSession = requireAdminSession(request);
+  if (typeof adminSession !== "string") return adminSession;
 
   let upstream: Response;
   try {

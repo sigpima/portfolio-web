@@ -1,5 +1,6 @@
 "use client";
 
+import type { PlaceholderQualifier } from "@/content/replays/placeholder";
 import type { Locale } from "@/content/types";
 import { useInviteSession } from "@/lib/invite/use-invite-session";
 import { DemoBadge } from "./DemoBadge";
@@ -15,7 +16,7 @@ export function LiveAwareBadge({
   replayQualifier,
 }: {
   locale: Locale;
-  replayQualifier?: "placeholder";
+  replayQualifier?: PlaceholderQualifier;
 }) {
   const { ready, invited, features } = useInviteSession();
   if (!ready) return null;

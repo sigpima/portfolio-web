@@ -95,6 +95,27 @@ describe("POST /api/chat/stream", () => {
     expect(bodyTouched).toBe(false);
   });
 
+  it.each([["cross-site"], ["same-site"], ["none"]])(
+    "rejects Sec-Fetch-Site %s with 403 forbidden before anything else",
+    async (site) => {
+      const fetchMock = mockFetch(async () => sseResponse());
+      const res = await streamRoute.POST(chatRequest(BODY, { headers: { "sec-fetch-site": site } }));
+      expect(res.status).toBe(403);
+      expect(await res.json()).toEqual({ code: "forbidden" });
+      expect(fetchMock).not.toHaveBeenCalled();
+    },
+  );
+
+  it("accepts Sec-Fetch-Site same-origin and a missing header", async () => {
+    for (const headers of [{ "sec-fetch-site": "same-origin" }, {}] as Record<string, string>[]) {
+      const fetchMock = mockFetch(async () => sseResponse("event: done\ndata: {}\n\n"));
+      const res = await streamRoute.POST(chatRequest(BODY, { headers }));
+      expect(res.status).toBe(200);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      await res.text();
+    }
+  });
+
   it("treats an empty or malformed session cookie as no session", async () => {
     const fetchMock = mockFetch(async () => sseResponse());
     for (const cookie of ["pf_session=", "pf_session=a%20b", "pf_session=é"]) {

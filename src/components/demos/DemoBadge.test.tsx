@@ -24,7 +24,16 @@ const QUALIFIER = {
   en: { chip: "Placeholder images and facts", description: "Placeholder sample: no record of a real run is attached yet." },
 } as const;
 
-function renderBadge(kind: "live" | "replay" | "simulation", locale: Locale, qualifier?: "placeholder") {
+const FACTS_QUALIFIER = {
+  vi: { chip: "Dữ kiện giữ chỗ", description: "Mẫu giữ chỗ: dữ kiện chưa lấy từ một lần chạy thật nào." },
+  en: { chip: "Placeholder facts", description: "Placeholder sample: the facts are not from a real run yet." },
+} as const;
+
+function renderBadge(
+  kind: "live" | "replay" | "simulation",
+  locale: Locale,
+  qualifier?: "placeholder" | "placeholderFacts",
+) {
   return render(
     <NextIntlClientProvider locale={locale} messages={locale === "vi" ? viMessages : enMessages}>
       <DemoBadge kind={kind} locale={locale} qualifier={qualifier} />
@@ -53,6 +62,15 @@ describe("DemoBadge", () => {
       expect(screen.getByText(QUALIFIER[locale].chip, { exact: true })).toBeVisible();
       const description = container.querySelector("[data-role='badge-description']");
       expect(description).toHaveTextContent(QUALIFIER[locale].description);
+    });
+
+    it(`qualifies a facts-only placeholder without mentioning images in ${locale}`, () => {
+      const { container } = renderBadge("replay", locale, "placeholderFacts");
+      expect(screen.getByText(FACTS_QUALIFIER[locale].chip, { exact: true })).toBeVisible();
+      const description = container.querySelector("[data-role='badge-description']");
+      expect(description).toHaveTextContent(FACTS_QUALIFIER[locale].description);
+      expect(container.textContent).not.toMatch(/ảnh|images/i);
+      expect(container.firstElementChild).toHaveAttribute("data-qualifier", "placeholderFacts");
     });
 
     it(`shows no qualifier without the prop in ${locale}`, () => {

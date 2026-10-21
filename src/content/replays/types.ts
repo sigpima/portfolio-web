@@ -4,7 +4,7 @@ import type { Locale, Localized } from "../types";
 export interface ReplaySample {
   id: string;
   title: Localized;
-  /** True while the images and facts are illustrative stand-ins, not a real run's. */
+  /** True while the facts (and images, if any) are illustrative stand-ins, not a real run's. */
   placeholder?: boolean;
   input:
     | { kind: "images"; items: { src: string; alt: Localized }[] }

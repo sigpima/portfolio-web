@@ -40,6 +40,17 @@ const definition: ReplayDefinition = {
   samples: [imageSample("one", true), imageSample("two", false)],
 };
 
+/** A chat sample: question in, text out, no images (like the Knowledge Base). */
+function textSample(id: string, placeholder: boolean | undefined): ReplaySample {
+  return {
+    ...imageSample(id, placeholder),
+    input: { kind: "question", text: { vi: `Câu hỏi ${id}`, en: `Question ${id}` } },
+    result: { kind: "text", text: { vi: `Trả lời ${id}`, en: `Answer ${id}` } },
+  };
+}
+
+const textDefinition: ReplayDefinition = { id: "text", samples: [textSample("q", true)] };
+
 function renderDemo(
   def: ReplayDefinition = definition,
   kind: "replay" | "simulation" = "replay",
@@ -177,6 +188,40 @@ describe("ReplayDemo", () => {
     expect(screen.queryByText(/Mẫu giữ chỗ/)).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Mẫu one" }));
     expect(screen.getByText("Ảnh và dữ kiện giữ chỗ")).toBeInTheDocument();
+  });
+
+  for (const [locale, chip, description, note] of [
+    [
+      "vi",
+      "Dữ kiện giữ chỗ",
+      "Mẫu giữ chỗ: dữ kiện chưa lấy từ một lần chạy thật nào.",
+      "Dữ kiện của mẫu này là minh hoạ giữ chỗ, chưa lấy từ một lần chạy thật.",
+    ],
+    [
+      "en",
+      "Placeholder facts",
+      "Placeholder sample: the facts are not from a real run yet.",
+      "This sample's facts are illustrative placeholders, not taken from a real run.",
+    ],
+  ] as const) {
+    it(`words a placeholder without images as "facts" only, never "images" (${locale})`, () => {
+      const { container } = renderDemo(textDefinition, "replay", locale);
+      expect(screen.getByText(chip)).toBeInTheDocument();
+      expect(screen.getByText(description)).toBeInTheDocument();
+      expect(screen.getByText(note)).toBeInTheDocument();
+      expect(container.textContent).not.toMatch(/Ảnh và dữ kiện|images and facts|ảnh giữ chỗ|placeholder images/i);
+    });
+  }
+
+  it("keeps the images wording for samples with images (vi and en)", () => {
+    const { unmount } = renderDemo(definition, "replay", "vi");
+    expect(screen.getByText("Ảnh và dữ kiện giữ chỗ")).toBeInTheDocument();
+    expect(screen.getByText(viMessages.demo.placeholder.note)).toBeInTheDocument();
+    unmount();
+    renderDemo(definition, "replay", "en");
+    expect(screen.getByText("Placeholder images and facts")).toBeInTheDocument();
+    expect(screen.getByText(enMessages.demo.placeholder.note)).toBeInTheDocument();
+    expect(screen.queryByText("Placeholder facts")).toBeNull();
   });
 
   it("does not qualify the simulation badge (no placeholder samples)", () => {
@@ -331,6 +376,18 @@ describe("demo registry", () => {
     expect(screen.getByText("Placeholder sample: no record of a real run is attached yet.")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Sample two" }));
     expect(screen.queryByText("Placeholder images and facts")).toBeNull();
+  });
+
+  it("does not repeat the facts qualifier when the page badge already carries it", () => {
+    render(
+      <NextIntlClientProvider locale="vi" messages={viMessages}>
+        <PageBadgeProvider qualifier="placeholderFacts">
+          <ReplayDemo definition={textDefinition} kind="replay" locale="vi" />
+        </PageBadgeProvider>
+      </NextIntlClientProvider>,
+    );
+    expect(screen.queryByText("Dữ kiện giữ chỗ")).toBeNull();
+    expect(screen.getByText(viMessages.demo.placeholder.noteFacts)).toBeInTheDocument();
   });
 
   it("does not repeat the qualifier when the page badge already carries it", () => {

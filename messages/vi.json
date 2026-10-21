@@ -77,7 +77,7 @@
     },
     "notes": {
       "synthetic": "Toàn bộ là dữ liệu giả lập: công ty \"Sơn Việt Demo Co.\", 24 công trình, 126 hạng mục.",
-      "privacy": "Câu hỏi của bạn không được lưu. Hệ thống chỉ ghi lại rằng link mời của bạn đã dùng tính năng nào và lúc nào."
+      "privacy": "Câu hỏi của bạn không được lưu. Hệ thống chỉ ghi lại rằng link mời của bạn đã dùng tính năng nào và lúc nào. Câu hỏi được gửi tới Google Gemini để tạo câu trả lời."
     },
     "errors": {
       "tooLong": "Câu hỏi dài quá 500 ký tự. Hãy rút gọn lại.",
@@ -94,7 +94,10 @@
   },
   "invite": {
     "notice": "Link mời không còn hiệu lực. Bạn vẫn xem được các bản phát lại.",
-    "dismiss": "Đóng thông báo"
+    "dismiss": "Đóng thông báo",
+    "unavailable": "Không mở được link lúc này. Hãy thử lại sau ít phút.",
+    "ok": "Link mời đã được kích hoạt. Bạn có thể dùng bot trực tiếp.",
+    "okNoSession": "Link mời hợp lệ nhưng trình duyệt chưa lưu được phiên. Hãy bật cookie hoặc mở link trong trình duyệt chính (Chrome/Safari)."
   },
   "demo": {
     "badge": {
@@ -136,7 +139,8 @@
     },
     "placeholder": {
       "ribbon": "ảnh giữ chỗ",
-      "note": "Ảnh và dữ kiện của mẫu này là minh hoạ giữ chỗ, chưa lấy từ một lần chạy thật."
+      "note": "Ảnh và dữ kiện của mẫu này là minh hoạ giữ chỗ, chưa lấy từ một lần chạy thật.",
+      "noteFacts": "Dữ kiện của mẫu này là minh hoạ giữ chỗ, chưa lấy từ một lần chạy thật."
     },
     "resultHint": "Bấm Chạy để xem từng bước và kết quả.",
     "people": {
@@ -154,6 +158,10 @@
       "placeholder": {
         "chip": "Ảnh và dữ kiện giữ chỗ",
         "description": "Mẫu giữ chỗ: chưa có bản ghi của lần chạy thật nào được gắn vào."
+      },
+      "placeholderFacts": {
+        "chip": "Dữ kiện giữ chỗ",
+        "description": "Mẫu giữ chỗ: dữ kiện chưa lấy từ một lần chạy thật nào."
       }
     },
     "chat": {

@@ -77,7 +77,7 @@
     },
     "notes": {
       "synthetic": "All data is synthetic: the company \"Sơn Việt Demo Co.\", 24 projects, 126 work items.",
-      "privacy": "Your questions are not stored. The system only records which feature your invite link used, and when."
+      "privacy": "Your questions are not stored. The system only records which feature your invite link used, and when. Each question is sent to Google Gemini to produce the answer."
     },
     "errors": {
       "tooLong": "Your question is longer than 500 characters. Please shorten it.",
@@ -94,7 +94,10 @@
   },
   "invite": {
     "notice": "This invite link is no longer valid. You can still view the replays.",
-    "dismiss": "Dismiss notice"
+    "dismiss": "Dismiss notice",
+    "unavailable": "We couldn't open the link right now. Please try again in a few minutes.",
+    "ok": "Your invite is active. You can use the live bot.",
+    "okNoSession": "The invite is valid but your browser did not keep the session. Enable cookies or open the link in your main browser (Chrome/Safari)."
   },
   "demo": {
     "badge": {
@@ -136,7 +139,8 @@
     },
     "placeholder": {
       "ribbon": "placeholder images",
-      "note": "This sample's images and facts are illustrative placeholders, not taken from a real run."
+      "note": "This sample's images and facts are illustrative placeholders, not taken from a real run.",
+      "noteFacts": "This sample's facts are illustrative placeholders, not taken from a real run."
     },
     "resultHint": "Press Play to see each step and the result.",
     "people": {
@@ -154,6 +158,10 @@
       "placeholder": {
         "chip": "Placeholder images and facts",
         "description": "Placeholder sample: no record of a real run is attached yet."
+      },
+      "placeholderFacts": {
+        "chip": "Placeholder facts",
+        "description": "Placeholder sample: the facts are not from a real run yet."
       }
     },
     "chat": {

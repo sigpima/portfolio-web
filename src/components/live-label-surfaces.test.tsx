@@ -76,6 +76,11 @@ describe("live projects are labelled invite-only on every surface", () => {
           const outside = container.cloneNode(true) as HTMLElement;
           outside.querySelector("#demo")?.remove();
           expect(outside.textContent).not.toContain(m.demo.badgeQualifier.placeholder.chip);
+          expect(outside.textContent).not.toContain(m.demo.badgeQualifier.placeholderFacts.chip);
+          // The KB samples have no images: no surface may speak of placeholder images.
+          if (project.slug === "knowledge-base") {
+            expect(container.textContent).not.toMatch(/Ảnh và dữ kiện|images and facts|ảnh giữ chỗ|placeholder images/i);
+          }
         });
       }
     }

@@ -2,6 +2,7 @@
 
 import { createContext, useContext, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import type { PlaceholderQualifier } from "@/content/replays/placeholder";
 import type { DemoKind, Locale } from "@/content/types";
 
 export type BadgeKind = Exclude<DemoKind, "none">;
@@ -11,10 +12,11 @@ export interface DemoBadgeProps {
   /** Route locale, for the registry-style signature; text follows the active next-intl locale. */
   locale: Locale;
   /**
-   * Qualifies the badge when the data behind it is not (yet) what the label says:
-   * `"placeholder"` adds a chip and swaps the description for a placeholder one.
+   * Qualifies the badge when the data behind it is not (yet) what the label says: adds a chip
+   * and swaps the description for a placeholder one (`"placeholder"`: images and facts;
+   * `"placeholderFacts"`: facts only, for samples without images).
    */
-  qualifier?: "placeholder";
+  qualifier?: PlaceholderQualifier;
 }
 
 const STYLE_BY_KIND: Record<BadgeKind, string> = {
@@ -61,7 +63,7 @@ function KindIcon({ kind }: { kind: BadgeKind }) {
   }
 }
 
-type PageBadge = { active: boolean; qualifier?: "placeholder" };
+type PageBadge = { active: boolean; qualifier?: PlaceholderQualifier };
 
 const PageBadgeContext = createContext<PageBadge>({ active: false });
 
@@ -75,7 +77,7 @@ export function PageBadgeProvider({
 }: {
   children: ReactNode;
   /** The qualifier the page badge already shows, so demos do not repeat it. */
-  qualifier?: "placeholder";
+  qualifier?: PlaceholderQualifier;
 }) {
   return <PageBadgeContext.Provider value={{ active: true, qualifier }}>{children}</PageBadgeContext.Provider>;
 }
@@ -86,7 +88,7 @@ export function usePageBadge(): PageBadge {
 }
 
 /** Only the qualifier part of a badge (chip + description), for demos under a page-level badge. */
-export function DemoBadgeQualifier({ qualifier }: { qualifier: "placeholder" }) {
+export function DemoBadgeQualifier({ qualifier }: { qualifier: PlaceholderQualifier }) {
   const t = useTranslations("demo");
   const activeLocale = useLocale();
   return (

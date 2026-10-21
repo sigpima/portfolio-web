@@ -42,6 +42,11 @@ describe("LinksDashboard", () => {
     render(<LinksDashboard siteUrl="https://example.test" />);
     expect(await screen.findByRole("button", { name: "Công ty X" })).toBeInTheDocument();
     expect(screen.getByText(/Không ghi: nội dung câu hỏi/)).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Lưu ý: một số công cụ xem trước link hoặc quét email có thể được tính là một lần 'Mở link'.",
+      ),
+    ).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Công ty X" }));
     expect(await screen.findByText("Link này chưa có hoạt động nào.")).toBeInTheDocument();
     expect(fetchMock.mock.calls.some(([u]) => String(u).startsWith("/api/admin/links/1/events"))).toBe(true);
@@ -85,6 +90,9 @@ describe("LinksDashboard", () => {
     await user.click(screen.getByRole("button", { name: "Đăng xuất" }));
     expect(await screen.findByLabelText("Mật khẩu")).toBeInTheDocument();
     await waitFor(() => expect(fetchMock.mock.calls.some(([u]) => u === "/api/admin/logout")).toBe(true));
+    const init = fetchMock.mock.calls.find(([u]) => u === "/api/admin/logout")![1] as RequestInit;
+    expect(init.method).toBe("POST");
+    expect(new Headers(init.headers).get("content-type")).toBe("application/json");
   });
 
   it("shows an error with a retry when the list fails", async () => {

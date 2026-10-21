@@ -5,6 +5,8 @@ import {
   jsonError,
   jsonResponse,
   readBodyCapped,
+  rejectCrossSite,
+  requireAdminSession,
 } from "@/lib/server/admin-proxy";
 
 export const dynamic = "force-dynamic";
@@ -23,6 +25,11 @@ export async function GET(request: NextRequest): Promise<Response> {
 
 /** Create a link; the reply carries the token, shown to the owner exactly once. */
 export async function POST(request: NextRequest): Promise<Response> {
+  const crossSite = rejectCrossSite(request);
+  if (crossSite) return crossSite;
+  // The session first: without one, neither the content type nor the body is looked at.
+  const session = requireAdminSession(request);
+  if (typeof session !== "string") return session;
   if (!isJsonContentType(request.headers.get("content-type"))) {
     return jsonError("unsupported_media_type", 415);
   }

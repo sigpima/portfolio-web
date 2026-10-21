@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { isPlaceholderDemo } from "@/content/replays";
+import { placeholderQualifier } from "@/content/replays";
 import type { Locale, Project } from "@/content/types";
 import { DEMO_CHIP_STYLE, ProjectCard, chipClass, placeholderChipClass, staticDemoLabelKey } from "./ProjectCard";
 
@@ -21,7 +21,7 @@ function FeaturedCard({ project, locale }: { project: Project; locale: Locale })
   const t = useTranslations();
   // Same rules as ProjectCard: a live demo is "live · invite only", and its replay
   // fallback's placeholder status is qualified inside the demo, not here.
-  const placeholder = project.demoKind !== "live" && isPlaceholderDemo(project);
+  const placeholder = project.demoKind !== "live" ? placeholderQualifier(project) : undefined;
   return (
     <article className="grid overflow-hidden rounded-xl border border-outline-variant bg-surface-container-low lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
       <div className="flex flex-col gap-4 p-6 md:p-8">
@@ -33,7 +33,7 @@ function FeaturedCard({ project, locale }: { project: Project; locale: Locale })
             </span>
           ) : null}
           {placeholder ? (
-            <span className={placeholderChipClass}>{t("demo.badgeQualifier.placeholder.chip")}</span>
+            <span className={placeholderChipClass}>{t(`demo.badgeQualifier.${placeholder}.chip`)}</span>
           ) : null}
         </p>
         <h3 className="text-headline-lg-mobile text-on-surface md:text-headline-lg">{project.title[locale]}</h3>

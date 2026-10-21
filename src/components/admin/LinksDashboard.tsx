@@ -78,7 +78,12 @@ export default function LinksDashboard({ siteUrl }: LinksDashboardProps) {
   async function logout() {
     setLoggingOut(true);
     try {
-      await fetch("/api/admin/logout", { method: "POST", cache: "no-store" });
+      await fetch("/api/admin/logout", {
+        method: "POST",
+        cache: "no-store",
+        headers: { "content-type": "application/json" },
+        body: "{}",
+      });
     } catch {
       // the cookie may remain; the API session still expires on its own
     } finally {
@@ -149,6 +154,9 @@ export default function LinksDashboard({ siteUrl }: LinksDashboardProps) {
         <p className="mt-4 text-label-mono-sm text-outline">
           Không ghi: nội dung câu hỏi, câu trả lời của bot, địa chỉ IP, chuỗi trình duyệt. Chỉ ghi link nào, tính năng
           nào, lúc nào, kết quả, và danh mục đồ đã chọn ở Twistfit.
+        </p>
+        <p className="mt-2 text-label-mono-sm text-outline">
+          Lưu ý: một số công cụ xem trước link hoặc quét email có thể được tính là một lần &apos;Mở link&apos;.
         </p>
       </section>
     </div>

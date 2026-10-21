@@ -81,9 +81,24 @@ describe("ProjectDetail for the Knowledge Base (live, invite only)", () => {
       const badges = demoRegion().querySelectorAll("[data-demo-kind]");
       expect(badges).toHaveLength(1);
       expect(badges[0]).toHaveAttribute("data-demo-kind", "replay");
-      if (isPlaceholderDemo(kb)) expect(badges[0]).toHaveAttribute("data-qualifier", "placeholder");
+      // The KB samples have no images: the "facts only" wording.
+      if (isPlaceholderDemo(kb)) expect(badges[0]).toHaveAttribute("data-qualifier", "placeholderFacts");
       else expect(badges[0]).not.toHaveAttribute("data-qualifier");
       expect(document.body.textContent).not.toMatch(BARE_LIVE[locale]);
+    });
+
+    it(`while the KB replay is a placeholder, it never says "images" (${locale})`, async () => {
+      stubSession({ invited: false, features: OFF });
+      renderKb(locale);
+      await screen.findByText(m.kb.replayNotice);
+      const text = document.body.textContent ?? "";
+      expect(text).not.toMatch(/Ảnh và dữ kiện|images and facts|ảnh giữ chỗ|placeholder images/i);
+      expect(text).not.toContain(m.demo.placeholder.note);
+      if (isPlaceholderDemo(kb)) {
+        expect(text).toContain(m.demo.badgeQualifier.placeholderFacts.chip);
+        expect(text).toContain(m.demo.badgeQualifier.placeholderFacts.description);
+        expect(text).toContain(m.demo.placeholder.noteFacts);
+      }
     });
 
     it(`with an invite that includes chat, the in-demo badge says live (${locale})`, async () => {

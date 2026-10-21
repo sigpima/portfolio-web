@@ -42,4 +42,22 @@ describe("/admin", () => {
     expect(await screen.findByRole("heading", { name: "Tạo link mới" })).toBeInTheDocument();
     expect(screen.getByText(/SITE_URL chưa được đặt/)).toBeInTheDocument();
   });
+
+  it("treats an unusable SITE_URL (CHANGE_ME) as unset", async () => {
+    cookieValue.current = "adm_x";
+    vi.stubEnv("SITE_URL", "CHANGE_ME");
+    vi.stubGlobal("fetch", vi.fn(async () => Response.json([])));
+    render(await AdminPage());
+    expect(await screen.findByText(/SITE_URL chưa được đặt/)).toBeInTheDocument();
+    expect(document.body.textContent).not.toContain("CHANGE_ME");
+  });
+
+  it("passes a valid SITE_URL as its origin", async () => {
+    cookieValue.current = "adm_x";
+    vi.stubEnv("SITE_URL", "https://example.com/");
+    vi.stubGlobal("fetch", vi.fn(async () => Response.json([])));
+    render(await AdminPage());
+    expect(await screen.findByRole("heading", { name: "Tạo link mới" })).toBeInTheDocument();
+    expect(screen.queryByText(/SITE_URL chưa được đặt/)).not.toBeInTheDocument();
+  });
 });

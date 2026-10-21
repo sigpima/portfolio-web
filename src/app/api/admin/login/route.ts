@@ -7,6 +7,7 @@ import {
   jsonError,
   jsonResponse,
   readBodyCapped,
+  rejectCrossSite,
   upstreamCode,
 } from "@/lib/server/admin-proxy";
 
@@ -36,6 +37,8 @@ function parseLogin(body: unknown): { session: string; maxAge: number } | null {
 
 /** Owner login. The password is never logged nor echoed; errors carry only a `code`. */
 export async function POST(request: NextRequest): Promise<Response> {
+  const crossSite = rejectCrossSite(request);
+  if (crossSite) return crossSite;
   if (!isJsonContentType(request.headers.get("content-type"))) {
     return jsonError("unsupported_media_type", 415);
   }

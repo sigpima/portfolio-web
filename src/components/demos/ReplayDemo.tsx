@@ -3,6 +3,7 @@
 import { useId, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { FlowPlayer } from "@/components/flow/FlowPlayer";
+import { placeholderVariantOf } from "@/content/replays/placeholder";
 import type { ReplayDefinition, ReplaySample } from "@/content/replays/types";
 import type { Locale, Localized } from "@/content/types";
 import type { NodeStatus } from "@/lib/flow/model";
@@ -172,15 +173,17 @@ export function ReplayDemo({ definition, kind, locale: _locale, footnote }: Repl
   );
 
   const placeholder = sample.placeholder === true;
+  // Worded after the data: "images and facts" only when the samples show images.
+  const variant = placeholderVariantOf(definition.samples);
   const ribbon = t("placeholder.ribbon");
   const pageBadge = usePageBadge();
 
   return (
     <div lang={locale} className="flex flex-col gap-4">
       {pageBadge.active ? (
-        placeholder && pageBadge.qualifier !== "placeholder" ? <DemoBadgeQualifier qualifier="placeholder" /> : null
+        placeholder && !pageBadge.qualifier ? <DemoBadgeQualifier qualifier={variant} /> : null
       ) : (
-        <DemoBadge kind={kind} locale={locale} qualifier={placeholder ? "placeholder" : undefined} />
+        <DemoBadge kind={kind} locale={locale} qualifier={placeholder ? variant : undefined} />
       )}
 
       {definition.samples.length > 1 ? (
@@ -201,7 +204,7 @@ export function ReplayDemo({ definition, kind, locale: _locale, footnote }: Repl
 
       {placeholder ? (
         <p className="rounded-lg border border-error/60 bg-error-container/30 px-3 py-2 text-body-md text-on-error-container">
-          {t("placeholder.note")}
+          {variant === "placeholder" ? t("placeholder.note") : t("placeholder.noteFacts")}
         </p>
       ) : null}
 

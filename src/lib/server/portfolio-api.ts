@@ -16,9 +16,20 @@ export function portfolioApiUrl(): string {
   return (process.env.PORTFOLIO_API_URL || DEFAULT_URL).replace(/\/+$/, "");
 }
 
+/** Same rule as portfolio-api: at least 32 visible ASCII characters (no spaces, no accents). */
+const MIN_KEY_LENGTH = 32;
+const KEY_SHAPE = /^[\x21-\x7e]+$/;
+
+/** The internal key, or a clear error (fail closed) when it is missing or too weak. Never echoes it. */
 function internalKey(): string {
   const key = process.env.PORTFOLIO_API_KEY?.trim();
   if (!key) throw new Error("PORTFOLIO_API_KEY is not set: cannot call portfolio-api");
+  if (key.length < MIN_KEY_LENGTH || !KEY_SHAPE.test(key)) {
+    throw new Error(
+      `PORTFOLIO_API_KEY is invalid: it must be at least ${MIN_KEY_LENGTH} visible ASCII characters ` +
+        "(no spaces); cannot call portfolio-api",
+    );
+  }
   return key;
 }
 
@@ -32,7 +43,7 @@ export type ApiFetchInit = RequestInit & {
  * `fetch` against `portfolio-api`. Adds `X-Internal-Key` plus the explicit `session`,
  * `adminSession` and `clientKey` options (empty ones are omitted); caller headers named like
  * those are dropped. No caching; a 10 s timeout unless the caller passes its own `signal`.
- * Throws when `PORTFOLIO_API_KEY` is missing.
+ * Throws when `PORTFOLIO_API_KEY` is missing, shorter than 32 characters or not visible ASCII.
  */
 export async function apiFetch(path: string, init: ApiFetchInit = {}): Promise<Response> {
   const { session, adminSession, clientKey, headers: callerHeaders, signal, ...rest } = init;
@@ -97,7 +108,11 @@ function normalizeAddress(raw: string): string {
 function clientAddress(request: Request): string | null {
   const realIp = request.headers.get("x-real-ip")?.trim();
   if (realIp) return realIp;
-  // nginx appends the real peer to the END; earlier entries are whatever the client sent.
+  // In production only nginx's X-Real-IP counts: when X-Forwarded-For is absent, Next fills it
+  // with the socket peer (the Docker gateway behind nginx), which would silently put every
+  // visitor in one bucket without the warning below.
+  if (process.env.NODE_ENV === "production") return null;
+  // Dev/tests: nginx appends the real peer to the END; earlier entries are whatever the client sent.
   const forwarded = request.headers
     .get("x-forwarded-for")
     ?.split(",")
@@ -108,8 +123,9 @@ function clientAddress(request: Request): string | null {
 
 /**
  * Rate-limit key for `X-Client-Key`: HMAC-SHA256 (keyed with PORTFOLIO_API_KEY) of the
- * normalised client address, as hex. The raw address never leaves this function. Without any
- * address header returns the shared literal "unknown" (warned once in production).
+ * normalised client address, as hex. The raw address never leaves this function. In production
+ * only `X-Real-IP` is trusted: without it returns the shared literal "unknown" (warned once).
+ * Outside production the last `X-Forwarded-For` hop is the fallback.
  */
 export function clientKeyFrom(request: Request): string {
   const address = clientAddress(request);

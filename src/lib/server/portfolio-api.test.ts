@@ -108,6 +108,30 @@ describe("apiFetch", () => {
     await expect(apiFetch("/v1/session")).rejects.toThrow(/PORTFOLIO_API_KEY/);
     expect(fetchMock).not.toHaveBeenCalled();
   });
+
+  it.each([
+    ["shorter than 32 characters", "a".repeat(31)],
+    ["the CHANGE_ME placeholder", "CHANGE_ME"],
+    ["containing a space", `${"a".repeat(20)} ${"b".repeat(20)}`],
+    ["containing non-ASCII", `${"a".repeat(32)}é`],
+    ["containing a control character", `${"a".repeat(32)}\u0001`],
+  ])("fails closed with a clear error when PORTFOLIO_API_KEY is %s", async (_name, key) => {
+    const fetchMock = mockFetch();
+    vi.stubEnv("PORTFOLIO_API_KEY", key);
+    const error = await apiFetch("/v1/session").catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(Error);
+    expect(String(error)).toMatch(/PORTFOLIO_API_KEY is invalid.*32 visible ASCII/);
+    // the error never echoes the key
+    expect(String(error)).not.toContain(key);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("accepts a 32-character visible-ASCII key", async () => {
+    const fetchMock = mockFetch();
+    vi.stubEnv("PORTFOLIO_API_KEY", "x".repeat(32));
+    await apiFetch("/v1/session");
+    expect(new Headers(fetchMock.mock.calls[0][1]?.headers).get("x-internal-key")).toBe("x".repeat(32));
+  });
 });
 
 describe("clientKeyFrom", () => {
@@ -132,7 +156,7 @@ describe("clientKeyFrom", () => {
     expect(key).toBe(hmac("198.51.100.1"));
   });
 
-  it("uses the LAST x-forwarded-for element (the first is client-controlled)", () => {
+  it("outside production, uses the LAST x-forwarded-for element (the first is client-controlled)", () => {
     const key = clientKeyFrom(req({ "x-forwarded-for": "1.1.1.1, 198.51.100.9" }));
     expect(key).toBe(hmac("198.51.100.9"));
     expect(key).not.toBe(hmac("1.1.1.1"));
@@ -161,6 +185,21 @@ describe("clientKeyFrom", () => {
     const error = vi.spyOn(console, "error").mockImplementation(() => {});
     clientKeyFrom(req());
     expect(error).not.toHaveBeenCalled();
+  });
+
+  it("in production trusts only X-Real-IP, never X-Forwarded-For", async () => {
+    vi.resetModules();
+    const fresh = await import("./portfolio-api");
+    vi.stubEnv("NODE_ENV", "production");
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    expect(fresh.clientKeyFrom(req({ "x-real-ip": "198.51.100.1", "x-forwarded-for": "172.18.0.1" }))).toBe(
+      hmac("198.51.100.1"),
+    );
+    // Next fills X-Forwarded-For with the socket peer (the Docker gateway): not a client address.
+    expect(fresh.clientKeyFrom(req({ "x-forwarded-for": "172.18.0.1" }))).toBe("unknown");
+    expect(fresh.clientKeyFrom(req({ "x-real-ip": "  ", "x-forwarded-for": "172.18.0.1" }))).toBe("unknown");
+    expect(error).toHaveBeenCalledTimes(1);
+    expect(String(error.mock.calls[0][0])).toMatch(/X-Real-IP/);
   });
 
   it("warns exactly once in production when X-Real-IP is missing", async () => {

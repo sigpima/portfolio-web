@@ -31,8 +31,8 @@ trình duyệt -> nginx (host) -> web: container `portfolio` (Next.js, 127.0.0.1
 
 | Biến | Bắt buộc | Ý nghĩa |
 | --- | --- | --- |
-| `PORTFOLIO_API_KEY` | **có** | Khoá nội bộ web <-> `portfolio-api` (header `X-Internal-Key`). **Phải giống hệt** giá trị đặt cho `portfolio-api`; >= 32 ký tự ASCII nhìn thấy được, không khoảng trắng. Compose từ chối chạy nếu thiếu. Khoá cũng dùng để băm IP người xem thành khoá giới hạn tần suất. |
-| `SITE_URL` | **có (production)** | Địa chỉ công khai, ví dụ `https://ten-mien-cua-ban`. Cần cả **lúc build** và **lúc chạy** (xem dưới). |
+| `PORTFOLIO_API_KEY` | **có** | Khoá nội bộ web <-> `portfolio-api` (header `X-Internal-Key`). **Phải giống hệt** giá trị đặt cho `portfolio-api`; >= 32 ký tự ASCII nhìn thấy được, không khoảng trắng. Compose từ chối chạy nếu thiếu; khoá ngắn hơn hay có ký tự lạ (kể cả `CHANGE_ME`) thì web **không gọi** `portfolio-api` (mở link báo "thử lại sau", `/admin` báo tạm nghỉ). Khoá cũng dùng để băm IP người xem thành khoá giới hạn tần suất. |
+| `SITE_URL` | **có (production)** | Địa chỉ công khai, ví dụ `https://ten-mien-cua-ban`. Cần cả **lúc build** và **lúc chạy** (xem dưới). Giá trị `CHANGE_ME` của `.env.example` làm build thất bại ngay. |
 | `PORTFOLIO_API_URL` | không | Mặc định `http://portfolio-api:8100` (tên service trong mạng Docker). |
 | `PORTFOLIO_API_NETWORK` | không | Dự phòng: tên mạng của stack `portfolio-api` khi nó khác `portfolio-api_default` (xem phần 3). |
 | `PORTFOLIO_PORT` | không | Cổng trên host (mặc định `3100`, chỉ nghe `127.0.0.1`). |
@@ -43,7 +43,10 @@ trình duyệt -> nginx (host) -> web: container `portfolio` (Next.js, 127.0.0.1
 **`SITE_URL` lúc chạy:** đích chuyển hướng của `/i/<mã>` (về `SITE_URL/`) và đường link đầy đủ hiển thị trên `/admin` lấy từ biến runtime. Compose đặt cả hai từ cùng một biến;
 đổi `SITE_URL` đồng nghĩa phải **build lại** image (`docker compose up -d --build`).
 Với `npm run build` chạy thẳng (không qua Docker): thiếu `SITE_URL` chỉ in cảnh báo `[portfolio-web] WARNING: SITE_URL is not set ...` và vẫn build được.
-Nếu thấy dòng cảnh báo này khi build cho production thì dừng lại và đặt `SITE_URL`.
+Nếu thấy dòng cảnh báo này khi build cho production thì dừng lại và đặt `SITE_URL`. Một giá trị không phải URL tuyệt đối (như `CHANGE_ME`) luôn làm build thất bại
+(`SITE_URL is not a valid absolute URL`); lúc chạy, giá trị như vậy bị bỏ qua (chuyển hướng của `/i/<mã>` dùng địa chỉ của chính yêu cầu, `/admin` hiện cảnh báo "SITE_URL chưa được đặt").
+
+**Cả `PORTFOLIO_API_KEY` lẫn `SITE_URL` phải là giá trị thật**: `.env.example` để cả hai là `CHANGE_ME` (cố ý không hợp lệ) để một bản chép chưa sửa hỏng ngay, thấy rõ.
 
 Web không biết địa chỉ của `chat`: địa chỉ đó chỉ cấu hình ở `portfolio-api`.
 
@@ -56,7 +59,7 @@ Web không biết địa chỉ của `chat`: địa chỉ đó chỉ cấu hình
 | `CHAT_BACKEND_URL` | không | Mặc định `http://chat:8003`. |
 | `KB_NETWORK` | không | Mạng của stack `knowledge_base`, mặc định `knowledge_base_default`. |
 | `PORTFOLIO_API_PORT` | không | Cổng trên `127.0.0.1` của host, mặc định `8100`. |
-| `SESSION_TTL_DAYS`, `ADMIN_SESSION_TTL_MINUTES` | không | Phiên người xem (30 ngày), phiên quản trị trượt (120 phút không hoạt động). |
+| `SESSION_TTL_DAYS`, `ADMIN_SESSION_TTL_MINUTES` | không | Phiên người xem (30 ngày), phiên quản trị trượt (120 phút không hoạt động) **phía `portfolio-api`**. Cookie `pf_admin` của web luôn trượt cố định 7200 giây (hằng số `ADMIN_MAX_AGE` trong mã web, không đọc biến này): giữ `ADMIN_SESSION_TTL_MINUTES=120` cho khớp (xem phần 9). |
 
 ### `chat` (repo `knowledge_base`)
 
@@ -84,7 +87,7 @@ cp .env.example .env && chmod 600 .env    # rồi sửa các giá trị CHANGE_M
 ```
 
 - `.env` đã nằm trong `.gitignore` của cả hai repo. **Không bao giờ commit nó.** Các giá trị `CHANGE_ME` trong `.env.example` cố ý không hợp lệ
-  (`portfolio-api` từ chối khởi động), để một bản chép chưa sửa hỏng ngay thay vì chạy với khoá yếu.
+  (`portfolio-api` từ chối khởi động; web từ chối gọi `portfolio-api` với khoá đó và build thất bại với `SITE_URL=CHANGE_ME`), để một bản chép chưa sửa hỏng ngay thay vì chạy với khoá yếu.
 - docker compose tự đọc `.env` cho **mọi** lệnh chạy trong thư mục đó. Điều này quan trọng: không chỉ `up` mà cả `logs`, `exec`, `cp`, `stop`, `down`, `run`
   đều cần các biến bắt buộc (`PORTFOLIO_API_KEY` ở web; `PORTFOLIO_API_KEY` và `ADMIN_PASSWORD` ở `portfolio-api`). Thiếu thì lệnh dừng ngay với lỗi
   `required variable ... is missing a value` (đã thấy với `logs`, `ps` ở cả hai stack và `exec` ở `portfolio-api`; vài lệnh khác tuỳ phiên bản compose
@@ -139,7 +142,7 @@ Các lệnh compose khác trong thư mục này (`logs`, `exec`, `cp`, `stop`, `
 - **Chỉ chạy MỘT worker** (đúng như `CMD` của Dockerfile). Không bao giờ thêm `--workers` > 1 hay nhân bản service: phiên quản trị, bộ giới hạn tần suất và trần luồng chat
   nằm trong bộ nhớ của tiến trình; nhiều worker làm phiên quản trị "biến mất" ngẫu nhiên và nhân các trần lên.
 - **Đổi mật khẩu quản trị hay bất kỳ biến nào**: sửa giá trị trong `.env` rồi chạy `docker compose up -d` trong thư mục `portfolio/api`.
-  **Không** dùng `docker compose restart`: lệnh đó khởi động lại với môi trường CŨ. `up -d` tạo lại container với giá trị mới; việc này cũng xoá mọi phiên quản trị
+  **Không** dùng `docker compose restart`: lệnh đó khởi động lại với môi trường CŨ. `up -d` tạo lại container với giá trị mới (chỉ khi có giá trị đã đổi; không đổi gì thì nó không làm gì, xem phần 9 để xoá bộ giới hạn); việc tạo lại cũng xoá mọi phiên quản trị
   (phải đăng nhập lại) và đặt lại các bộ giới hạn. Link, phiên người xem và nhật ký trong SQLite được giữ nguyên.
   Đổi `PORTFOLIO_API_KEY` thì phải đổi ở **cả hai** service rồi `up -d` cả hai.
 
@@ -164,15 +167,19 @@ Sau đó dán `deploy/nginx.conf.example` vào nginx của host (đổi tên mi�
   Đừng thêm nơi nhận `error_log` nào khác (syslog, file mức `debug`, ...) ghi được đường dẫn này. Ứng dụng tự nó không ghi đường dẫn này;
   hãy kiểm tra mọi proxy, CDN hay công cụ phân tích khác đứng trước nginx cũng không ghi.
 - Mọi `location` proxy đặt `X-Real-IP $remote_addr` và `X-Forwarded-For $remote_addr` (không dùng `$proxy_add_x_forwarded_for`, client tự khai được chuỗi đó).
-  Web băm IP này thành khoá giới hạn tần suất; thiếu `X-Real-IP` thì log web in `X-Real-IP header is missing` và mọi người xem dùng chung một khoá.
+  Ở production web **chỉ** tin `X-Real-IP` và băm nó thành khoá giới hạn tần suất (không dùng `X-Forwarded-For`: khi thiếu, Next tự điền địa chỉ kết nối, tức gateway
+  của Docker). Yêu cầu nào thiếu `X-Real-IP` đều rơi vào một khoá chung `unknown`, và log web in một lần `X-Real-IP header is missing`: thấy dòng này khi đi qua nginx
+  nghĩa là cấu hình nginx thiếu header, mọi người xem đang chung một bộ giới hạn.
 - **Sau CDN** (Cloudflare, ...): bật `set_real_ip_from <dải IP của CDN>` + `real_ip_header` (ghi chú trong mẫu), nếu không `$remote_addr` là IP của CDN
   và mọi người xem dùng chung một khoá giới hạn (cả ở nginx lẫn ở `portfolio-api`).
-- Giới hạn tần suất của nginx (theo IP): `/api/chat/stream` 6 yêu cầu/phút (burst 4), `/i/` 30/phút (burst 10), `/api/admin/login` 10/phút (burst 5), quá thì 429;
-  với hai tuyến `/api/` thân 429 là JSON `{"code":"rate_limited"}` (qua `error_page 429 = @rate_limited`) để trang hiện đúng thông báo; `client_max_body_size 64k`.
+- Giới hạn tần suất của nginx (theo IP): `/api/chat/stream` 6 yêu cầu/phút (burst 4), `/api/chat/status` 30/phút (burst 20), `/i/` 30/phút (burst 10),
+  `/api/admin/login` 10/phút (burst 5), quá thì 429; với các tuyến `/api/` thân 429 là JSON `{"code":"rate_limited"}` (qua `error_page 429 = @rate_limited`) để trang hiện đúng thông báo; `client_max_body_size 64k`.
   `$binary_remote_addr` tính riêng từng địa chỉ IPv6 (/128) còn ứng dụng gộp theo /64, nên một máy có cả dải /64 né được giới hạn của nginx;
   trần luồng chat đồng thời của `portfolio-api` (2 mỗi link, 40 toàn hệ thống) vẫn chặn.
-- **Khuyến nghị mạnh:** bỏ chú thích `allow <IP CỦA BẠN>; deny all;` ở `/admin`, `/api/admin/login` và `/api/admin/`. Đó là biện pháp chính để trang quản trị
-  không lộ ra ngoài và để người lạ dò mật khẩu không làm bạn bị khoá (xem phần 9).
+- **Bắt buộc (nằm trong danh sách phần 7):** giới hạn IP cho `/admin`, `/api/admin/login` và `/api/admin/`. Mẫu đã có sẵn `allow 192.0.2.1; deny all;`
+  (192.0.2.1 là địa chỉ dành cho tài liệu, không ai có): thay bằng IP của bạn. Để nguyên thì chính bạn cũng bị 403, cố ý để cấu hình chưa sửa thì đóng chứ không mở.
+  Đó là biện pháp chính để trang quản trị không lộ ra ngoài và để người lạ dò mật khẩu không làm bạn bị khoá (xem phần 9).
+- Web tự gửi `X-Frame-Options: DENY` và `Content-Security-Policy: frame-ancestors 'none'` cho `/admin` và `/api/admin/*` (không trang nào khác nhúng được trang quản trị).
 
 **Khi IP của bạn đổi (bị chính danh sách `allow` chặn, nhận 403):**
 
@@ -187,18 +194,28 @@ ssh -L 3100:127.0.0.1:3100 <user>@<may-chu>
 ```
 
 Cookie `pf_admin` có cờ `Secure`, nhưng các trình duyệt hiện đại coi `http://localhost` là ngữ cảnh an toàn nên vẫn nhận nó. **Cách đường hầm này chưa được kiểm tra thực tế.**
-Đi đường hầm thì không có `X-Real-IP`: mọi lần đăng nhập qua đó chung một khoá giới hạn `unknown` (web in cảnh báo một lần trong log), chấp nhận được cho một người dùng.
+Đi đường hầm thì không có `X-Real-IP` (không qua nginx): ở production web không dùng `X-Forwarded-For` thay thế, nên mọi lần đăng nhập qua đó chung khoá giới hạn `unknown`
+và log web in một lần `X-Real-IP header is missing` (lúc này là bình thường). Chấp nhận được cho một người dùng.
 
 ## 7. Việc phải làm lần đầu (trước khi gửi link cho ai)
 
+Mọi mục dưới đây là **bắt buộc**.
+
 1. Sinh `PORTFOLIO_API_KEY` và `ADMIN_PASSWORD` mạnh (phần 2), đặt vào `.env` (`chmod 600`) của `portfolio/api` và (khoá, `SITE_URL`) của `web`.
+   Không để sót giá trị `CHANGE_ME` nào: cả `PORTFOLIO_API_KEY` lẫn `SITE_URL` phải là giá trị thật.
    Sau khi bật `portfolio-api`, chạy `docker network ls`: nếu không có `portfolio-api_default`, làm theo phần 3 (đặt `PORTFOLIO_API_NETWORK` cho web).
 2. Bật theo thứ tự `chat` -> `portfolio-api` -> web (phần 3-6), với `SITE_URL` là địa chỉ thật (build lại nếu trước đó build thiếu).
-3. Cấu hình nginx theo mẫu: `access_log off` và `error_log /dev/null crit` cho `/i/`, `limit_req`, `X-Real-IP`, giới hạn IP cho `/admin` và `/api/admin/`; `nginx -t` rồi reload.
-4. Chạy các kiểm tra ở phần 10 (đặc biệt: `POST /api/chat/stream` không cookie phải trả 401; `docker compose logs` và log nginx không chứa mã link).
-5. Mở `https://ten-mien-cua-ban/admin`, đăng nhập, tạo một link thử, mở nó trong cửa sổ ẩn danh, hỏi bot một câu, xem nhật ký của link, rồi thu hồi link đó.
-6. Ghi các mẫu phát lại thật cho Knowledge Base (phần 12) để người không có link thấy dữ liệu thật thay vì mẫu giữ chỗ.
-7. Điền hoặc xác nhận các nội dung chưa được xác nhận (phần 16).
+3. Cấu hình nginx theo mẫu: `access_log off` và `error_log /dev/null crit` cho `/i/`, `limit_req`, `X-Real-IP`; `nginx -t` rồi reload.
+4. **Giới hạn IP cho `/admin` và `/api/admin/`** (cả ba location `/admin`, `= /api/admin/login`, `/api/admin/`): thay `192.0.2.1` trong mẫu bằng IP của bạn
+   (thêm IPv6 nếu có), `nginx -t`, reload. Kiểm tra: từ một mạng khác (ví dụ 4G điện thoại) `https://ten-mien-cua-ban/admin` phải trả 403; từ máy bạn thì vào được.
+5. Chạy các kiểm tra ở phần 10 (đặc biệt: `POST /api/chat/stream` không cookie phải trả 401; `docker compose logs` và log nginx không chứa mã link).
+6. Mở `https://ten-mien-cua-ban/admin`, đăng nhập, tạo một link thử, mở nó trong cửa sổ ẩn danh: phải thấy thông báo "Link mời đã được kích hoạt...".
+   Hỏi bot một câu, xem nhật ký của link, rồi thu hồi link đó.
+7. **Kiểm tra trường hợp trình duyệt chặn cookie**: tạo một link thử khác, chặn cookie cho tên miền (ví dụ Chrome: Cài đặt > Quyền riêng tư > Cookie của bên thứ nhất
+   bị chặn cho trang này, hoặc Safari với "Chặn mọi cookie"), mở link: phải thấy cảnh báo "Link mời hợp lệ nhưng trình duyệt chưa lưu được phiên..." chứ không phải
+   thông báo thành công. Nếu được, thử cả trong trình duyệt nhúng của Zalo/Messenger. Thu hồi link thử.
+8. Ghi các mẫu phát lại thật cho Knowledge Base (phần 12) để người không có link thấy dữ liệu thật thay vì mẫu giữ chỗ.
+9. Điền hoặc xác nhận các nội dung chưa được xác nhận (phần 16), kể cả mục về Google Gemini.
 
 ## 8. Bật/tắt demo chat, tắt khẩn cấp
 
@@ -252,21 +269,41 @@ Lưu ý vận hành của `chat`:
 Trang `/admin` chỉ có tiếng Việt và không được lập chỉ mục (`noindex`).
 
 1. **Đăng nhập** bằng `ADMIN_PASSWORD`. Phiên quản trị hết hạn sau 120 phút không hoạt động, và mất khi `portfolio-api` được tạo lại/khởi động lại.
+   Hai đồng hồ: phía `portfolio-api` là `ADMIN_SESSION_TTL_MINUTES` (mặc định 120); cookie `pf_admin` của web trượt cố định 7200 giây mỗi lần thao tác thành công
+   (hằng số trong mã web, biến kia không đổi được nó). Giữ `ADMIN_SESSION_TTL_MINUTES=120` để hai bên khớp; đặt khác thì phiên thực tế theo bên nào hết trước.
    Sai mật khẩu nhiều lần bị chặn tạm (429): 5 lần/15 phút cho mỗi IP và 60 lần/15 phút cho cả hệ thống (mọi lần thử đều tính, kể cả lần đúng).
-   **Nếu bị khoá** (kể cả do người khác dò mật khẩu): chờ hết cửa sổ 15 phút, hoặc chạy `docker compose up -d` trong thư mục `portfolio/api` để xoá bộ giới hạn
-   (link và nhật ký giữ nguyên). Cách phòng chính là giới hạn IP ở nginx (phần 6); nếu chính bạn bị danh sách `allow` chặn vì IP đổi, xem "Khi IP của bạn đổi" ở phần 6.
+   **Nếu bị khoá** (kể cả do người khác dò mật khẩu): chờ hết cửa sổ 15 phút, hoặc xoá bộ giới hạn (nằm trong bộ nhớ) bằng cách tạo lại container,
+   trong thư mục `portfolio/api`:
+
+   ```bash
+   docker compose up -d --force-recreate portfolio-api
+   ```
+
+   `docker compose up -d` trơn **không làm gì** khi cấu hình không đổi (container cũ vẫn chạy, bộ giới hạn còn nguyên). Khi `.env` không đổi,
+   `docker compose restart portfolio-api` cũng xoá được bộ giới hạn (nhưng `restart` không nạp giá trị mới nếu bạn vừa sửa `.env`; khi đó dùng lệnh trên).
+   Cả hai cách đều xoá mọi phiên quản trị; link, phiên người xem và nhật ký giữ nguyên. Cách phòng chính là giới hạn IP ở nginx (phần 6, bắt buộc theo phần 7);
+   nếu chính bạn bị danh sách `allow` chặn vì IP đổi, xem "Khi IP của bạn đổi" ở phần 6.
 2. **Tạo link**: nhập tên gợi nhớ (ví dụ tên công ty/người nhận; 1..80 ký tự), tuỳ chọn ngày hết hạn. Link đầy đủ `SITE_URL/i/<mã>` **chỉ hiện đúng một lần**:
    sao chép ngay rồi gửi cho người nhận. Hệ thống chỉ lưu băm của mã nên không ai (kể cả bạn) xem lại được; lỡ mất thì thu hồi và tạo link mới.
 3. **Bảng link**: tên, trạng thái (`active` đang dùng, `unused` chưa ai mở, `revoked` đã thu hồi, `expired` hết hạn), thời điểm tạo/hết hạn/lần dùng cuối, số lần dùng thành công.
 4. **Nhật ký từng link**: mở một link để xem các sự kiện mới nhất trước.
 5. **Thu hồi**: có hiệu lực **ngay** với mọi phiên đã mở từ link đó (câu hỏi kế tiếp bị từ chối, demo quay về bản phát lại). Không hoàn tác được; cần thì tạo link mới.
 
-Người nhận mở link: trình duyệt nhận cookie `pf_session` (HttpOnly, 30 ngày hoặc tới khi link bị thu hồi/hết hạn) và được chuyển về trang chủ; mã sai,
-đã thu hồi hay hết hạn đều chuyển về `/?invite=invalid` (không lộ lý do).
+Người nhận mở link: trình duyệt nhận cookie `pf_session` (HttpOnly, 30 ngày hoặc tới khi link bị thu hồi/hết hạn) và được chuyển về `/?invite=ok`; trang chủ
+hiện "Link mời đã được kích hoạt...", hoặc cảnh báo bật cookie / mở bằng trình duyệt chính nếu trình duyệt không giữ phiên. Mã sai, sai dạng, đã thu hồi hay hết hạn
+đều chuyển về `/?invite=invalid` (không lộ lý do). Khi không mở được vì sự cố (`portfolio-api` tắt hay quá tải, bị giới hạn tần suất, sai khoá nội bộ) thì chuyển
+về `/?invite=unavailable`: "Không mở được link lúc này. Hãy thử lại sau ít phút." (không nói gì về mã).
+
+**Công cụ xem trước link**: khi link được dán vào Slack, Zalo, Messenger, LinkedIn, iMessage, ... các công cụ đó tự tải link để tạo bản xem trước. Web nhận ra
+các công cụ quen biết qua User-Agent (danh sách `PREVIEW_BOT_PATTERNS` trong `src/lib/server/preview-bots.ts`, cần cập nhật dần) và cả yêu cầu `HEAD`: chúng
+chỉ nhận một trang trung tính, **không** đổi mã, không ghi `open`, không gọi `portfolio-api`. Giới hạn: công cụ quét email hay cổng bảo mật giả làm trình duyệt
+thường (ví dụ Outlook Safe Links, vài trình quét link trong Gmail) vẫn có thể được tính là một lần "Mở link" (và tạo một phiên không ai dùng).
+Trang `/admin` có ghi chú này dưới nhật ký.
 
 ### Nhật ký chứa gì
 
 - **Có**: link nào, thời điểm (UTC), tính năng (`open` mở link, `chat` hỏi bot), kết quả (`success`, `error`, `blocked`) và chi tiết kỹ thuật ngắn do hệ thống đặt (ví dụ mã lỗi).
+  Một `open` có thể do công cụ quét email/xem trước link giả làm trình duyệt gây ra (xem trên).
 - **Không bao giờ có**: nội dung câu hỏi hay câu trả lời, ảnh, địa chỉ IP, chuỗi trình duyệt (user agent), mã link gốc hay mã phiên (CSDL chỉ lưu băm SHA-256).
 - Log tiến trình (`docker compose logs`) của web và `portfolio-api` cũng không ghi mã link, phiên, mật khẩu hay nội dung câu hỏi.
 
@@ -280,7 +317,9 @@ curl -s -o /dev/null -w '%{http_code}\n' localhost:3100/en    # 200
 curl -s -o /dev/null -w '%{http_code}\n' localhost:3100/fr    # 404 (chỉ có vi và en)
 curl -s -w ' %{http_code}\n' -X POST localhost:3100/api/chat/stream -H 'content-type: application/json' \
   -d '{"message":"x","session_id":null}'                       # {"code":"invite_required"} 401
-curl -s -i localhost:3100/i/khong-phai-ma-that | grep -i -E '^(HTTP|location|set-cookie)'   # 307, location .../?invite=invalid, không set-cookie
+curl -s -i -A 'Mozilla/5.0' localhost:3100/i/khong-phai-ma-that | grep -i -E '^(HTTP|location|set-cookie)'   # 307, location .../?invite=invalid, không set-cookie
+curl -s -i localhost:3100/i/khong-phai-ma-that | grep -i -E '^(HTTP|location|set-cookie|x-robots)'          # curl là "công cụ xem trước": 200, x-robots-tag: noindex, không location/set-cookie
+curl -s -I localhost:3100/admin | grep -i -E '^(x-frame-options|content-security-policy)'                 # DENY và frame-ancestors 'none'
 curl -s localhost:3100/vi | grep -o '<link rel="canonical"[^>]*>'   # phải là https://ten-mien-cua-ban/vi
 ```
 
@@ -298,7 +337,8 @@ sudo grep -r '<mã>' /var/log/nginx/                                            
 Nếu cấu hình nginx ghi log ở nơi khác (`access_log`/`error_log` trỏ tới file khác, syslog, journald), tìm cả ở đó. Thu hồi link thử sau khi kiểm tra.
 
 Khi `chat` tắt hoặc không với tới được, `/api/chat/status` trả `{"enabled":false}`: người có link thấy bảng "demo tạm nghỉ", người không có link vẫn thấy bản phát lại.
-Khi `portfolio-api` tắt: mọi người đều thấy bản phát lại, `/i/<mã>` chuyển về `/?invite=invalid`, phần còn lại của site vẫn chạy.
+Khi `portfolio-api` tắt: mọi người đều thấy bản phát lại, `/i/<mã>` chuyển về `/?invite=unavailable` ("thử lại sau ít phút", không phải "link không còn hiệu lực"),
+phần còn lại của site vẫn chạy.
 
 ## 11. Sao lưu và khôi phục SQLite
 
@@ -400,11 +440,14 @@ grep -rn "TODO:" src/content
 - **Gia phả** là mô phỏng một tính năng AI đang phát triển (chưa xây), không được trình bày như sản phẩm đã có. Việc đọc ảnh và bản quét tài liệu gia phả mới là kế hoạch.
 - **Dữ liệu Knowledge Base là giả lập**; giữ cụm "dữ liệu giả lập" / "synthetic data" trong mô tả.
 - **Quyền riêng tư**: nội dung câu hỏi không bao giờ được lưu; nhật ký chỉ ghi link, tính năng, thời điểm và kết quả (phần 9). Đừng viết trên trang rằng "không ghi lại gì cả".
+  Câu hỏi được gửi tới **Google Gemini** để tạo câu trả lời, và ghi chú trên demo nói rõ điều đó ("Câu hỏi được gửi tới Google Gemini để tạo câu trả lời.").
 - Không đưa thông số Flux, prompt hay thời gian từng bước nếu bản ghi thật không có.
 
 ### Nội dung chưa được xác nhận (cần bạn điền hoặc quyết định)
 
 - **Hosting của Flux**: chưa xác nhận Flux chạy ở đâu; không viết ra nơi chạy cho tới khi bạn xác nhận.
+- **Google Gemini lưu câu hỏi bao lâu, có dùng để huấn luyện không**: tuỳ tài khoản Google và gói (miễn phí hay trả phí) của khoá `GEMINI_API_KEY`. Hãy kiểm tra điều khoản
+  của gói bạn dùng và xác nhận; nếu gói đó cho Google giữ hay dùng dữ liệu, cân nhắc ghi thêm điều đó vào ghi chú quyền riêng tư (`kb.notes.privacy`) hoặc đổi sang gói trả phí.
 - **Liên kết repo**: cả ba dự án đang để `links: []` (có `TODO:` trong `src/content/projects/*.ts`); chỉ thêm khi bạn xác nhận repo được công khai.
 - **Thông tin cá nhân** trong `src/content/site.ts`: tên, giới thiệu, email, GitHub đang là `TODO:`; `cv` là `null`.
 - **Câu định vị ở phần mở đầu trang chủ** (`home.hero.headline` trong `messages/vi.json` và `messages/en.json`: "Tôi xây hệ thống LLM và agent, cùng các sản phẩm web xung quanh chúng." / "I build LLM and agent systems, and the web products around them."):

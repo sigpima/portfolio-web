@@ -166,15 +166,24 @@ describe("KnowledgeBaseDemo", () => {
     expect(screen.getByText(/không được lưu/i)).toBeInTheDocument();
   });
 
-  it("the privacy note says questions are not stored AND that the link's feature use is logged (vi and en)", async () => {
+  it("the privacy note says questions are not stored, that the link's feature use is logged, and that questions go to Google Gemini (vi and en)", async () => {
     const expected = {
-      vi: ["Câu hỏi của bạn không được lưu.", "ghi lại rằng link mời của bạn đã dùng tính năng nào và lúc nào"],
-      en: ["Your questions are not stored.", "records which feature your invite link used, and when"],
+      vi: [
+        "Câu hỏi của bạn không được lưu.",
+        "ghi lại rằng link mời của bạn đã dùng tính năng nào và lúc nào",
+        "Câu hỏi được gửi tới Google Gemini để tạo câu trả lời.",
+      ],
+      en: [
+        "Your questions are not stored.",
+        "records which feature your invite link used, and when",
+        "Each question is sent to Google Gemini to produce the answer.",
+      ],
     } as const;
     for (const locale of ["vi", "en"] as const) {
       const { unmount } = await renderDemo(locale);
       const note = await screen.findByText(expected[locale][0], { exact: false });
       expect(note.textContent).toContain(expected[locale][1]);
+      expect(note.textContent).toContain(expected[locale][2]);
       unmount();
     }
   });

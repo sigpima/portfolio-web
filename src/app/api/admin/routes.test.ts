@@ -208,6 +208,50 @@ describe("POST /api/admin/logout", () => {
     expect(res.status).toBe(200);
     expect(fetchMock).not.toHaveBeenCalled();
   });
+
+  it.each([["text/plain"], ["application/x-www-form-urlencoded"], [""]])(
+    "rejects content type %j with 415 without calling the API or clearing the cookie",
+    async (type) => {
+      const fetchMock = mockFetch(async () => new Response(null, { status: 204 }));
+      const request = req("/api/admin/logout", { body: "x" });
+      if (type) request.headers.set("content-type", type);
+      else request.headers.delete("content-type");
+      const res = await logoutRoute.POST(request);
+      expect(res.status).toBe(415);
+      expect(await res.json()).toEqual({ code: "unsupported_media_type" });
+      expect(adminCookie(res)).toBeNull();
+      expect(fetchMock).not.toHaveBeenCalled();
+    },
+  );
+});
+
+describe("cross-site requests (Sec-Fetch-Site)", () => {
+  const posts: [string, (h: Record<string, string>) => Promise<Response>][] = [
+    ["login", (h) => loginRoute.POST(req("/api/admin/login", { body: JSON.stringify({ password: PASSWORD }), headers: h }))],
+    ["logout", (h) => logoutRoute.POST(req("/api/admin/logout", { body: "{}", headers: h }))],
+    ["create link", (h) => linksRoute.POST(req("/api/admin/links", { body: '{"name":"a"}', headers: h }))],
+    ["revoke", (h) => revokeRoute.POST(req("/api/admin/links/3/revoke", { body: "{}", headers: h }), idParams("3"))],
+  ];
+
+  for (const [name, call] of posts) {
+    it.each([["cross-site"], ["same-site"], ["none"]])(`${name}: Sec-Fetch-Site %s -> 403 forbidden, no API call`, async (site) => {
+      const fetchMock = mockFetch(async () => Response.json({}));
+      const res = await call({ "sec-fetch-site": site });
+      expect(res.status).toBe(403);
+      expect(await res.json()).toEqual({ code: "forbidden" });
+      expect(res.headers.get("cache-control")).toBe("no-store");
+      expect(adminCookie(res)).toBeNull();
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it(`${name}: same-origin and a missing header (curl, older browsers) pass`, async () => {
+      for (const headers of [{ "sec-fetch-site": "same-origin" }, {}] as Record<string, string>[]) {
+        mockFetch(async () => new Response(null, { status: 500 }));
+        const res = await call(headers);
+        expect(res.status).not.toBe(403);
+      }
+    });
+  }
 });
 
 describe("admin routes without a session", () => {
@@ -228,6 +272,76 @@ describe("admin routes without a session", () => {
     expect(res.status).toBe(401);
     expect(await res.json()).toEqual({ code: "admin_required" });
     expect(res.headers.get("cache-control")).toBe("no-store");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [
+      "POST links (wrong content type)",
+      () =>
+        linksRoute.POST(
+          req("/api/admin/links", { body: "name=a", cookie: null, headers: { "content-type": "text/plain" } }),
+        ),
+    ],
+    [
+      "POST links (oversized body)",
+      () => linksRoute.POST(req("/api/admin/links", { body: "x".repeat(10_000), cookie: null })),
+    ],
+    [
+      "revoke (wrong content type, bad id)",
+      () =>
+        revokeRoute.POST(
+          req("/api/admin/links/x/revoke", { body: "", cookie: null, headers: { "content-type": "text/plain" } }),
+          idParams("x"),
+        ),
+    ],
+    [
+      "events (bad id and query)",
+      () => eventsRoute.GET(req("/api/admin/links/x/events?limit=0", { method: "GET", cookie: null }), idParams("x")),
+    ],
+  ])("%s: no cookie -> 401 first, before any other check", async (_name, call) => {
+    const fetchMock = mockFetch(async () => Response.json([]));
+    const res = await call();
+    expect(res.status).toBe(401);
+    expect(await res.json()).toEqual({ code: "admin_required" });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("does not read the body without a cookie", async () => {
+    const fetchMock = mockFetch(async () => Response.json({}));
+    const request = req("/api/admin/links", { body: '{"name":"a"}', cookie: null });
+    let pulled = false;
+    Object.defineProperty(request, "body", {
+      get() {
+        pulled = true;
+        return null;
+      },
+    });
+    const res = await linksRoute.POST(request);
+    expect(res.status).toBe(401);
+    expect(pulled).toBe(false);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["GET links", (c: string) => linksRoute.GET(req("/api/admin/links", { method: "GET", cookie: c }))],
+    ["POST links", (c: string) => linksRoute.POST(req("/api/admin/links", { body: '{"name":"a"}', cookie: c }))],
+    [
+      "revoke",
+      (c: string) => revokeRoute.POST(req("/api/admin/links/3/revoke", { body: "{}", cookie: c }), idParams("3")),
+    ],
+    [
+      "events",
+      (c: string) => eventsRoute.GET(req("/api/admin/links/3/events", { method: "GET", cookie: c }), idParams("3")),
+    ],
+  ])("%s: a malformed pf_admin cookie -> 401 and the cookie is cleared", async (_name, call) => {
+    const fetchMock = mockFetch(async () => Response.json([]));
+    for (const cookie of ["pf_admin=" + "a".repeat(600), "pf_admin=bad%20value"]) {
+      const res = await call(cookie);
+      expect(res.status).toBe(401);
+      expect(await res.json()).toEqual({ code: "admin_required" });
+      expect(adminCookie(res)).toMatch(/Max-Age=0/i);
+    }
     expect(fetchMock).not.toHaveBeenCalled();
   });
 

@@ -2,7 +2,15 @@ import type { Project } from "../types";
 import { giaPhaReplay } from "./gia-pha";
 import { knowledgeBaseReplay } from "./knowledge-base";
 import { twistfitReplay } from "./twistfit";
+import { placeholderQualifierOf, type PlaceholderQualifier } from "./placeholder";
 import type { ReplayDefinition } from "./types";
+
+export {
+  placeholderQualifierOf,
+  placeholderVariantOf,
+  sampleHasImages,
+  type PlaceholderQualifier,
+} from "./placeholder";
 
 /**
  * Replay data by `Project.demo.component` key: replay/simulation demos, plus live demos
@@ -14,15 +22,18 @@ export const replaysByDemoComponent: Record<string, ReplayDefinition> = {
   "gia-pha-simulation": giaPhaReplay,
 };
 
-/**
- * True when every sample behind the project's demo is a placeholder, derived from
- * the replay data itself (no separate flag to keep in sync).
- */
+/** The placeholder qualifier of the replay behind the project's demo (see `placeholderQualifierOf`). */
+export function placeholderQualifier(
+  project: Project,
+  replays: Record<string, ReplayDefinition> = replaysByDemoComponent,
+): PlaceholderQualifier | undefined {
+  return placeholderQualifierOf(project.demo ? replays[project.demo.component] : undefined);
+}
+
+/** True when every sample behind the project's demo is a placeholder. */
 export function isPlaceholderDemo(
   project: Project,
   replays: Record<string, ReplayDefinition> = replaysByDemoComponent,
 ): boolean {
-  const definition = project.demo ? replays[project.demo.component] : undefined;
-  if (!definition || definition.samples.length === 0) return false;
-  return definition.samples.every((sample) => sample.placeholder === true);
+  return placeholderQualifier(project, replays) !== undefined;
 }

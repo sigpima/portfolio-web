@@ -4,7 +4,7 @@ import { demoComponents } from "@/components/demos/registry";
 import { DemoBadge, PageBadgeProvider } from "@/components/demos/DemoBadge";
 import { LiveAwareBadge } from "@/components/demos/LiveAwareBadge";
 import type { Locale, Project } from "@/content/types";
-import { isPlaceholderDemo } from "@/content/replays";
+import { placeholderQualifier } from "@/content/replays";
 import { chipClass, placeholderChipClass, staticDemoLabelKey } from "./ProjectCard";
 
 const eyebrowClass = "font-mono text-label-mono-sm uppercase text-secondary";
@@ -27,10 +27,11 @@ export function ProjectDetail({ project, locale }: { project: Project; locale: L
   const hasDemo = project.demoKind !== "none" && project.demo !== undefined;
   const Demo = hasDemo ? demoComponents[project.demo!.component] : undefined;
   const demoKind = project.demoKind === "none" ? null : project.demoKind;
-  // Derived from the replay data: every sample is a placeholder. For a live demo this
-  // is its replay fallback, which only the in-demo badge talks about.
-  const qualifier = isPlaceholderDemo(project) ? ("placeholder" as const) : undefined;
-  const qualifierChip = qualifier && demoKind !== "live" ? t("demo.badgeQualifier.placeholder.chip") : null;
+  // Derived from the replay data: every sample is a placeholder (worded "facts" only when the
+  // samples have no images). For a live demo this is its replay fallback, which only the
+  // in-demo badge talks about.
+  const qualifier = placeholderQualifier(project);
+  const qualifierChip = qualifier && demoKind !== "live" ? t(`demo.badgeQualifier.${qualifier}.chip`) : null;
   // Static labels never say "live" on its own: a live demo is live only with an invite.
   const staticLabel = demoKind ? t(`demo.badge.${staticDemoLabelKey(demoKind)}.label`) : null;
 

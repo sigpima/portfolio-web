@@ -44,6 +44,10 @@ describe("resolveSiteUrl", () => {
 
   it("rejects a SITE_URL that is not an absolute URL", () => {
     expect(() => resolveSiteUrl({ SITE_URL: "example.com" }, vi.fn())).toThrow(/not a valid/);
+    // The .env.example placeholder fails the build loudly, even with REQUIRE_SITE_URL=0.
+    expect(() =>
+      resolveSiteUrl({ SITE_URL: "CHANGE_ME", NODE_ENV: "production", REQUIRE_SITE_URL: "0" }, vi.fn()),
+    ).toThrow(/SITE_URL is not a valid/);
   });
 });
 

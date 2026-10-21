@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { SESSION_COOKIE } from "@/lib/server/cookies";
+import { rejectCrossSite } from "@/lib/server/admin-proxy";
 import { apiFetch } from "@/lib/server/portfolio-api";
 
 export const dynamic = "force-dynamic";
@@ -130,6 +131,9 @@ async function readErrorResponse(upstream: Response, controller: AbortController
 }
 
 export async function POST(request: NextRequest): Promise<Response> {
+  // A browser that says the request is not same-origin (another site's page) is refused.
+  const crossSite = rejectCrossSite(request);
+  if (crossSite) return crossSite;
   // Only JSON: a cross-site "simple" POST (text/plain, form) must not reach the API.
   if (!isJsonContentType(request.headers.get("content-type"))) {
     return jsonError("unsupported_media_type", 415);

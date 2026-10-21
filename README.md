@@ -18,11 +18,15 @@ Every compose command (`up`, `logs`, `exec`, `cp`, `stop`, `down`) needs `PORTFO
 
 | Variable | Required | Meaning |
 | --- | --- | --- |
-| `PORTFOLIO_API_KEY` | yes | Shared internal key with `portfolio-api`; the SAME value in both services, >= 32 visible ASCII chars. |
+| `PORTFOLIO_API_KEY` | yes | Shared internal key with `portfolio-api`; the SAME value in both services, >= 32 visible ASCII chars. A shorter or non-ASCII key makes every call to `portfolio-api` fail closed (invite links show "try again later", `/admin` is unavailable). |
 | `SITE_URL` | yes in production | Public origin, needed at build time AND runtime (canonical URLs, invite redirects, links shown on `/admin`). |
 | `PORTFOLIO_API_URL` | no | Default `http://portfolio-api:8100`. |
 | `PORTFOLIO_API_NETWORK` | no (compose) | Fallback only, when `docker network ls` shows the `portfolio-api` network under a name other than `portfolio-api_default` (see `docs/RUNBOOK.md`, section 3). |
 | `PORTFOLIO_PORT` | no (compose) | Host port on 127.0.0.1, default `3100`. |
+
+Both `PORTFOLIO_API_KEY` and `SITE_URL` must be set to **real values**: `.env.example` ships both as `CHANGE_ME`, which is
+deliberately invalid (the production build fails on `SITE_URL=CHANGE_ME`, and the web refuses to call `portfolio-api` with
+`PORTFOLIO_API_KEY=CHANGE_ME`).
 
 Start order: knowledge_base `chat` -> `portfolio-api` -> this web app. The web container joins only the
 `portfolio-api` network and cannot reach `chat:8003` directly.

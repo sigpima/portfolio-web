@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { isPlaceholderDemo } from "@/content/replays";
+import { placeholderQualifier } from "@/content/replays";
 import type { DemoKind, Locale, Project } from "@/content/types";
 
 /** Short demo-kind chip colours (the label text carries the meaning). */
@@ -38,7 +38,7 @@ export function ProjectCard({
   const Heading = headingLevel === 2 ? "h2" : "h3";
   const href = `/${locale}/projects/${project.slug}`;
   // A live demo's replay fallback is qualified inside the demo, not next to "live · invite only".
-  const placeholder = project.demoKind !== "live" && isPlaceholderDemo(project);
+  const placeholder = project.demoKind !== "live" ? placeholderQualifier(project) : undefined;
 
   return (
     <article className="group relative flex flex-col overflow-hidden rounded-xl border border-outline-variant bg-surface-container-low transition-colors hover:border-outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-secondary">
@@ -60,7 +60,7 @@ export function ProjectCard({
                 {t(`demo.badge.${staticDemoLabelKey(project.demoKind)}.label`)}
               </span>
               {placeholder ? (
-                <span className={placeholderChipClass}>{t("demo.badgeQualifier.placeholder.chip")}</span>
+                <span className={placeholderChipClass}>{t(`demo.badgeQualifier.${placeholder}.chip`)}</span>
               ) : null}
             </span>
           ) : null}

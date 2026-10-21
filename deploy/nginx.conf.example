@@ -7,11 +7,12 @@
 # KHÔNG BAO GIỜ được proxy ra ngoài.
 #
 # Địa chỉ IP thật của người xem:
-#   Ứng dụng lấy khoá giới hạn tần suất từ header `X-Real-IP` (dự phòng: phần tử CUỐI của
-#   `X-Forwarded-For`). Vì vậy MỌI location proxy bên dưới đặt cả hai header bằng
-#   $remote_addr (địa chỉ kết nối thật tới nginx), thay vì $proxy_add_x_forwarded_for:
-#   biến đó nối thêm vào chuỗi do client tự gửi, nên client có thể tự khai IP giả để né giới
-#   hạn. Thiếu `X-Real-IP` thì mọi người xem dùng chung MỘT khoá giới hạn.
+#   Ở production ứng dụng lấy khoá giới hạn tần suất CHỈ từ header `X-Real-IP` (không dùng
+#   `X-Forwarded-For`: khi thiếu, Next tự điền địa chỉ kết nối, tức gateway của Docker). Vì vậy
+#   MỌI location proxy bên dưới đặt `X-Real-IP` (và cả `X-Forwarded-For`) bằng $remote_addr
+#   (địa chỉ kết nối thật tới nginx), thay vì $proxy_add_x_forwarded_for: biến đó nối thêm vào
+#   chuỗi do client tự gửi, nên client có thể tự khai IP giả. Thiếu `X-Real-IP` thì mọi người
+#   xem dùng chung MỘT khoá giới hạn `unknown` (log web in cảnh báo một lần).
 #
 #   Nếu chạy sau CDN/proxy khác (Cloudflare, ...): $remote_addr lúc đó là IP của CDN, mọi
 #   người xem sẽ chung một khoá (và chung một bộ limit_req). Bật module real_ip trong khối
@@ -27,6 +28,8 @@
 limit_req_zone $binary_remote_addr zone=chat_stream:10m rate=6r/m;
 limit_req_zone $binary_remote_addr zone=invite_open:10m rate=30r/m;
 limit_req_zone $binary_remote_addr zone=admin_login:10m rate=10r/m;
+# Trang dự án hỏi /api/chat/status mỗi lần tải; mỗi lần là một lời gọi tới portfolio-api và chat.
+limit_req_zone $binary_remote_addr zone=chat_status:10m rate=30r/m;
 
 server {
     listen 80;
@@ -74,6 +77,18 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
+    # Trạng thái demo chat: rẻ nhưng mỗi lần đi tới portfolio-api và chat, nên cũng giới hạn.
+    location = /api/chat/status {
+        limit_req zone=chat_status burst=20 nodelay;
+        error_page 429 = @rate_limited;
+
+        proxy_pass http://127.0.0.1:3100;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
     # Link mời /i/<mã>: MÃ LINK NẰM TRÊN ĐƯỜNG DẪN. Access log của nginx ghi nguyên đường dẫn,
     # nên phải tắt log ở đây, nếu không mọi mã link (đủ để vào demo) nằm trong file log.
     # `access_log off` KHÔNG tắt error log: lần bị limit_req từ chối (mức `error`) và lỗi upstream
@@ -95,17 +110,22 @@ server {
     }
 
     # ---- Trang quản trị -------------------------------------------------------------------
-    # KHUYẾN NGHỊ MẠNH: chỉ cho IP của bạn vào /admin và /api/admin/ (bỏ dấu # ở hai dòng
-    # `allow`/`deny` trong ba location dưới và thay <IP CỦA BẠN>; có thể thêm nhiều dòng allow).
+    # BẮT BUỘC trước khi mở site: chỉ cho IP của bạn vào /admin và /api/admin/. Trong cả ba
+    # location dưới, thay 192.0.2.1 (địa chỉ dành cho tài liệu, không ai có) bằng IP của bạn
+    # (thêm dòng `allow` cho từng địa chỉ, kể cả IPv6 nếu mạng có IPv6). Để nguyên thì chính bạn
+    # cũng bị 403: cố ý, để cấu hình chưa sửa thì đóng chứ không mở.
     # Đây là biện pháp CHÍNH chống lộ trang quản trị và chống bị khoá-chết đăng nhập: portfolio-api
     # giới hạn đăng nhập 5 lần/15 phút theo IP (đã băm) VÀ 60 lần/15 phút cho cả hệ thống, nên người
     # lạ dò mật khẩu từ nhiều IP có thể khiến chính bạn bị chặn (429) cho tới hết cửa sổ.
     # Chặn ở nginx thì người lạ không chạm tới được API.
-    # Nếu bị khoá: trên máy chủ chạy `docker compose up -d` trong thư mục portfolio-api
-    # (tạo lại container, xoá bộ giới hạn và mọi phiên quản trị; link và nhật ký giữ nguyên).
+    # Nếu bị khoá: trên máy chủ, trong thư mục portfolio-api, chạy
+    #   docker compose up -d --force-recreate portfolio-api
+    # (tạo lại container: xoá bộ giới hạn trong bộ nhớ và mọi phiên quản trị; link và nhật ký giữ
+    # nguyên). `docker compose up -d` trơn KHÔNG làm gì khi cấu hình không đổi. Nếu .env không đổi,
+    # `docker compose restart portfolio-api` cũng được.
     location /admin {
-        # allow <IP CỦA BẠN>;
-        # deny all;
+        allow 192.0.2.1;   # TODO: IP của bạn
+        deny all;
 
         proxy_pass http://127.0.0.1:3100;
         proxy_set_header Host $host;
@@ -115,8 +135,8 @@ server {
     }
 
     location = /api/admin/login {
-        # allow <IP CỦA BẠN>;
-        # deny all;
+        allow 192.0.2.1;   # TODO: IP của bạn (giống /admin)
+        deny all;
         limit_req zone=admin_login burst=5 nodelay;
         error_page 429 = @rate_limited;
 
@@ -128,8 +148,8 @@ server {
     }
 
     location /api/admin/ {
-        # allow <IP CỦA BẠN>;
-        # deny all;
+        allow 192.0.2.1;   # TODO: IP của bạn (giống /admin)
+        deny all;
 
         proxy_pass http://127.0.0.1:3100;
         proxy_set_header Host $host;

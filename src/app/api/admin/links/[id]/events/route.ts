@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { forwardAdmin, ID_SHAPE, jsonError, jsonResponse } from "@/lib/server/admin-proxy";
+import { forwardAdmin, ID_SHAPE, jsonError, jsonResponse, requireAdminSession } from "@/lib/server/admin-proxy";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -34,6 +34,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ): Promise<Response> {
+  // The session first: without one, the id and query are not looked at.
+  const session = requireAdminSession(request);
+  if (typeof session !== "string") return session;
   const { id } = await params;
   if (!ID_SHAPE.test(id)) return jsonError("invalid_request", 422);
   const query = eventsQuery(request.nextUrl.searchParams);

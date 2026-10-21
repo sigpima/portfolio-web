@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { getProject } from "../registry";
 import type { Project } from "../types";
-import { isPlaceholderDemo, replaysByDemoComponent } from "./index";
+import { isPlaceholderDemo, placeholderQualifier, placeholderQualifierOf, replaysByDemoComponent } from "./index";
 import { knowledgeBaseReplayFor } from "./knowledge-base";
 import { recordedSamples } from "./knowledge-base.recorded";
 import type { ReplayDefinition, ReplaySample } from "./types";
@@ -74,5 +74,30 @@ describe("Twistfit copy", () => {
       expect(text).not.toMatch(/lần chạy thật/i);
       expect(text).not.toMatch(/real run/i);
     }
+  });
+});
+
+describe("placeholder wording variant", () => {
+  const image = { src: "/x.svg", alt: { vi: "x", en: "x" } };
+  const withImagesIn: ReplaySample = { ...sample("in", true), input: { kind: "images", items: [image] } };
+  const withImagesOut: ReplaySample = { ...sample("out", true), result: { kind: "images", items: [image] } };
+
+  it("is placeholderFacts when no sample shows images, placeholder when any does", () => {
+    expect(placeholderQualifierOf({ id: "a", samples: [sample("1", true)] })).toBe("placeholderFacts");
+    expect(placeholderQualifierOf({ id: "b", samples: [sample("1", true), withImagesIn] })).toBe("placeholder");
+    expect(placeholderQualifierOf({ id: "c", samples: [withImagesOut] })).toBe("placeholder");
+    expect(placeholderQualifierOf({ id: "d", samples: [sample("1", true), sample("2", false)] })).toBeUndefined();
+    expect(placeholderQualifierOf({ id: "e", samples: [] })).toBeUndefined();
+    expect(placeholderQualifierOf(undefined)).toBeUndefined();
+  });
+
+  it("reads the real data: Twistfit (images) keeps the images wording, Knowledge Base gets facts", () => {
+    expect(placeholderQualifier(twistfit)).toBe("placeholder");
+    expect(placeholderQualifier(getProject("gia-pha")!)).toBeUndefined();
+    const kb = getProject("knowledge-base")!;
+    expect(placeholderQualifier(kb)).toBe(recordedSamples.length === 0 ? "placeholderFacts" : undefined);
+    expect(placeholderQualifier(kb, { ...replaysByDemoComponent, "knowledge-base": knowledgeBaseReplayFor([]) })).toBe(
+      "placeholderFacts",
+    );
   });
 });
