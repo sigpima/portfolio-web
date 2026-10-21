@@ -9,6 +9,8 @@ export const runtime = "nodejs";
 const MAX_BODY_BYTES = 32 * 1024;
 /** Time portfolio-api gets to answer with response headers; the stream itself has no cap. */
 const CONNECT_TIMEOUT_MS = 15_000;
+/** Time to read a (tiny) upstream error body once its headers have arrived. */
+const ERROR_BODY_TIMEOUT_MS = 5_000;
 /** Cap on an upstream error body read for passthrough (real ones are a few dozen bytes). */
 const MAX_ERROR_BODY_BYTES = 16 * 1024;
 /** Upstream statuses (besides a 2xx stream) that are relayed with their JSON body. */
@@ -49,10 +51,16 @@ async function readBodyCapped(request: Request, limit: number): Promise<Uint8Arr
   return bytes;
 }
 
-/** Read at most `limit` bytes of a response body as text (the rest is discarded). */
-async function readTextCapped(res: Response, limit: number): Promise<string> {
+/**
+ * Read at most `limit` bytes of a response body as text (the rest is discarded). Aborting
+ * `signal` cancels the read: it returns what arrived so far instead of waiting for more.
+ */
+async function readTextCapped(res: Response, limit: number, signal: AbortSignal): Promise<string> {
   if (!res.body) return "";
   const reader = res.body.getReader();
+  const cancel = () => void reader.cancel().catch(() => {});
+  if (signal.aborted) cancel();
+  else signal.addEventListener("abort", cancel, { once: true });
   const chunks: Uint8Array[] = [];
   let total = 0;
   try {
@@ -63,7 +71,8 @@ async function readTextCapped(res: Response, limit: number): Promise<string> {
       total += value.byteLength;
     }
   } finally {
-    await reader.cancel().catch(() => {});
+    signal.removeEventListener("abort", cancel);
+    cancel();
   }
   return new TextDecoder().decode(Buffer.concat(chunks).subarray(0, limit));
 }
@@ -82,8 +91,8 @@ function codeOf(body: unknown): string | null {
 }
 
 /** Map a non-2xx portfolio-api answer to what the browser should see. */
-async function relayError(upstream: Response): Promise<Response> {
-  const text = await readTextCapped(upstream, MAX_ERROR_BODY_BYTES);
+async function relayError(upstream: Response, signal: AbortSignal): Promise<Response> {
+  const text = await readTextCapped(upstream, MAX_ERROR_BODY_BYTES, signal);
   let body: unknown = null;
   try {
     body = JSON.parse(text);
@@ -103,7 +112,21 @@ async function relayError(upstream: Response): Promise<Response> {
     return jsonError("demo_disabled", 503);
   }
   if (upstream.status === 401 && code !== "invite_required") return jsonError("demo_disabled", 503);
-  return Response.json(body, { status: upstream.status, headers: { "cache-control": "no-store" } });
+  // Relay only the code, never other fields the upstream body may carry.
+  return jsonError(code, upstream.status);
+}
+
+/** `relayError` bounded by its own short timeout (which also aborts the upstream request). */
+async function readErrorResponse(upstream: Response, controller: AbortController): Promise<Response> {
+  const timer = setTimeout(() => controller.abort(), ERROR_BODY_TIMEOUT_MS);
+  try {
+    const res = await relayError(upstream, controller.signal);
+    return controller.signal.aborted ? jsonError("demo_disabled", 503) : res;
+  } catch {
+    return jsonError("demo_disabled", 503);
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export async function POST(request: NextRequest): Promise<Response> {
@@ -143,12 +166,24 @@ export async function POST(request: NextRequest): Promise<Response> {
     clearTimeout(timer);
   }
 
-  if (!upstream.ok || !upstream.body) {
-    request.signal.removeEventListener("abort", abort);
-    if (upstream.ok) return jsonError("demo_disabled", 503);
-    return relayError(upstream).catch(() => jsonError("demo_disabled", 503));
+  if (!upstream.ok) {
+    try {
+      return await readErrorResponse(upstream, controller);
+    } finally {
+      request.signal.removeEventListener("abort", abort);
+    }
   }
 
+  const contentType = upstream.headers.get("content-type")?.split(";")[0].trim().toLowerCase();
+  if (!upstream.body || contentType !== "text/event-stream") {
+    // A 2xx that is not an event stream (misrouted JSON/HTML) is not something to relay.
+    request.signal.removeEventListener("abort", abort);
+    void upstream.body?.cancel().catch(() => {});
+    controller.abort();
+    return jsonError("demo_disabled", 503);
+  }
+
+  // The client-abort listener stays attached for the stream's lifetime.
   return new Response(upstream.body, {
     status: upstream.status,
     headers: {

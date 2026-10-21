@@ -180,10 +180,38 @@ describe("POST /api/chat/stream", () => {
     expect(await res.json()).toEqual(payload);
   });
 
+  it("relays only the code of an upstream error, never other fields (e.g. an echo of the question)", async () => {
+    mockFetch(async () =>
+      Response.json(
+        { code: "invalid_question", detail: `echo ${MARKER}`, input: BODY, extra: { a: 1 } },
+        { status: 422 },
+      ),
+    );
+    const res = await streamRoute.POST(chatRequest());
+    expect(res.status).toBe(422);
+    const text = await res.text();
+    expect(JSON.parse(text)).toEqual({ code: "invalid_question" });
+    expect(text).not.toContain(MARKER);
+  });
+
+  it.each([
+    ["JSON", () => Response.json({ enabled: true }, { status: 200 })],
+    ["HTML", () => new Response("<html></html>", { status: 200, headers: { "content-type": "text/html" } })],
+    ["no content-type", () => new Response("x", { status: 200, headers: { "content-type": "" } })],
+  ])("treats a 2xx that is not an event stream (%s) as 503 demo_disabled", async (_name, make) => {
+    mockFetch(async () => make());
+    const res = await streamRoute.POST(chatRequest());
+    expect(res.status).toBe(503);
+    expect(await res.json()).toEqual({ code: "demo_disabled" });
+  });
+
   it("maps an upstream 401 unauthorized (key mismatch) to 503 demo_disabled and logs exactly once", async () => {
+    // Fresh module: the warn-once flag must not depend on which tests ran before.
+    vi.resetModules();
+    const fresh = await import("./stream/route");
     const fetchMock = mockFetch(async () => Response.json({ code: "unauthorized" }, { status: 401 }));
     for (let i = 0; i < 3; i++) {
-      const res = await streamRoute.POST(chatRequest());
+      const res = await fresh.POST(chatRequest());
       expect(res.status).toBe(503);
       expect(await res.json()).toEqual({ code: "demo_disabled" });
     }
@@ -330,6 +358,95 @@ describe("POST /api/chat/stream", () => {
     expect(res.status).toBe(200);
     await vi.advanceTimersByTimeAsync(10 * 60_000);
     expect(upstreamSignal?.aborted).toBe(false);
+  });
+
+  describe("upstream error body", () => {
+    function hangingErrorBody() {
+      const state = { signal: undefined as AbortSignal | undefined, cancelled: false };
+      mockFetch(async (_url, init) => {
+        state.signal = init?.signal ?? undefined;
+        return new Response(
+          new ReadableStream({
+            start(c) {
+              c.enqueue(new TextEncoder().encode('{"code":'));
+            },
+            cancel() {
+              state.cancelled = true;
+            },
+          }),
+          { status: 503, headers: { "content-type": "application/json" } },
+        );
+      });
+      return state;
+    }
+
+    it("is bounded by a 5 s timeout that aborts the upstream and answers 503 demo_disabled", async () => {
+      vi.useFakeTimers();
+      const state = hangingErrorBody();
+      let settled = false;
+      const pending = streamRoute.POST(chatRequest()).then((r) => ((settled = true), r));
+      await vi.advanceTimersByTimeAsync(4_900);
+      expect(settled).toBe(false);
+      expect(state.signal?.aborted).toBe(false);
+      await vi.advanceTimersByTimeAsync(200);
+      const res = await pending;
+      expect(res.status).toBe(503);
+      expect(await res.json()).toEqual({ code: "demo_disabled" });
+      expect(state.signal?.aborted).toBe(true);
+      expect(state.cancelled).toBe(true);
+      expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it("is abandoned when the client aborts: upstream aborted and the handler settles", async () => {
+      vi.useFakeTimers();
+      const state = hangingErrorBody();
+      const ctrl = new AbortController();
+      let settled = false;
+      const pending = streamRoute.POST(chatRequest(BODY, { signal: ctrl.signal })).then((r) => ((settled = true), r));
+      await vi.advanceTimersByTimeAsync(50);
+      expect(settled).toBe(false);
+      ctrl.abort();
+      await vi.advanceTimersByTimeAsync(10);
+      expect(settled).toBe(true);
+      expect((await pending).status).toBe(503);
+      expect(state.signal?.aborted).toBe(true);
+      expect(state.cancelled).toBe(true);
+      expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it("still passes a tiny error body through and leaves no timer behind", async () => {
+      vi.useFakeTimers();
+      mockFetch(async () => Response.json({ code: "rate_limited" }, { status: 429 }));
+      const res = await streamRoute.POST(chatRequest());
+      expect(res.status).toBe(429);
+      expect(await res.json()).toEqual({ code: "rate_limited" });
+      expect(vi.getTimerCount()).toBe(0);
+    });
+  });
+
+  it("removes the client-abort listener when the client aborts before the headers arrive", async () => {
+    vi.useFakeTimers();
+    mockFetch(
+      (_url, init) =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError")));
+        }),
+    );
+    const ctrl = new AbortController();
+    const req = chatRequest(BODY, { signal: ctrl.signal });
+    const add = vi.spyOn(req.signal, "addEventListener");
+    const remove = vi.spyOn(req.signal, "removeEventListener");
+    const pending = streamRoute.POST(req);
+    await vi.advanceTimersByTimeAsync(10);
+    ctrl.abort();
+    const res = await pending;
+    expect(res.status).toBe(503);
+    expect(await res.json()).toEqual({ code: "demo_disabled" });
+    const added = add.mock.calls.filter(([type]) => type === "abort").map(([, fn]) => fn);
+    const removed = remove.mock.calls.filter(([type]) => type === "abort").map(([, fn]) => fn);
+    expect(added.length).toBeGreaterThan(0);
+    for (const fn of added) expect(removed).toContain(fn);
+    expect(vi.getTimerCount()).toBe(0);
   });
 
   it("never logs the visitor's question, on success or on any failure path", async () => {
