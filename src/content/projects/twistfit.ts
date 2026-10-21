@@ -15,8 +15,8 @@ export const twistfit: Project = {
     en: "A fashion website that suggests outfits from your wardrobe and renders a try-on image with Flux.",
   },
   summary: {
-    vi: "Twistfit là website thời trang (Next.js và FastAPI) có khảo sát màu sắc cá nhân theo mùa, tủ đồ cá nhân và tính năng phối đồ mặc thử. Người dùng tải ảnh quần áo lên tủ đồ; khi chọn dịp hoặc phong cách, hệ thống ghép một bộ phù hợp với màu cá nhân của họ rồi gọi Flux để dựng ảnh người mẫu mặc bộ đó. Demo trên trang này là bản phát lại từ lần chạy thật, không gọi Flux khi có người xem.",
-    en: "Twistfit is a fashion website (Next.js and FastAPI) with a seasonal personal-colour quiz, a personal wardrobe and an outfit try-on feature. Users upload clothing photos to their wardrobe; when they pick an occasion or a style, the system assembles a matching outfit for their personal colours and calls Flux to render a model wearing it. The demo on this page is a replay of a real run and does not call Flux when someone views it.",
+    vi: "Twistfit là website thời trang (Next.js và FastAPI) có khảo sát màu sắc cá nhân theo mùa, tủ đồ cá nhân và tính năng phối đồ mặc thử. Người dùng tải ảnh quần áo lên tủ đồ; khi chọn dịp hoặc phong cách, hệ thống ghép một bộ phù hợp với màu cá nhân của họ rồi gọi Flux để dựng ảnh người mẫu mặc bộ đó. Demo trên trang này phát lại các bước của một lượt mặc thử bằng Flux và không gọi Flux khi có người xem.",
+    en: "Twistfit is a fashion website (Next.js and FastAPI) with a seasonal personal-colour quiz, a personal wardrobe and an outfit try-on feature. Users upload clothing photos to their wardrobe; when they pick an occasion or a style, the system assembles a matching outfit for their personal colours and calls Flux to render a model wearing it. The demo on this page replays the steps of a Flux try-on run and does not call Flux when someone views it.",
   },
   problem: {
     vi: "Chọn đồ hợp với tông màu cá nhân, hợp dịp và hợp phong cách mất nhiều thời gian, và khó hình dung bộ đồ khi mặc lên người trước khi quyết định.",

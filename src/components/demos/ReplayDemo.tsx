@@ -177,8 +177,8 @@ export function ReplayDemo({ definition, kind, locale: _locale, footnote }: Repl
 
   return (
     <div lang={locale} className="flex flex-col gap-4">
-      {pageBadge ? (
-        placeholder ? <DemoBadgeQualifier qualifier="placeholder" /> : null
+      {pageBadge.active ? (
+        placeholder && pageBadge.qualifier !== "placeholder" ? <DemoBadgeQualifier qualifier="placeholder" /> : null
       ) : (
         <DemoBadge kind={kind} locale={locale} qualifier={placeholder ? "placeholder" : undefined} />
       )}

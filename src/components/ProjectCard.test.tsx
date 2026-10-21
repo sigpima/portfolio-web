@@ -41,4 +41,23 @@ describe("ProjectCard", () => {
     renderCard("gia-pha", "en");
     expect(screen.getByRole("heading", { name: "Gia phả: a family-tree website" })).toBeInTheDocument();
   });
+
+  for (const [locale, chip, label] of [
+    ["vi", "Ảnh và dữ kiện giữ chỗ", "Phát lại từ lần chạy thật"],
+    ["en", "Placeholder images and facts", "Replay of a real run"],
+  ] as const) {
+    it(`qualifies the Twistfit replay chip as placeholder in ${locale}`, () => {
+      renderCard("twistfit", locale);
+      expect(screen.getByText(label, { exact: true })).toBeInTheDocument();
+      expect(screen.getByText(chip, { exact: true })).toBeInTheDocument();
+    });
+
+    it(`shows no placeholder qualifier on projects without placeholder replays in ${locale}`, () => {
+      for (const slug of ["knowledge-base", "gia-pha"]) {
+        const { unmount } = renderCard(slug, locale);
+        expect(screen.queryByText(chip)).toBeNull();
+        unmount();
+      }
+    });
+  }
 });

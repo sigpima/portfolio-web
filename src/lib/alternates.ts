@@ -5,7 +5,10 @@ import { routing } from "@/i18n/routing";
 export function languageAlternates(path: string, locale: string): Metadata["alternates"] {
   return {
     canonical: `/${locale}${path}`,
-    languages: Object.fromEntries(routing.locales.map((l) => [l, `/${l}${path}`])),
+    languages: {
+      ...Object.fromEntries(routing.locales.map((l) => [l, `/${l}${path}`])),
+      "x-default": `/${routing.defaultLocale}${path}`,
+    },
   };
 }
 

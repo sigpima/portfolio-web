@@ -61,18 +61,27 @@ function KindIcon({ kind }: { kind: BadgeKind }) {
   }
 }
 
-const PageBadgeContext = createContext(false);
+type PageBadge = { active: boolean; qualifier?: "placeholder" };
+
+const PageBadgeContext = createContext<PageBadge>({ active: false });
 
 /**
  * Marks a demo area whose badge is already rendered by the page (ProjectDetail).
  * Demos inside it skip their own label and only add a qualifier when needed.
  */
-export function PageBadgeProvider({ children }: { children: ReactNode }) {
-  return <PageBadgeContext.Provider value={true}>{children}</PageBadgeContext.Provider>;
+export function PageBadgeProvider({
+  children,
+  qualifier,
+}: {
+  children: ReactNode;
+  /** The qualifier the page badge already shows, so demos do not repeat it. */
+  qualifier?: "placeholder";
+}) {
+  return <PageBadgeContext.Provider value={{ active: true, qualifier }}>{children}</PageBadgeContext.Provider>;
 }
 
-/** True when the surrounding page already shows the demo badge. */
-export function usePageBadge(): boolean {
+/** Whether the surrounding page already shows the demo badge, and with which qualifier. */
+export function usePageBadge(): PageBadge {
   return useContext(PageBadgeContext);
 }
 

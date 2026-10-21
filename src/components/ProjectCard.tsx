@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { isPlaceholderDemo } from "@/content/replays";
 import type { DemoKind, Locale, Project } from "@/content/types";
 
 /** Short demo-kind chip colours (the label text carries the meaning). */
@@ -8,6 +9,10 @@ export const DEMO_CHIP_STYLE: Record<Exclude<DemoKind, "none">, string> = {
   replay: "border-primary/70 text-primary",
   simulation: "border-dashed border-on-surface-variant text-on-surface",
 };
+
+/** Chip that qualifies a demo label while all of its samples are placeholders. */
+export const placeholderChipClass =
+  "inline-flex items-center rounded border border-error bg-error-container px-2 py-0.5 font-mono text-label-mono-sm text-on-error-container";
 
 export const chipClass =
   "inline-flex items-center rounded border px-2 py-0.5 font-mono text-label-mono-sm";
@@ -24,9 +29,10 @@ export function ProjectCard({
   const t = useTranslations();
   const Heading = headingLevel === 2 ? "h2" : "h3";
   const href = `/${locale}/projects/${project.slug}`;
+  const placeholder = isPlaceholderDemo(project);
 
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-xl border border-outline-variant bg-surface-container-low transition-colors hover:border-outline focus-within:border-secondary">
+    <article className="group relative flex flex-col overflow-hidden rounded-xl border border-outline-variant bg-surface-container-low transition-colors hover:border-outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-secondary">
       <div className="relative aspect-[16/9] overflow-hidden border-b border-outline-variant bg-surface-container-lowest">
         {/* Decorative SVG cover: plain <img> because the image optimizer refuses SVG. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -40,8 +46,13 @@ export function ProjectCard({
             {t(`groups.${project.group}`)}
           </span>
           {project.demoKind !== "none" ? (
-            <span className={`${chipClass} bg-surface-container-lowest/90 ${DEMO_CHIP_STYLE[project.demoKind]}`}>
-              {t(`demo.badge.${project.demoKind}.label`)}
+            <span className="flex flex-wrap justify-end gap-1.5">
+              <span className={`${chipClass} bg-surface-container-lowest/90 ${DEMO_CHIP_STYLE[project.demoKind]}`}>
+                {t(`demo.badge.${project.demoKind}.label`)}
+              </span>
+              {placeholder ? (
+                <span className={placeholderChipClass}>{t("demo.badgeQualifier.placeholder.chip")}</span>
+              ) : null}
             </span>
           ) : null}
         </div>

@@ -282,4 +282,16 @@ describe("demo registry", () => {
     fireEvent.click(screen.getByRole("button", { name: "Sample two" }));
     expect(screen.queryByText("Placeholder images and facts")).toBeNull();
   });
+
+  it("does not repeat the qualifier when the page badge already carries it", () => {
+    render(
+      <NextIntlClientProvider locale="en" messages={enMessages}>
+        <PageBadgeProvider qualifier="placeholder">
+          <ReplayDemo definition={definition} kind="replay" locale="en" />
+        </PageBadgeProvider>
+      </NextIntlClientProvider>,
+    );
+    expect(screen.queryByText("Replay of a real run")).toBeNull();
+    expect(screen.queryByText("Placeholder images and facts")).toBeNull();
+  });
 });
