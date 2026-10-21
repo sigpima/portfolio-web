@@ -5,6 +5,7 @@ import { getMessages, getTranslations, setRequestLocale } from "next-intl/server
 import { routing } from "@/i18n/routing";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import { InviteSessionProvider } from "@/lib/invite/use-invite-session";
 import { metadataBase } from "@/lib/alternates";
 import { fontVariables } from "../fonts";
 import "../globals.css";
@@ -45,14 +46,16 @@ export default async function LocaleLayout({
     <html lang={locale} className={fontVariables}>
       <body className="flex min-h-screen flex-col">
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <a href="#main" className="skip-link">
-            {t("skipToContent")}
-          </a>
-          <SiteHeader locale={locale} />
-          <main id="main" tabIndex={-1} className="flex-1">
-            {children}
-          </main>
-          <SiteFooter locale={locale} />
+          <InviteSessionProvider>
+            <a href="#main" className="skip-link">
+              {t("skipToContent")}
+            </a>
+            <SiteHeader locale={locale} />
+            <main id="main" tabIndex={-1} className="flex-1">
+              {children}
+            </main>
+            <SiteFooter locale={locale} />
+          </InviteSessionProvider>
         </NextIntlClientProvider>
       </body>
     </html>
