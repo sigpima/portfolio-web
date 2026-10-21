@@ -11,8 +11,8 @@ export const knowledgeBase: Project = {
     en: "Knowledge Base: paint-contracting quotation Q&A",
   },
   tagline: {
-    vi: "Agent AI trả lời câu hỏi về báo giá bằng số liệu thật từ Postgres, qua 10 tool MCP chỉ đọc.",
-    en: "An AI agent that answers quotation questions with figures from Postgres, through 10 read-only MCP tools.",
+    vi: "Agent AI trả lời câu hỏi về báo giá bằng số liệu từ Postgres (dữ liệu giả lập), qua 10 tool MCP chỉ đọc.",
+    en: "An AI agent that answers quotation questions with figures from Postgres (synthetic data), through 10 read-only MCP tools.",
   },
   summary: {
     vi: "Kho dữ liệu báo giá và dự toán thi công sơn trong Postgres (19 bảng), nạp từ file YAML có kiểm tra, cùng một MCP server chỉ đọc để agent AI so sánh đơn giá và giải thích chênh lệch kèm số liệu cụ thể. Một bot Gemini gọi 10 tool MCP chỉ đọc đó để trả lời bằng tiếng Việt. Toàn bộ dữ liệu là giả lập: công ty \"Sơn Việt Demo Co.\", 24 công trình, 126 hạng mục; mọi tên công ty, công trình, thương hiệu đều là bịa.",

@@ -25,6 +25,21 @@ describe("project registry", () => {
     expect(listProjects("ai-agent").map((p) => p.slug)).toEqual(["knowledge-base"]);
   });
 
+  it("returns a copy so callers cannot reorder the registry", () => {
+    expect(listProjects()).not.toBe(projects);
+  });
+
+  it("never mentions Vast in any project text", () => {
+    const text = JSON.stringify(projects);
+    expect(text).not.toMatch(/vast/i);
+  });
+
+  it("flags Knowledge Base data as synthetic in both taglines", () => {
+    const kb = getProject("knowledge-base")!;
+    expect(kb.tagline.vi).toContain("dữ liệu giả lập");
+    expect(kb.tagline.en).toContain("synthetic data");
+  });
+
   it("puts Knowledge Base first overall", () => {
     const all = listProjects();
     expect(all).toHaveLength(3);

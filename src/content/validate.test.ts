@@ -35,7 +35,7 @@ describe("validateProjects", () => {
 
   it("reports duplicate slugs", () => {
     const errors = validateProjects([make({ slug: "a" }), make({ slug: "a" })], known);
-    expect(errors.some((e) => e.includes("a") && /trùng|duplicate/i.test(e))).toBe(true);
+    expect(errors.some((e) => e.startsWith("a:") && /slug trùng/.test(e))).toBe(true);
   });
 
   it("reports an empty Localized string in vi or en", () => {
@@ -56,7 +56,7 @@ describe("validateProjects", () => {
 
   it("reports a demoKind other than none without a demo", () => {
     const errors = validateProjects([make({ demoKind: "replay" })], known);
-    expect(errors.some((e) => e.includes("demo"))).toBe(true);
+    expect(errors.some((e) => e.includes("thiếu demo"))).toBe(true);
   });
 
   it("reports a demo component that is not a known demo", () => {
@@ -69,6 +69,6 @@ describe("validateProjects", () => {
 
   it("reports a demo present when demoKind is none", () => {
     const errors = validateProjects([make({ demo: { component: "demo-a" } })], known);
-    expect(errors.some((e) => e.includes("demo"))).toBe(true);
+    expect(errors.some((e) => e.includes('"none" nhưng lại có demo'))).toBe(true);
   });
 });
