@@ -180,12 +180,16 @@
       "title": "Công cụ dùng trong các dự án",
       "lead": "Danh sách lấy từ phần công nghệ của từng dự án trên trang này."
     },
+    "orbit": {
+      "label": "Kênh liên hệ"
+    },
     "contact": {
       "eyebrow": "Liên hệ",
       "title": "Trao đổi về một dự án",
       "lead": "Liên hệ qua các kênh dưới đây.",
       "email": "Email",
       "github": "GitHub",
+      "linkedin": "LinkedIn",
       "cv": "CV",
       "pending": "chưa cập nhật"
     },

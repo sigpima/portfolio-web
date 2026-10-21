@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { HomeProjectSections, splitHomeProjects } from "@/components/HomeProjects";
+import OrbitAvatar, { type OrbitLink } from "@/components/OrbitAvatar";
 import { chipClass, DEMO_CHIP_STYLE } from "@/components/ProjectCard";
 import { listProjects } from "@/content/registry";
 import { site } from "@/content/site";
@@ -52,19 +53,32 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const contacts: { key: string; label: string; value: string | null; href: string | null }[] = [
     { key: "email", label: t("home.contact.email"), value: site.email, href: `mailto:${site.email}` },
     { key: "github", label: t("home.contact.github"), value: site.github, href: site.github },
+    { key: "linkedin", label: t("home.contact.linkedin"), value: site.linkedin, href: site.linkedin },
     { key: "cv", label: t("home.contact.cv"), value: site.cv, href: site.cv },
   ];
+
+  // The planets around the avatar: only real values (a TODO placeholder never becomes a link).
+  const orbitCandidates: OrbitLink[] = [
+    { key: "github", label: t("home.contact.github"), href: site.github, icon: "github" },
+    { key: "linkedin", label: t("home.contact.linkedin"), href: site.linkedin, icon: "linkedin" },
+    { key: "email", label: t("home.contact.email"), href: `mailto:${site.email}`, icon: "mail" },
+  ];
+  const orbitLinks = orbitCandidates.filter((link) => !isPending(link.href.replace(/^mailto:/, "")));
 
   return (
     <div className="flex flex-col gap-20 pb-10 md:gap-24">
       {/* Hero */}
       <section aria-labelledby="hero-heading" className={`${containerClass} pt-12 md:pt-20`}>
-        <div className="grid items-end gap-8 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] lg:gap-12">
+        <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:gap-12">
           <div className="flex flex-col gap-6">
-            <p className="w-fit rounded-full border border-secondary/40 bg-secondary/10 px-3 py-1 font-mono text-label-mono-sm uppercase text-secondary">
-              {site.title[locale]}
-            </p>
-            <p className="font-mono text-label-mono-sm uppercase text-on-surface-variant">{site.name}</p>
+            <div className="flex flex-col gap-3">
+              <p className="text-headline-lg-mobile font-bold text-on-surface md:text-headline-lg">
+                {site.name[locale]}
+              </p>
+              <p className="w-fit rounded-full border border-secondary/50 bg-secondary/10 px-4 py-1.5 font-mono text-body-lg font-semibold uppercase tracking-wider text-secondary">
+                {site.title[locale]}
+              </p>
+            </div>
             <h1 id="hero-heading" className="text-display-xl-mobile text-on-surface md:text-display-xl">
               {t("home.hero.headline")}
             </h1>
@@ -85,9 +99,17 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               </Link>
             </div>
           </div>
-          <div className="flex flex-col gap-3 border-l-2 border-primary-container/60 pl-5">
-            <p className="text-body-lg text-on-surface-variant">{t("home.hero.lead")}</p>
-            <p className="text-body-md text-outline">{site.bio[locale]}</p>
+          <div className="flex flex-col gap-8">
+            <OrbitAvatar
+              name={site.name[locale]}
+              avatarSrc={site.avatar}
+              label={t("home.orbit.label")}
+              links={orbitLinks}
+            />
+            <div className="flex flex-col gap-3 border-l-2 border-primary-container/60 pl-5">
+              <p className="text-body-lg text-on-surface-variant">{t("home.hero.lead")}</p>
+              <p className="text-body-md text-outline">{site.bio[locale]}</p>
+            </div>
           </div>
         </div>
 

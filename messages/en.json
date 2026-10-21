@@ -180,12 +180,16 @@
       "title": "Tools used across these projects",
       "lead": "Collected from the tech list of each project on this site."
     },
+    "orbit": {
+      "label": "Contact links"
+    },
     "contact": {
       "eyebrow": "Contact",
       "title": "Talk about a project",
       "lead": "Reach out through the channels below.",
       "email": "Email",
       "github": "GitHub",
+      "linkedin": "LinkedIn",
       "cv": "CV",
       "pending": "not set yet"
     },
