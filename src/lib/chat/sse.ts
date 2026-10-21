@@ -39,21 +39,44 @@ function toEvent(block: string): ChatEvent | null {
 export async function* parseSse(body: ReadableStream<Uint8Array>): AsyncGenerator<ChatEvent> {
   const reader = body.getReader();
   const decoder = new TextDecoder("utf-8");
-  let buffer = "";
+  let buffer = ""; // normalized to "\n" line endings
+  let carry = ""; // a trailing "\r" held back until we know whether "\n" follows
+
+  function append(text: string): void {
+    let raw = carry + text;
+    carry = "";
+    if (raw.endsWith("\r")) {
+      carry = "\r";
+      raw = raw.slice(0, -1);
+    }
+    buffer += raw.replace(/\r\n?/g, "\n");
+  }
+
+  function* drain(): Generator<ChatEvent> {
+    let sep: number;
+    while ((sep = buffer.indexOf("\n\n")) !== -1) {
+      const block = buffer.slice(0, sep);
+      buffer = buffer.slice(sep + 2);
+      const event = toEvent(block);
+      if (event) yield event;
+    }
+  }
+
   try {
     for (;;) {
       const { done, value } = await reader.read();
       if (done) break;
-      buffer += decoder.decode(value, { stream: true }).replace(/\r\n?/g, "\n");
-      let sep: number;
-      while ((sep = buffer.indexOf("\n\n")) !== -1) {
-        const block = buffer.slice(0, sep);
-        buffer = buffer.slice(sep + 2);
-        const event = toEvent(block);
-        if (event) yield event;
-      }
+      append(decoder.decode(value, { stream: true }));
+      yield* drain();
     }
+    // End of stream: flush the decoder; a held-back lone "\r" is a line end.
+    append(decoder.decode());
+    buffer += carry.replace("\r", "\n");
+    carry = "";
+    yield* drain();
   } finally {
+    // Cancels the body if the consumer stopped early (no-op once closed).
+    await reader.cancel().catch(() => {});
     reader.releaseLock();
   }
 }

@@ -87,6 +87,30 @@ describe("POST /api/chat/stream", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it("enforces the cap when content-length is missing or understated", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const big = new TextEncoder().encode("x".repeat(33 * 1024));
+    const streamed = new Request("http://localhost/api/chat/stream", {
+      method: "POST",
+      body: new ReadableStream<Uint8Array>({
+        start(c) {
+          c.enqueue(big);
+          c.close();
+        },
+      }),
+      duplex: "half",
+    } as RequestInit & { duplex: "half" });
+    expect(streamed.headers.get("content-length")).toBeNull();
+    const lying = chatRequest("x".repeat(33 * 1024), { headers: { "content-length": "10" } });
+    for (const req of [streamed, lying]) {
+      const res = await streamRoute.POST(req);
+      expect(res.status).toBe(413);
+      expect(await res.json()).toEqual({ code: "too_long" });
+    }
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("aborts the upstream request when the client aborts", async () => {
     let upstreamSignal: AbortSignal | undefined;
     vi.stubGlobal(

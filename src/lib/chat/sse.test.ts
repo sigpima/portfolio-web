@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { parseSse } from "./sse";
 import type { ChatEvent } from "./types";
 
@@ -66,5 +66,45 @@ describe("parseSse", () => {
       streamOf([': keepalive\r\n\r\nevent: answer\r\ndata:{"text":"x"}\r\n\r\n']),
     );
     expect(events).toEqual([{ type: "answer", text: "x" }]);
+  });
+
+  it("handles a CRLF split across chunks", async () => {
+    const events = await collect(streamOf(["event: answer\r", '\ndata: {"text":"x"}\r\n\r\n']));
+    expect(events).toEqual([{ type: "answer", text: "x" }]);
+  });
+
+  it("handles a CRLF CRLF terminator split at every byte boundary", async () => {
+    const full = 'event: answer\r\ndata: {"text":"x"}\r\n\r\nevent: done\r\ndata: {"duration_ms":1}\r\n\r\n';
+    const term = full.indexOf("\r\n\r\n");
+    for (let i = term; i <= term + 4; i++) {
+      const events = await collect(streamOf([full.slice(0, i), full.slice(i)]));
+      expect(events, `split at ${i}`).toEqual([
+        { type: "answer", text: "x" },
+        { type: "done", duration_ms: 1 },
+      ]);
+    }
+  });
+
+  it("joins a multi-line data field with newlines", async () => {
+    const events = await collect(
+      streamOf(['event: answer\ndata: {"text":\ndata: "a"}\n\n']),
+    );
+    expect(events).toEqual([{ type: "answer", text: "a" }]);
+  });
+
+  it("cancels the stream when the consumer stops early", async () => {
+    const cancel = vi.fn();
+    const enc = new TextEncoder();
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(enc.encode('event: answer\ndata: {"text":"a"}\n\n'));
+      },
+      cancel,
+    });
+    for await (const ev of parseSse(body)) {
+      expect(ev.type).toBe("answer");
+      break;
+    }
+    expect(cancel).toHaveBeenCalledTimes(1);
   });
 });
