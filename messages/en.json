@@ -86,5 +86,57 @@
       "model": "The bot couldn't answer right now. Please try again in a moment.",
       "generic": "Something went wrong. Please try again."
     }
+  },
+  "demo": {
+    "badge": {
+      "live": {
+        "label": "Live",
+        "description": "This demo calls the real system every time you use it."
+      },
+      "replay": {
+        "label": "Replay of a real run",
+        "description": "The steps are played back from the record of a run; no service is called while you watch."
+      },
+      "simulation": {
+        "label": "Simulation · feature in development",
+        "description": "This feature is not built yet. The simulation uses fictional sample data and a pre-written result, with no real AI model call."
+      }
+    },
+    "samplesLabel": "Choose a sample",
+    "inputTitle": "Input",
+    "fileCardLabel": "Sample Word file (fictional)",
+    "resultTitle": "Result",
+    "flowTitle": "Steps",
+    "flowLabel": "Diagram of the replayed steps",
+    "play": "Play",
+    "replay": "Replay",
+    "runStatus": {
+      "idle": "Ready",
+      "playing": "Playing",
+      "done": "Done"
+    },
+    "statusLabels": {
+      "idle": "Waiting",
+      "active": "Running",
+      "done": "Done",
+      "error": "Error",
+      "skipped": "Skipped"
+    },
+    "placeholder": {
+      "ribbon": "placeholder images",
+      "note": "This sample's images and facts (occasion, style, garments, total time) are illustrative placeholders, to be replaced with a real run's images and record."
+    },
+    "resultHint": "Press Play to see each step and the result.",
+    "people": {
+      "treeLabel": "The family tree that was built",
+      "generation": "Generation {n}",
+      "childOf": "Child of {parents}",
+      "and": "and",
+      "born": "born {year}",
+      "noParents": "No parents given in the file"
+    },
+    "giaPha": {
+      "scansPlanned": "Only a Word file input is simulated today. Support for photos and scans of genealogy documents is planned and not available yet."
+    }
   }
 }

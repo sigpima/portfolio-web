@@ -86,5 +86,57 @@
       "model": "Bot chưa trả lời được lúc này. Hãy thử lại sau giây lát.",
       "generic": "Có lỗi xảy ra. Hãy thử lại."
     }
+  },
+  "demo": {
+    "badge": {
+      "live": {
+        "label": "Chạy thật",
+        "description": "Demo này gọi hệ thống thật mỗi khi bạn dùng."
+      },
+      "replay": {
+        "label": "Phát lại từ lần chạy thật",
+        "description": "Các bước được phát lại theo bản ghi của một lần chạy; không có dịch vụ nào được gọi khi bạn xem."
+      },
+      "simulation": {
+        "label": "Mô phỏng · tính năng đang phát triển",
+        "description": "Tính năng này chưa được xây dựng. Bản mô phỏng dùng dữ liệu mẫu giả và kết quả soạn sẵn, không gọi mô hình AI thật."
+      }
+    },
+    "samplesLabel": "Chọn mẫu",
+    "inputTitle": "Đầu vào",
+    "fileCardLabel": "File Word mẫu (giả)",
+    "resultTitle": "Kết quả",
+    "flowTitle": "Các bước",
+    "flowLabel": "Sơ đồ các bước của bản phát lại",
+    "play": "Chạy",
+    "replay": "Phát lại",
+    "runStatus": {
+      "idle": "Sẵn sàng",
+      "playing": "Đang phát",
+      "done": "Xong"
+    },
+    "statusLabels": {
+      "idle": "Đang chờ",
+      "active": "Đang chạy",
+      "done": "Xong",
+      "error": "Lỗi",
+      "skipped": "Bỏ qua"
+    },
+    "placeholder": {
+      "ribbon": "ảnh giữ chỗ",
+      "note": "Ảnh và dữ kiện của mẫu này (dịp, phong cách, món đồ, tổng thời gian) là minh hoạ giữ chỗ, sẽ được thay bằng ảnh và bản ghi của một lần chạy thật."
+    },
+    "resultHint": "Bấm Chạy để xem từng bước và kết quả.",
+    "people": {
+      "treeLabel": "Cây gia phả dựng được",
+      "generation": "Đời {n}",
+      "childOf": "Con của {parents}",
+      "and": "và",
+      "born": "sinh {year}",
+      "noParents": "Không ghi cha mẹ trong file"
+    },
+    "giaPha": {
+      "scansPlanned": "Hiện chỉ mô phỏng đầu vào là file Word. Hỗ trợ ảnh chụp và ảnh scan giấy tờ gia phả là kế hoạch, chưa có."
+    }
   }
 }
