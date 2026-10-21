@@ -1,0 +1,18 @@
+{
+  "meta": {
+    "title": "AI Engineer Portfolio",
+    "description": "An AI engineer's portfolio: projects with live demos, replays and simulations, each honestly labelled."
+  },
+  "header": {
+    "brand": "Portfolio · AI Engineer",
+    "navLabel": "Main navigation",
+    "home": "Home",
+    "projects": "Projects",
+    "languageLabel": "Language",
+    "switchToVi": "Tiếng Việt",
+    "switchToEn": "English"
+  },
+  "a11y": {
+    "skipToContent": "Skip to main content"
+  }
+}

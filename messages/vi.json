@@ -1,0 +1,18 @@
+{
+  "meta": {
+    "title": "Portfolio AI Engineer",
+    "description": "Portfolio của một AI Engineer: các dự án có demo chạy thật, bản phát lại và bản mô phỏng, được ghi nhãn trung thực."
+  },
+  "header": {
+    "brand": "Portfolio · AI Engineer",
+    "navLabel": "Điều hướng chính",
+    "home": "Trang chủ",
+    "projects": "Dự án",
+    "languageLabel": "Ngôn ngữ",
+    "switchToVi": "Tiếng Việt",
+    "switchToEn": "English"
+  },
+  "a11y": {
+    "skipToContent": "Chuyển tới nội dung chính"
+  }
+}
