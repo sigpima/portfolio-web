@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type FormEvent } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { FlowPlayer } from "@/components/flow/FlowPlayer";
 import type { Locale } from "@/content/types";
 import { ChatHttpError, fetchChatStatus, streamChat } from "@/lib/chat/client";
@@ -17,6 +17,7 @@ const TYPING_MAX_TICKS = 200;
 type DemoStatus = "loading" | "enabled" | "paused";
 type ErrorKey = "sessionFull" | "model" | "generic";
 type InputErrorKey = "tooLong" | "invalidQuestion";
+type FocusTarget = "input" | "newConversation" | "paused";
 
 interface Turn {
   id: number;
@@ -48,22 +49,26 @@ function errorKeyFor(event: Extract<ChatEvent, { type: "error" }>): ErrorKey {
   }
 }
 
-/** Types `text` out progressively, or shows it at once under reduced motion. */
+/**
+ * Types `text` out progressively (by code point), or shows it at once under reduced motion.
+ * Purely visual: it is hidden from assistive tech, which gets the full text elsewhere.
+ */
 function TypedText({ text }: { text: string }) {
-  const [shown, setShown] = useState(() => (prefersReducedMotion() ? text.length : 0));
+  const chars = useMemo(() => Array.from(text), [text]);
+  const [shown, setShown] = useState(() => (prefersReducedMotion() ? chars.length : 0));
 
-  const typing = shown < text.length;
+  const typing = shown < chars.length;
 
   useEffect(() => {
     if (!typing) return;
-    const step = Math.max(1, Math.ceil(text.length / TYPING_MAX_TICKS));
-    const timer = setInterval(() => setShown((n) => Math.min(text.length, n + step)), TYPING_INTERVAL_MS);
+    const step = Math.max(1, Math.ceil(chars.length / TYPING_MAX_TICKS));
+    const timer = setInterval(() => setShown((n) => Math.min(chars.length, n + step)), TYPING_INTERVAL_MS);
     return () => clearInterval(timer);
-  }, [typing, text]);
+  }, [typing, chars]);
 
   return (
-    <span aria-busy={typing || undefined}>
-      {text.slice(0, shown)}
+    <span aria-hidden="true" data-typed="">
+      {chars.slice(0, shown).join("")}
       {typing ? (
         <span
           aria-hidden="true"
@@ -75,13 +80,19 @@ function TypedText({ text }: { text: string }) {
 }
 
 export interface KnowledgeBaseDemoProps {
-  /** Must match the locale of the surrounding NextIntlClientProvider. */
+  /** Route locale; the rendered language comes from the surrounding NextIntlClientProvider. */
   locale: Locale;
 }
 
 /** Live Knowledge Base demo: the bot's real steps in a flow diagram above, the chat below. */
-export function KnowledgeBaseDemo({ locale }: KnowledgeBaseDemoProps) {
+/**
+ * The `locale` prop is accepted for the registry signature only: text and `lang`
+ * both follow the active next-intl locale, so they can never disagree.
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function KnowledgeBaseDemo(_props: KnowledgeBaseDemoProps) {
   const t = useTranslations("kb");
+  const activeLocale = useLocale();
   const inputId = useId();
   const inputErrorId = useId();
 
@@ -110,6 +121,13 @@ export function KnowledgeBaseDemo({ locale }: KnowledgeBaseDemoProps) {
   const [inputError, setInputError] = useState<InputErrorKey | null>(null);
   const [running, setRunning] = useState(false);
   const [sessionFull, setSessionFull] = useState(false);
+  /** Text of the single polite live region: a completed answer or a localized error. */
+  const [announcement, setAnnouncement] = useState("");
+  const [focusRequest, setFocusRequest] = useState<{ target: FocusTarget; seq: number } | null>(null);
+
+  const inputRef = useRef<HTMLInputElement>(null);
+  const newConversationRef = useRef<HTMLButtonElement>(null);
+  const pausedRef = useRef<HTMLHeadingElement>(null);
 
   const runningRef = useRef(false);
   const sessionIdRef = useRef<string | null>(null);
@@ -130,6 +148,22 @@ export function KnowledgeBaseDemo({ locale }: KnowledgeBaseDemoProps) {
   // Abort the in-flight request when the component goes away.
   useEffect(() => () => abortRef.current?.abort(), []);
 
+  // Focus moves after the render that enables / creates the target, never onto a disabled element.
+  useEffect(() => {
+    if (!focusRequest) return;
+    const el =
+      focusRequest.target === "input"
+        ? inputRef.current
+        : focusRequest.target === "newConversation"
+          ? newConversationRef.current
+          : pausedRef.current;
+    if (el && !(el instanceof HTMLInputElement && el.disabled)) el.focus();
+  }, [focusRequest]);
+
+  const requestFocus = useCallback((target: FocusTarget) => {
+    setFocusRequest((prev) => ({ target, seq: (prev?.seq ?? 0) + 1 }));
+  }, []);
+
   const updateFlow = useCallback((next: FlowState) => {
     flowRef.current = next;
     setFlow(next);
@@ -143,7 +177,8 @@ export function KnowledgeBaseDemo({ locale }: KnowledgeBaseDemoProps) {
     async (raw: string) => {
       const message = raw.trim();
       if (message === "" || runningRef.current || sessionFull) return;
-      if (message.length > MAX_QUESTION_CHARS) {
+      // Count code points, like the Python backend does.
+      if ([...message].length > MAX_QUESTION_CHARS) {
         setInputError("tooLong");
         return;
       }
@@ -152,6 +187,9 @@ export function KnowledgeBaseDemo({ locale }: KnowledgeBaseDemoProps) {
       setRunning(true);
       setInputError(null);
       setInput("");
+      setAnnouncement("");
+      // The send button / chip gets disabled while running: keep focus on the input instead.
+      requestFocus("input");
       const turnId = ++turnSeq.current;
       setTurns((all) => [...all, { id: turnId, question: message, answer: null, error: null }]);
       updateFlow(reduceChatFlow(flowRef.current, { type: "submit" }, labels));
@@ -164,6 +202,8 @@ export function KnowledgeBaseDemo({ locale }: KnowledgeBaseDemoProps) {
       const fail = (key: ErrorKey) => {
         failed = true;
         updateTurn(turnId, { error: key });
+        setAnnouncement(t(`errors.${key}`));
+        if (key === "sessionFull") requestFocus("newConversation");
         // Mark the running steps as failed with our own text, never the upstream message.
         updateFlow(
           reduceChatFlow(flowRef.current, { type: "error", code: "internal", message: t(`errors.${key}`) }, labels),
@@ -185,6 +225,7 @@ export function KnowledgeBaseDemo({ locale }: KnowledgeBaseDemoProps) {
           if (event.type === "answer") {
             answered = true;
             updateTurn(turnId, { answer: event.text });
+            setAnnouncement(event.text);
           }
         }
         if (!answered && !failed && !controller.signal.aborted) fail("generic");
@@ -195,6 +236,7 @@ export function KnowledgeBaseDemo({ locale }: KnowledgeBaseDemoProps) {
             case "demo_disabled":
               updateFlow(initialChatFlow(labels));
               setStatus("paused");
+              requestFocus("paused");
               return;
             case "too_long":
             case "invalid_question":
@@ -219,7 +261,7 @@ export function KnowledgeBaseDemo({ locale }: KnowledgeBaseDemoProps) {
         }
       }
     },
-    [labels, sessionFull, t, updateFlow, updateTurn],
+    [labels, requestFocus, sessionFull, t, updateFlow, updateTurn],
   );
 
   const newConversation = useCallback(() => {
@@ -231,8 +273,10 @@ export function KnowledgeBaseDemo({ locale }: KnowledgeBaseDemoProps) {
     setTurns([]);
     setSessionFull(false);
     setInputError(null);
+    setAnnouncement("");
     updateFlow(initialChatFlow(labels));
-  }, [labels, updateFlow]);
+    requestFocus("input");
+  }, [labels, requestFocus, updateFlow]);
 
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -250,7 +294,7 @@ export function KnowledgeBaseDemo({ locale }: KnowledgeBaseDemoProps) {
   const blocked = status !== "enabled" || running || sessionFull;
 
   return (
-    <div lang={locale} className="flex flex-col gap-4">
+    <div lang={activeLocale} className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between font-mono text-label-mono-sm tracking-wider text-outline uppercase">
           <span>{t("flowTitle")}</span>
@@ -267,12 +311,16 @@ export function KnowledgeBaseDemo({ locale }: KnowledgeBaseDemoProps) {
       >
         {status === "paused" ? (
           <div className="flex flex-col gap-1 rounded-lg border border-outline-variant bg-surface-container-low p-4">
-            <h3 className="text-headline-md text-on-surface">{t("paused.title")}</h3>
+            <h3 ref={pausedRef} tabIndex={-1} className="text-headline-md text-on-surface">{t("paused.title")}</h3>
             <p className="text-body-md text-on-surface-variant">{t("paused.body")}</p>
           </div>
         ) : (
           <>
-            <div aria-live="polite" className="flex flex-col gap-2.5">
+            {/* Only completed answers and localized errors are announced, once each. */}
+            <div aria-live="polite" aria-atomic="true" data-role="live" className="sr-only">
+              {announcement}
+            </div>
+            <div className="flex flex-col gap-2.5">
               {turns.length === 0 ? (
                 <p className="text-body-md text-on-surface-variant">
                   {status === "loading" ? t("loading") : t("emptyHint")}
@@ -292,6 +340,9 @@ export function KnowledgeBaseDemo({ locale }: KnowledgeBaseDemoProps) {
                       data-role="bot"
                       className="max-w-[82%] self-start rounded-xl border border-primary-container/50 bg-primary-container/20 px-3.5 py-2.5 text-body-md break-words whitespace-pre-wrap text-on-surface"
                     >
+                      <span className="sr-only">
+                        {t("bot")}: {turn.answer}
+                      </span>
                       <TypedText text={turn.answer} />
                     </p>
                   ) : null}
@@ -313,6 +364,7 @@ export function KnowledgeBaseDemo({ locale }: KnowledgeBaseDemoProps) {
             {turns.length > 0 ? (
               <button
                 type="button"
+                ref={newConversationRef}
                 onClick={newConversation}
                 className="self-start rounded-lg border border-secondary px-3 py-1.5 text-body-md text-secondary hover:bg-secondary/10"
               >
@@ -340,6 +392,7 @@ export function KnowledgeBaseDemo({ locale }: KnowledgeBaseDemoProps) {
               </label>
               <div className="flex gap-2">
                 <input
+                  ref={inputRef}
                   id={inputId}
                   type="text"
                   autoComplete="off"

@@ -96,6 +96,19 @@ function botBubbles() {
   return Array.from(document.querySelectorAll<HTMLElement>('[data-role="bot"]'));
 }
 
+/** The visual, typed-out text of the latest bot bubble. */
+function typed() {
+  return botBubbles().at(-1)?.querySelector<HTMLElement>("[data-typed]") ?? null;
+}
+
+function live() {
+  const el = document.querySelector<HTMLElement>('[data-role="live"]');
+  if (!el) throw new Error("live region missing");
+  return el;
+}
+
+const ERROR = { selector: '[data-role="error"]' };
+
 async function renderDemo(locale: Locale = "vi") {
   const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
   const messages = locale === "vi" ? viMessages : enMessages;
@@ -183,14 +196,29 @@ describe("KnowledgeBaseDemo", () => {
 
     await s.emit(answer);
     expect(node("answer")).toHaveAttribute("data-status", "done");
-    // Typing out: not complete right away.
-    expect(botBubbles().at(-1)?.textContent).not.toBe(ANSWER);
+    // Typing out: the visual text is not complete right away and is hidden from assistive tech...
+    expect(typed()?.textContent).not.toBe(ANSWER);
+    expect(typed()).toHaveAttribute("aria-hidden", "true");
+    // ...while the live region holds the full answer from the start, never a prefix.
+    expect(live()).toHaveAttribute("aria-live", "polite");
+    expect(live().textContent).toBe(ANSWER);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(80);
+    });
+    expect(typed()?.textContent?.length).toBeGreaterThan(0);
+    expect(typed()?.textContent).not.toBe(ANSWER);
+    expect(live().textContent).toBe(ANSWER);
+    // The bubble itself still exposes the full answer to screen readers (not live).
+    expect(botBubbles().at(-1)?.querySelector(".sr-only")).toHaveTextContent(ANSWER);
 
     await s.emit(done);
     await s.end();
     await finishTyping();
-    expect(botBubbles().at(-1)).toHaveTextContent(ANSWER);
-    expect(botBubbles().at(-1)?.closest("[aria-live]")).toHaveAttribute("aria-live", "polite");
+    expect(typed()).toHaveTextContent(ANSWER);
+    expect(botBubbles().at(-1)?.closest("[aria-live]")).toBeNull();
+    // The echoed question is not announced.
+    expect(document.querySelector('[data-role="user"]')?.closest("[aria-live]")).toBeNull();
+    expect(live().textContent).toBe(ANSWER);
   });
 
   it("shows the answer at once when reduced motion is preferred", async () => {
@@ -200,7 +228,7 @@ describe("KnowledgeBaseDemo", () => {
     const input = await readyInput();
     await user.type(input, "hi");
     await user.click(screen.getByRole("button", { name: "Gửi" }));
-    await waitFor(() => expect(botBubbles().at(-1)).toHaveTextContent(ANSWER));
+    await waitFor(() => expect(typed()).toHaveTextContent(ANSWER));
   });
 
   it("does not call streamChat for an empty or whitespace-only question", async () => {
@@ -247,8 +275,9 @@ describe("KnowledgeBaseDemo", () => {
     const { user } = await renderDemo();
     const input = await readyInput();
     await user.type(input, "Câu hỏi{Enter}");
-    expect(await chat().findByText(viMessages.kb.errors.model)).toBeInTheDocument();
+    expect(await chat().findByText(viMessages.kb.errors.model, ERROR)).toBeInTheDocument();
     expect(screen.queryByText(/RAW UPSTREAM/)).not.toBeInTheDocument();
+    expect(live().textContent).toBe(viMessages.kb.errors.model);
     expect(node("model-1")).toHaveAttribute("data-status", "error");
     await user.type(input, "tiếp");
     expect(input).toBeEnabled();
@@ -284,14 +313,14 @@ describe("KnowledgeBaseDemo", () => {
     const { user } = await renderDemo();
     const input = await readyInput();
     await user.type(input, "Một{Enter}");
-    await waitFor(() => expect(botBubbles().at(-1)).toHaveTextContent(ANSWER));
+    await waitFor(() => expect(typed()).toHaveTextContent(ANSWER));
     await user.type(input, "Hai{Enter}");
     expect(mockStream).toHaveBeenLastCalledWith(
       { message: "Hai", sessionId: "s-full" },
       expect.any(AbortSignal),
     );
     const button = await screen.findByRole("button", { name: "Cuộc trò chuyện mới" });
-    expect(chat().getByText(viMessages.kb.errors.sessionFull)).toBeInTheDocument();
+    expect(chat().getByText(viMessages.kb.errors.sessionFull, ERROR)).toBeInTheDocument();
 
     await user.click(button);
     expect(screen.queryByText("Một")).not.toBeInTheDocument();
@@ -335,7 +364,7 @@ describe("KnowledgeBaseDemo", () => {
     const { user } = await renderDemo();
     const input = await readyInput();
     await user.type(input, "Câu hỏi{Enter}");
-    expect(await chat().findByText(viMessages.kb.errors.generic)).toBeInTheDocument();
+    expect(await chat().findByText(viMessages.kb.errors.generic, ERROR)).toBeInTheDocument();
     expect(screen.queryByText(/Failed to fetch/)).not.toBeInTheDocument();
     expect(input).toBeEnabled();
   });
@@ -361,5 +390,77 @@ describe("KnowledgeBaseDemo", () => {
     expect(screen.getByRole("button", { name: "Send" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: enMessages.kb.chips.c1 })).toBeInTheDocument();
     expect(within(screen.getByRole("region", { name: enMessages.kb.flowLabel })).getAllByRole("listitem")).toHaveLength(5);
+  });
+  it("moves focus to the input after a chip send", async () => {
+    const s = controlledStream();
+    mockStream.mockImplementation(s.gen);
+    const { user } = await renderDemo();
+    const input = await readyInput();
+    const chip = screen.getByRole("button", { name: viMessages.kb.chips.c1 });
+    await user.click(chip);
+    expect(chip).toBeDisabled();
+    expect(input).toHaveFocus();
+  });
+
+  it("keeps focus on the input when sending with the (then disabled) send button", async () => {
+    const s = controlledStream();
+    mockStream.mockImplementation(s.gen);
+    const { user } = await renderDemo();
+    const input = await readyInput();
+    await user.type(input, "Câu hỏi");
+    const send = screen.getByRole("button", { name: "Gửi" });
+    await user.click(send);
+    expect(send).toBeDisabled();
+    expect(input).toHaveFocus();
+  });
+
+  it("focuses New conversation on session_full, then the input after starting over", async () => {
+    mockStream.mockImplementation(
+      streamOf([{ type: "error", code: "session_full", message: "full" }]),
+    );
+    const { user } = await renderDemo();
+    const input = await readyInput();
+    await user.type(input, "Câu hỏi{Enter}");
+    const button = await screen.findByRole("button", { name: "Cuộc trò chuyện mới" });
+    await waitFor(() => expect(button).toHaveFocus());
+    expect(input).toBeDisabled();
+    expect(live().textContent).toBe(viMessages.kb.errors.sessionFull);
+    await user.click(button);
+    expect(input).toBeEnabled();
+    expect(input).toHaveFocus();
+    expect(live().textContent).toBe("");
+  });
+
+  it("counts the 500-character limit in code points, not UTF-16 units", async () => {
+    mockMatchMedia(true);
+    mockStream.mockImplementation(streamOf(happyEvents()));
+    const { user } = await renderDemo();
+    const input = await readyInput();
+
+    await user.click(input);
+    await user.paste("😀".repeat(501));
+    await user.keyboard("{Enter}");
+    expect(mockStream).not.toHaveBeenCalled();
+    expect(input).toHaveAttribute("aria-invalid", "true");
+
+    await user.clear(input);
+    await user.paste("😀".repeat(500));
+    await user.keyboard("{Enter}");
+    expect(mockStream).toHaveBeenCalledWith(
+      { message: "😀".repeat(500), sessionId: null },
+      expect.any(AbortSignal),
+    );
+    expect(input).not.toHaveAttribute("aria-invalid");
+    expect(screen.queryByText(/500 ký tự/)).not.toBeInTheDocument();
+  });
+
+  it("takes lang from the active next-intl locale, not the prop", async () => {
+    const { container } = render(
+      <NextIntlClientProvider locale="en" messages={enMessages}>
+        <KnowledgeBaseDemo locale="vi" />
+      </NextIntlClientProvider>,
+    );
+    await readyInput("Your question");
+    expect(container.firstElementChild).toHaveAttribute("lang", "en");
   });
 });
