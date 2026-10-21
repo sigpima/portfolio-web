@@ -211,6 +211,14 @@ export function ReplayDemo({ definition, kind, locale: _locale, footnote }: Repl
         </h3>
         {sample.input.kind === "images" ? (
           <ImageGrid items={sample.input.items} locale={locale} placeholder={placeholder} ribbon={ribbon} />
+        ) : sample.input.kind === "question" ? (
+          <p
+            data-role="user"
+            className="max-w-[82%] self-end rounded-xl bg-surface-container-high px-3.5 py-2.5 text-body-md break-words text-on-surface"
+          >
+            <span className="sr-only">{t("chat.you")}: </span>
+            {sample.input.text[locale]}
+          </p>
         ) : (
           <figure className="m-0 flex flex-col gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest p-4">
             <figcaption className="flex flex-wrap items-center gap-2">
@@ -269,6 +277,14 @@ export function ReplayDemo({ definition, kind, locale: _locale, footnote }: Repl
           <p className="text-body-md text-on-surface-variant">{t("resultHint")}</p>
         ) : sample.result.kind === "images" ? (
           <ImageGrid items={sample.result.items} locale={locale} placeholder={placeholder} ribbon={ribbon} />
+        ) : sample.result.kind === "text" ? (
+          <p
+            data-role="bot"
+            className="max-w-[82%] self-start rounded-xl border border-primary-container/50 bg-primary-container/20 px-3.5 py-2.5 text-body-md break-words whitespace-pre-wrap text-on-surface"
+          >
+            <span className="sr-only">{t("chat.bot")}: </span>
+            {sample.result.text[locale]}
+          </p>
         ) : (
           <PeopleResult people={sample.result.people} />
         )}

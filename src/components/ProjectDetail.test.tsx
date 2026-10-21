@@ -1,6 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
-import { describe, expect, it, vi as vitest } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi as vitest } from "vitest";
+import { InviteSessionProvider } from "@/lib/invite/use-invite-session";
 import type { DemoKind, Locale, Project } from "@/content/types";
 import viMessages from "../../messages/vi.json";
 import enMessages from "../../messages/en.json";
@@ -49,16 +50,31 @@ function fakeProject(demoKind: DemoKind): Project {
 function renderDetail(project: Project, locale: Locale) {
   return render(
     <NextIntlClientProvider locale={locale} messages={locale === "vi" ? viMessages : enMessages}>
-      <ProjectDetail project={project} locale={locale} />
+      <InviteSessionProvider>
+        <ProjectDetail project={project} locale={locale} />
+      </InviteSessionProvider>
     </NextIntlClientProvider>,
   );
 }
 
+// An invited visitor with the chat feature: the in-demo badge of a live project says "live".
+beforeEach(() => {
+  vitest.stubGlobal(
+    "fetch",
+    vitest.fn(async () => Response.json({ invited: true, features: { chat: true, twistfit: false, gia_pha: false } })),
+  );
+});
+
+afterEach(() => {
+  vitest.unstubAllGlobals();
+});
+
 describe("ProjectDetail", () => {
   for (const locale of ["vi", "en"] as const) {
     for (const kind of ["live", "replay", "simulation"] as const) {
-      it(`shows the ${kind} badge right above the demo in ${locale}`, () => {
+      it(`shows the ${kind} badge right above the demo in ${locale}`, async () => {
         renderDetail(fakeProject(kind), locale);
+        await screen.findAllByText(LABELS[locale][kind], { exact: true });
         const demo = screen.getByTestId("demo-stub");
         expect(demo).toHaveTextContent(`stub demo ${locale}`);
         // the badge sits in the same demo region, once, and precedes the demo

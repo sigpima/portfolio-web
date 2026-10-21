@@ -1,10 +1,15 @@
 import type { Project } from "../types";
 import { giaPhaReplay } from "./gia-pha";
+import { knowledgeBaseReplay } from "./knowledge-base";
 import { twistfitReplay } from "./twistfit";
 import type { ReplayDefinition } from "./types";
 
-/** Replay data by `Project.demo.component` key (only replay/simulation demos have one). */
+/**
+ * Replay data by `Project.demo.component` key: replay/simulation demos, plus live demos
+ * that fall back to a replay for visitors without an invite (Knowledge Base).
+ */
 export const replaysByDemoComponent: Record<string, ReplayDefinition> = {
+  "knowledge-base": knowledgeBaseReplay,
   "twistfit-replay": twistfitReplay,
   "gia-pha-simulation": giaPhaReplay,
 };

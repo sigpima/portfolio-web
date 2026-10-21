@@ -84,14 +84,21 @@
       "invalidQuestion": "Câu hỏi không hợp lệ. Hãy thử diễn đạt lại.",
       "sessionFull": "Cuộc trò chuyện này đã đủ dài. Hãy bắt đầu cuộc trò chuyện mới.",
       "model": "Bot chưa trả lời được lúc này. Hãy thử lại sau giây lát.",
-      "generic": "Có lỗi xảy ra. Hãy thử lại."
-    }
+      "generic": "Có lỗi xảy ra. Hãy thử lại.",
+      "rateLimited": "Bạn đang chạy quá nhiều lượt cùng lúc. Đợi lượt trước xong rồi thử lại.",
+      "inviteRequired": "Link mời không còn hiệu lực."
+    },
+    "replayNotice": "Bạn đang xem bản phát lại. Mở link mời để thử trực tiếp.",
+    "modeLoading": "Đang tải demo…"
   },
   "demo": {
     "badge": {
       "live": {
         "label": "Chạy thật",
         "description": "Demo này gọi hệ thống thật mỗi khi bạn dùng."
+      },
+      "liveInvite": {
+        "label": "Chạy thật · cần link mời"
       },
       "replay": {
         "label": "Phát lại từ lần chạy thật",
@@ -143,6 +150,10 @@
         "chip": "Ảnh và dữ kiện giữ chỗ",
         "description": "Mẫu giữ chỗ: chưa có bản ghi của lần chạy thật nào được gắn vào."
       }
+    },
+    "chat": {
+      "you": "Bạn",
+      "bot": "Bot"
     }
   },
   "groups": {

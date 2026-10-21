@@ -1,12 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { projects } from "@/content/registry";
 import { replaysByDemoComponent } from "@/content/replays";
+import { KnowledgeBaseSwitch } from "./KnowledgeBaseSwitch";
 import { demoComponents } from "./registry";
 import { replayDemoComponents } from "./replay-demos";
 
+/** Live demos that fall back to a replay (their switch is registered outside `replayDemoComponents`). */
+const LIVE_WITH_REPLAY: Record<string, unknown> = { "knowledge-base": KnowledgeBaseSwitch };
+
 describe("demo registries stay in sync", () => {
-  it("every replay definition has a replay demo component and vice versa", () => {
-    expect(Object.keys(replayDemoComponents).sort()).toEqual(Object.keys(replaysByDemoComponent).sort());
+  it("every replay definition has a registered demo component, and vice versa", () => {
+    const withReplay = [...Object.keys(replayDemoComponents), ...Object.keys(LIVE_WITH_REPLAY)].sort();
+    expect(Object.keys(replaysByDemoComponent).sort()).toEqual(withReplay);
+    for (const key of Object.keys(replaysByDemoComponent)) expect(demoComponents[key], key).toBeDefined();
   });
 
   it("every replay demo component is registered in demoComponents", () => {
@@ -15,8 +21,21 @@ describe("demo registries stay in sync", () => {
     }
   });
 
-  it("every replay/simulation project points at a key present in both registries", () => {
-    for (const project of projects.filter((p) => p.demoKind === "replay" || p.demoKind === "simulation")) {
+  it("live demos with a replay fallback are registered through their switch", () => {
+    for (const [key, component] of Object.entries(LIVE_WITH_REPLAY)) {
+      expect(demoComponents[key], key).toBe(component);
+    }
+  });
+
+  it("every replay/simulation project, and every live project with a replay, points at a key in both registries", () => {
+    const withReplay = projects.filter(
+      (p) =>
+        p.demoKind === "replay" ||
+        p.demoKind === "simulation" ||
+        (p.demoKind === "live" && (p.demo?.component ?? "") in LIVE_WITH_REPLAY),
+    );
+    expect(withReplay.map((p) => p.slug)).toContain("knowledge-base");
+    for (const project of withReplay) {
       const key = project.demo?.component ?? "";
       expect(replaysByDemoComponent[key], project.slug).toBeDefined();
       expect(demoComponents[key], project.slug).toBeDefined();

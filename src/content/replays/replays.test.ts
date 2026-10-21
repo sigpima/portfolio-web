@@ -2,10 +2,13 @@ import { describe, expect, it } from "vitest";
 import { existsSync } from "fs";
 import path from "path";
 import { giaPhaReplay } from "./gia-pha";
+import { knowledgeBaseReplay } from "./knowledge-base";
 import { twistfitReplay } from "./twistfit";
 import type { ReplayDefinition } from "./types";
+import viMessages from "../../../messages/vi.json";
+import enMessages from "../../../messages/en.json";
 
-const definitions: ReplayDefinition[] = [twistfitReplay, giaPhaReplay];
+const definitions: ReplayDefinition[] = [twistfitReplay, giaPhaReplay, knowledgeBaseReplay];
 
 describe("replay data integrity", () => {
   for (const def of definitions) {
@@ -22,12 +25,13 @@ describe("replay data integrity", () => {
           for (const step of sample.steps) expect(nodeIds).toContain(step.nodeId);
         });
 
-        it(`${sample.id}: steps are sorted by atMs and end with every node done`, () => {
+        it(`${sample.id}: steps are sorted by atMs and end with every node done (or skipped)`, () => {
           const times = sample.steps.map((s) => s.atMs);
           expect(times).toEqual([...times].sort((a, b) => a - b));
           const last = new Map<string, string>();
           for (const step of sample.steps) last.set(step.nodeId, step.status);
-          for (const node of sample.nodes) expect(last.get(node.id)).toBe("done");
+          for (const node of sample.nodes) expect(["done", "skipped"]).toContain(last.get(node.id));
+          expect([...last.values()].filter((s) => s === "done").length).toBeGreaterThan(0);
         });
 
         it(`${sample.id}: every person's parents exist`, () => {
@@ -70,7 +74,14 @@ describe("replay data integrity", () => {
       const details = sample.steps.flatMap((s) => (s.detail ? [s.detail] : []));
 
       it(`${def.id}/${sample.id}: placeholder flag is consistent with its images and facts`, () => {
+        const answers = sample.result.kind === "text" ? [sample.result.text] : [];
+        const texts = [...(sample.input.kind === "question" ? [sample.input.text] : []), ...answers];
         if (sample.placeholder === true) {
+          // An illustrative answer says so in both languages.
+          for (const text of answers) {
+            expect(text.vi).toContain(ILLUSTRATIVE.vi);
+            expect(text.en).toContain(ILLUSTRATIVE.en);
+          }
           for (const img of images) {
             expect(img.alt.vi.toLowerCase()).toContain("giữ chỗ");
             expect(img.alt.en.toLowerCase()).toContain("placeholder");
@@ -79,7 +90,7 @@ describe("replay data integrity", () => {
           expect(details.some((d) => d.en.includes(ILLUSTRATIVE.en))).toBe(true);
         } else {
           for (const img of images) expect(img.src).not.toMatch(PLACEHOLDER_SVG);
-          for (const d of details) {
+          for (const d of [...details, ...texts]) {
             expect(d.vi).not.toContain(ILLUSTRATIVE.vi);
             expect(d.en).not.toContain(ILLUSTRATIVE.en);
           }
@@ -106,5 +117,22 @@ describe("replay data integrity", () => {
     expect(s.input.kind).toBe("file");
     expect(s.result.kind).toBe("people");
     if (s.input.kind === "file") expect(s.input.fileName).toMatch(/\.docx$/);
+  });
+
+  it("Knowledge Base: recorded samples or exactly one placeholder asking the latest-quotation chip", () => {
+    const samples = knowledgeBaseReplay.samples;
+    for (const s of samples) {
+      expect(s.input.kind).toBe("question");
+      expect(s.result.kind).toBe("text");
+      expect(s.nodes.map((n) => n.id).slice(0, 4)).toEqual(["question", "model-1", "tool-1", "db-1"]);
+      expect(s.nodes.map((n) => n.id)).toContain("answer");
+    }
+    if (samples.some((s) => s.placeholder === true)) {
+      expect(samples).toHaveLength(1);
+      const [s] = samples;
+      if (s.input.kind === "question") {
+        expect(s.input.text).toEqual({ vi: viMessages.kb.chips.c1, en: enMessages.kb.chips.c1 });
+      }
+    }
   });
 });

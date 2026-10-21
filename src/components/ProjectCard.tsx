@@ -14,6 +14,14 @@ export const DEMO_CHIP_STYLE: Record<Exclude<DemoKind, "none">, string> = {
 export const placeholderChipClass =
   "inline-flex items-center rounded border border-error bg-error-container px-2 py-0.5 font-mono text-label-mono-sm text-on-error-container";
 
+/**
+ * Message key (under `demo.badge`) of a demo's static label (cards, page eyebrow, facts):
+ * a live demo is live only with an invite link, so it never says "live" on its own.
+ */
+export function staticDemoLabelKey(kind: Exclude<DemoKind, "none">): "liveInvite" | Exclude<DemoKind, "none" | "live"> {
+  return kind === "live" ? "liveInvite" : kind;
+}
+
 export const chipClass =
   "inline-flex items-center rounded border px-2 py-0.5 font-mono text-label-mono-sm";
 
@@ -29,7 +37,8 @@ export function ProjectCard({
   const t = useTranslations();
   const Heading = headingLevel === 2 ? "h2" : "h3";
   const href = `/${locale}/projects/${project.slug}`;
-  const placeholder = isPlaceholderDemo(project);
+  // A live demo's replay fallback is qualified inside the demo, not next to "live · invite only".
+  const placeholder = project.demoKind !== "live" && isPlaceholderDemo(project);
 
   return (
     <article className="group relative flex flex-col overflow-hidden rounded-xl border border-outline-variant bg-surface-container-low transition-colors hover:border-outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-secondary">
@@ -48,7 +57,7 @@ export function ProjectCard({
           {project.demoKind !== "none" ? (
             <span className="flex flex-wrap justify-end gap-1.5">
               <span className={`${chipClass} bg-surface-container-lowest/90 ${DEMO_CHIP_STYLE[project.demoKind]}`}>
-                {t(`demo.badge.${project.demoKind}.label`)}
+                {t(`demo.badge.${staticDemoLabelKey(project.demoKind)}.label`)}
               </span>
               {placeholder ? (
                 <span className={placeholderChipClass}>{t("demo.badgeQualifier.placeholder.chip")}</span>

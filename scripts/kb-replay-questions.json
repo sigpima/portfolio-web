@@ -1,0 +1,17 @@
+[
+  {
+    "id": "latest-quotation",
+    "title": { "vi": "Báo giá mới nhất", "en": "Latest quotation" },
+    "question": "Báo giá mới nhất có giá bao nhiêu?"
+  },
+  {
+    "id": "waterproofing-price-gap",
+    "title": { "vi": "Vì sao chống thấm Sen Vàng đắt hơn", "en": "Why Sen Vàng's waterproofing costs more" },
+    "question": "Vì sao đơn giá chống thấm sân thượng ở Biệt thự Sen Vàng cao hơn Biệt thự Lúa Non?"
+  },
+  {
+    "id": "largest-quotation-labour",
+    "title": { "vi": "Tỷ trọng nhân công", "en": "Labour share" },
+    "question": "Nhân công chiếm bao nhiêu % ở báo giá lớn nhất?"
+  }
+]

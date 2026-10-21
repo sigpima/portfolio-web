@@ -5,8 +5,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { FlowPlayer } from "@/components/flow/FlowPlayer";
 import type { Locale } from "@/content/types";
 import { ChatHttpError, fetchChatStatus, streamChat } from "@/lib/chat/client";
-import type { ChatEvent } from "@/lib/chat/types";
 import { initialChatFlow, reduceChatFlow, type FlowLabels } from "@/lib/flow/chat-flow";
+import { chatErrorKey, chatFlowLabels, type ChatEventErrorKey } from "@/lib/flow/chat-flow-labels";
 import type { FlowState, NodeStatus } from "@/lib/flow/model";
 
 const MAX_QUESTION_CHARS = 500;
@@ -15,7 +15,7 @@ const TYPING_INTERVAL_MS = 16;
 const TYPING_MAX_TICKS = 200;
 
 type DemoStatus = "loading" | "enabled" | "paused";
-type ErrorKey = "sessionFull" | "model" | "generic";
+type ErrorKey = ChatEventErrorKey | "rateLimited" | "inviteRequired";
 type InputErrorKey = "tooLong" | "invalidQuestion";
 type FocusTarget = "input" | "newConversation" | "paused";
 
@@ -36,17 +36,6 @@ function prefersReducedMotion(): boolean {
 
 function isAbortError(err: unknown): boolean {
   return err instanceof Error && err.name === "AbortError";
-}
-
-function errorKeyFor(event: Extract<ChatEvent, { type: "error" }>): ErrorKey {
-  switch (event.code) {
-    case "session_full":
-      return "sessionFull";
-    case "model":
-      return "model";
-    default:
-      return "generic";
-  }
 }
 
 /**
@@ -82,6 +71,11 @@ function TypedText({ text }: { text: string }) {
 export interface KnowledgeBaseDemoProps {
   /** Route locale; the rendered language comes from the surrounding NextIntlClientProvider. */
   locale: Locale;
+  /**
+   * Called when the server says the invite no longer works (401 `invite_required`),
+   * so the caller can fall back to the replay. Without it the error shows in place.
+   */
+  onInviteRequired?: () => void;
 }
 
 /** Live Knowledge Base demo: the bot's real steps in a flow diagram above, the chat below. */
@@ -89,25 +83,13 @@ export interface KnowledgeBaseDemoProps {
  * The `locale` prop is accepted for the registry signature only: text and `lang`
  * both follow the active next-intl locale, so they can never disagree.
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function KnowledgeBaseDemo(_props: KnowledgeBaseDemoProps) {
+export function KnowledgeBaseDemo({ onInviteRequired }: KnowledgeBaseDemoProps) {
   const t = useTranslations("kb");
   const activeLocale = useLocale();
   const inputId = useId();
   const inputErrorId = useId();
 
-  const labels = useMemo<FlowLabels>(
-    () => ({
-      question: { label: t("nodes.question.label"), sublabel: t("nodes.question.sublabel") },
-      model: { label: t("nodes.model.label"), sublabel: t("nodes.model.sublabel") },
-      tool: { label: t("nodes.tool.label"), sublabel: t("nodes.tool.sublabel") },
-      database: { label: t("nodes.database.label"), sublabel: t("nodes.database.sublabel") },
-      answer: { label: t("nodes.answer.label"), sublabel: t("nodes.answer.sublabel") },
-      extraCall: (n) => t("extraCall", { n }),
-      rowCount: (count) => t("rowCount", { count }),
-    }),
-    [t],
-  );
+  const labels = useMemo<FlowLabels>(() => chatFlowLabels(t), [t]);
 
   const statusLabels = useMemo(
     () => Object.fromEntries(NODE_STATUSES.map((s) => [s, t(`statusLabels.${s}`)])) as Record<NodeStatus, string>,
@@ -215,7 +197,7 @@ export function KnowledgeBaseDemo(_props: KnowledgeBaseDemoProps) {
         for await (const event of events) {
           if (controller.signal.aborted) return;
           if (event.type === "error") {
-            const key = errorKeyFor(event);
+            const key = chatErrorKey(event.code);
             if (key === "sessionFull") setSessionFull(true);
             fail(key);
             continue;
@@ -250,6 +232,14 @@ export function KnowledgeBaseDemo(_props: KnowledgeBaseDemoProps) {
               setSessionFull(true);
               fail("sessionFull");
               return;
+            case "rate_limited":
+              // Too many runs at once on this invite: the visitor may simply try again later.
+              fail("rateLimited");
+              return;
+            case "invite_required":
+              fail("inviteRequired");
+              onInviteRequired?.();
+              return;
           }
         }
         fail("generic");
@@ -261,7 +251,7 @@ export function KnowledgeBaseDemo(_props: KnowledgeBaseDemoProps) {
         }
       }
     },
-    [labels, requestFocus, sessionFull, t, updateFlow, updateTurn],
+    [labels, onInviteRequired, requestFocus, sessionFull, t, updateFlow, updateTurn],
   );
 
   const newConversation = useCallback(() => {

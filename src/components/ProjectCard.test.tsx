@@ -23,7 +23,14 @@ describe("ProjectCard", () => {
     expect(link).toHaveAttribute("href", "/vi/projects/knowledge-base");
     expect(screen.queryByText("Knowledge Base: paint-contracting quotation Q&A")).toBeNull();
     expect(screen.getByText("AI / LLM / Agent")).toBeInTheDocument();
-    expect(screen.getByText("Chạy thật")).toBeInTheDocument();
+    expect(screen.getByText("Chạy thật · cần link mời")).toBeInTheDocument();
+    expect(screen.queryByText("Chạy thật", { exact: true })).toBeNull();
+  });
+
+  it("labels the live Knowledge Base card as invite only in English", () => {
+    renderCard("knowledge-base", "en");
+    expect(screen.getByText("Live · invite only")).toBeInTheDocument();
+    expect(screen.queryByText("Live", { exact: true })).toBeNull();
   });
 
   it("shows the English title, group and demo label", () => {
@@ -52,7 +59,7 @@ describe("ProjectCard", () => {
       expect(screen.getByText(chip, { exact: true })).toBeInTheDocument();
     });
 
-    it(`shows no placeholder qualifier on projects without placeholder replays in ${locale}`, () => {
+    it(`shows no placeholder qualifier on Gia phả and on the live (invite-only) Knowledge Base card in ${locale}`, () => {
       for (const slug of ["knowledge-base", "gia-pha"]) {
         const { unmount } = renderCard(slug, locale);
         expect(screen.queryByText(chip)).toBeNull();

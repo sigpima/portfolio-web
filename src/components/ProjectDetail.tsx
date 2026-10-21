@@ -2,9 +2,10 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { demoComponents } from "@/components/demos/registry";
 import { DemoBadge, PageBadgeProvider } from "@/components/demos/DemoBadge";
+import { LiveAwareBadge } from "@/components/demos/LiveAwareBadge";
 import type { Locale, Project } from "@/content/types";
 import { isPlaceholderDemo } from "@/content/replays";
-import { chipClass, placeholderChipClass } from "./ProjectCard";
+import { chipClass, placeholderChipClass, staticDemoLabelKey } from "./ProjectCard";
 
 const eyebrowClass = "font-mono text-label-mono-sm uppercase text-secondary";
 
@@ -26,9 +27,12 @@ export function ProjectDetail({ project, locale }: { project: Project; locale: L
   const hasDemo = project.demoKind !== "none" && project.demo !== undefined;
   const Demo = hasDemo ? demoComponents[project.demo!.component] : undefined;
   const demoKind = project.demoKind === "none" ? null : project.demoKind;
-  // Derived from the replay data: every sample is a placeholder.
+  // Derived from the replay data: every sample is a placeholder. For a live demo this
+  // is its replay fallback, which only the in-demo badge talks about.
   const qualifier = isPlaceholderDemo(project) ? ("placeholder" as const) : undefined;
-  const qualifierChip = qualifier ? t("demo.badgeQualifier.placeholder.chip") : null;
+  const qualifierChip = qualifier && demoKind !== "live" ? t("demo.badgeQualifier.placeholder.chip") : null;
+  // Static labels never say "live" on its own: a live demo is live only with an invite.
+  const staticLabel = demoKind ? t(`demo.badge.${staticDemoLabelKey(demoKind)}.label`) : null;
 
   return (
     <article className="mx-auto flex max-w-[1200px] flex-col gap-12 px-margin py-10 md:px-margin-tablet md:py-14 lg:px-margin-desktop">
@@ -43,7 +47,7 @@ export function ProjectDetail({ project, locale }: { project: Project; locale: L
         <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <span className={eyebrowClass}>
             {t(`groups.${project.group}`)}
-            {demoKind ? ` · ${t(`demo.badge.${demoKind}.label`)}` : null}
+            {staticLabel ? ` · ${staticLabel}` : null}
           </span>
           {qualifierChip ? <span className={placeholderChipClass}>{qualifierChip}</span> : null}
         </p>
@@ -70,7 +74,7 @@ export function ProjectDetail({ project, locale }: { project: Project; locale: L
         <div className="flex flex-col gap-1 rounded-xl border border-outline-variant bg-surface-container-low p-4">
           <dt className="font-mono text-label-mono-xs uppercase text-outline">{t("detail.facts.demo")}</dt>
           <dd className="flex flex-col items-start gap-1.5 text-headline-md text-on-surface">
-            <span>{demoKind ? t(`demo.badge.${demoKind}.label`) : t("card.noDemo")}</span>
+            <span>{staticLabel ?? t("card.noDemo")}</span>
             {qualifierChip ? <span className={placeholderChipClass}>{qualifierChip}</span> : null}
           </dd>
         </div>
@@ -89,7 +93,12 @@ export function ProjectDetail({ project, locale }: { project: Project; locale: L
           <h2 id="demo-heading" className="font-mono text-label-mono-sm uppercase text-outline">
             {t("detail.demoTitle")}
           </h2>
-          <DemoBadge kind={demoKind} locale={locale} qualifier={qualifier} />
+          {demoKind === "live" ? (
+            // Depends on the visitor's invite: a client component decides after /api/session.
+            <LiveAwareBadge locale={locale} replayQualifier={qualifier} />
+          ) : (
+            <DemoBadge kind={demoKind} locale={locale} qualifier={qualifier} />
+          )}
           <PageBadgeProvider qualifier={qualifier}>
             <Demo locale={locale} />
           </PageBadgeProvider>

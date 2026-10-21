@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { getProject } from "../registry";
 import type { Project } from "../types";
-import { isPlaceholderDemo } from "./index";
+import { isPlaceholderDemo, replaysByDemoComponent } from "./index";
+import { knowledgeBaseReplayFor } from "./knowledge-base";
+import { recordedSamples } from "./knowledge-base.recorded";
 import type { ReplayDefinition, ReplaySample } from "./types";
 
 function sample(id: string, placeholder?: boolean): ReplaySample {
@@ -36,10 +38,28 @@ describe("isPlaceholderDemo", () => {
     expect(isPlaceholderDemo({ ...twistfit, demo: undefined }, map)).toBe(false);
   });
 
-  it("reads the real replay data: Twistfit is a placeholder today, Knowledge Base and Gia phả are not", () => {
+  it("reads the real replay data: Twistfit is a placeholder today, Gia phả is not", () => {
     expect(isPlaceholderDemo(twistfit)).toBe(true);
-    expect(isPlaceholderDemo(getProject("knowledge-base")!)).toBe(false);
     expect(isPlaceholderDemo(getProject("gia-pha")!)).toBe(false);
+  });
+
+  it("Knowledge Base: placeholder exactly while no recorded sample exists", () => {
+    const kb = getProject("knowledge-base")!;
+    expect(isPlaceholderDemo(kb)).toBe(recordedSamples.length === 0);
+
+    const empty = knowledgeBaseReplayFor([]);
+    expect(empty.samples).toHaveLength(1);
+    expect(empty.samples[0].placeholder).toBe(true);
+    expect(isPlaceholderDemo(kb, { ...replaysByDemoComponent, "knowledge-base": empty })).toBe(true);
+
+    const real: ReplaySample = {
+      ...sample("real"),
+      input: { kind: "question", text: { vi: "Q", en: "Q" } },
+      result: { kind: "text", text: { vi: "A", en: "A" } },
+    };
+    const recorded = knowledgeBaseReplayFor([real]);
+    expect(recorded.samples).toEqual([real]);
+    expect(isPlaceholderDemo(kb, { ...replaysByDemoComponent, "knowledge-base": recorded })).toBe(false);
   });
 });
 

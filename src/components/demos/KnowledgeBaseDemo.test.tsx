@@ -8,6 +8,7 @@ import type { Locale } from "@/content/types";
 import viMessages from "../../../messages/vi.json";
 import enMessages from "../../../messages/en.json";
 import { KnowledgeBaseDemo } from "./KnowledgeBaseDemo";
+import { KnowledgeBaseSwitch } from "./KnowledgeBaseSwitch";
 import { demoComponents } from "./registry";
 
 vi.mock("@/lib/chat/client", async (importOriginal) => {
@@ -144,8 +145,8 @@ afterEach(() => {
 });
 
 describe("KnowledgeBaseDemo", () => {
-  it("is registered under the knowledge-base key", () => {
-    expect(demoComponents["knowledge-base"]).toBe(KnowledgeBaseDemo);
+  it("is reached through the invite-aware switch registered under the knowledge-base key", () => {
+    expect(demoComponents["knowledge-base"]).toBe(KnowledgeBaseSwitch);
   });
 
   it("shows the paused panel and no input when the demo is disabled", async () => {
@@ -291,6 +292,48 @@ describe("KnowledgeBaseDemo", () => {
     await user.type(input, "Câu hỏi{Enter}");
     expect(await screen.findByText("Demo tạm nghỉ")).toBeInTheDocument();
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+  });
+
+  for (const locale of ["vi", "en"] as const) {
+    it(`shows the rate-limited message on ChatHttpError rate_limited and lets the visitor retry (${locale})`, async () => {
+      mockStream
+        .mockImplementationOnce(streamOf([], new ChatHttpError("rate_limited", 429)))
+        .mockImplementationOnce(streamOf(happyEvents()));
+      mockMatchMedia(true);
+      const { user } = await renderDemo(locale);
+      const input = await readyInput(locale === "vi" ? "Câu hỏi của bạn" : "Your question");
+      await user.type(input, "Một{Enter}");
+      const text = (locale === "vi" ? viMessages : enMessages).kb.errors.rateLimited;
+      await waitFor(() => expect(document.querySelector(ERROR.selector)).toHaveTextContent(text));
+      expect(live().textContent).toBe(text);
+      await waitFor(() => expect(input).toBeEnabled());
+      await user.type(input, "Hai{Enter}");
+      await waitFor(() => expect(typed()).toHaveTextContent(ANSWER));
+    });
+  }
+
+  it("reports a lost invite through onInviteRequired on ChatHttpError invite_required", async () => {
+    mockStream.mockImplementation(streamOf([], new ChatHttpError("invite_required", 401)));
+    const onInviteRequired = vi.fn();
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(
+      <NextIntlClientProvider locale="vi" messages={viMessages}>
+        <KnowledgeBaseDemo locale="vi" onInviteRequired={onInviteRequired} />
+      </NextIntlClientProvider>,
+    );
+    const input = await readyInput();
+    await user.type(input, "Một{Enter}");
+    await waitFor(() => expect(onInviteRequired).toHaveBeenCalledTimes(1));
+  });
+
+  it("shows the invite-required message in place when nobody handles it", async () => {
+    mockStream.mockImplementation(streamOf([], new ChatHttpError("invite_required", 401)));
+    const { user } = await renderDemo();
+    const input = await readyInput();
+    await user.type(input, "Một{Enter}");
+    await waitFor(() =>
+      expect(document.querySelector(ERROR.selector)).toHaveTextContent(viMessages.kb.errors.inviteRequired),
+    );
   });
 
   it("shows an inline input error on ChatHttpError too_long", async () => {

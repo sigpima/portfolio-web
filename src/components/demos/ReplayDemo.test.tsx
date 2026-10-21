@@ -86,6 +86,31 @@ describe("ReplayDemo", () => {
     expect(screen.queryByAltText("Ảnh ra one")).toBeNull();
   });
 
+  it("shows a question input as a user bubble and, after the run, the answer as a bot bubble", () => {
+    const qa: ReplayDefinition = {
+      id: "qa",
+      samples: [
+        {
+          ...imageSample("q", undefined),
+          input: { kind: "question", text: { vi: "Báo giá mới nhất?", en: "Latest quote?" } },
+          result: { kind: "text", text: { vi: "Là 1,2 tỷ đồng.\nDòng hai.", en: "It is 1.2 billion VND." } },
+        },
+      ],
+    };
+    for (const locale of ["vi", "en"] as const) {
+      const { container, unmount } = renderDemo(qa, "replay", locale);
+      const user = container.querySelector('[data-role="user"]');
+      expect(user).toHaveTextContent(locale === "vi" ? "Bạn: Báo giá mới nhất?" : "You: Latest quote?");
+      expect(container.querySelector('[data-role="bot"]')).toBeNull();
+      fireEvent.click(screen.getByRole("button", { name: locale === "vi" ? "Chạy" : "Play" }));
+      act(() => vi.advanceTimersByTime(300));
+      const bot = container.querySelector('[data-role="bot"]');
+      expect(bot).toHaveTextContent(locale === "vi" ? "Bot: Là 1,2 tỷ đồng. Dòng hai." : "Bot: It is 1.2 billion VND.");
+      expect(bot?.querySelector(".sr-only")).toHaveTextContent("Bot:");
+      unmount();
+    }
+  });
+
   it("plays the flow, then shows the result and a Replay button", () => {
     const { container } = renderDemo();
     fireEvent.click(screen.getByRole("button", { name: "Chạy" }));

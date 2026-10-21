@@ -84,14 +84,21 @@
       "invalidQuestion": "That question can't be processed. Please rephrase it.",
       "sessionFull": "This conversation is long enough. Please start a new conversation.",
       "model": "The bot couldn't answer right now. Please try again in a moment.",
-      "generic": "Something went wrong. Please try again."
-    }
+      "generic": "Something went wrong. Please try again.",
+      "rateLimited": "You are running too many questions at once. Wait for the previous one to finish, then try again.",
+      "inviteRequired": "This invite link is no longer valid."
+    },
+    "replayNotice": "You are watching a replay. Open an invite link to try it live.",
+    "modeLoading": "Loading the demo…"
   },
   "demo": {
     "badge": {
       "live": {
         "label": "Live",
         "description": "This demo calls the real system every time you use it."
+      },
+      "liveInvite": {
+        "label": "Live · invite only"
       },
       "replay": {
         "label": "Replay of a real run",
@@ -143,6 +150,10 @@
         "chip": "Placeholder images and facts",
         "description": "Placeholder sample: no record of a real run is attached yet."
       }
+    },
+    "chat": {
+      "you": "You",
+      "bot": "Bot"
     }
   },
   "groups": {

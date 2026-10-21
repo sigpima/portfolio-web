@@ -8,8 +8,14 @@ export interface ReplaySample {
   placeholder?: boolean;
   input:
     | { kind: "images"; items: { src: string; alt: Localized }[] }
-    | { kind: "file"; fileName: string; excerpt: Localized<string[]> };
-  nodes: { id: string; label: Localized; sublabel?: Localized }[];
+    | { kind: "file"; fileName: string; excerpt: Localized<string[]> }
+    /** A chat question, shown as the visitor's bubble. */
+    | { kind: "question"; text: Localized };
+  /**
+   * Diagram nodes in display order. Nodes without `row` sit on the first row (`r1`);
+   * the others are grouped into extra rows (e.g. a second tool call), in first-seen order.
+   */
+  nodes: { id: string; label: Localized; sublabel?: Localized; row?: { id: string; title?: Localized } }[];
   /** Sorted by `atMs` (ms after "play"). */
   steps: { atMs: number; nodeId: string; status: NodeStatus; detail?: Localized }[];
   result:
@@ -17,7 +23,9 @@ export interface ReplaySample {
     | {
         kind: "people";
         people: { id: string; name: string; birthYear?: number; deathYear?: number; parentIds: string[] }[];
-      };
+      }
+    /** The bot's answer, shown as a bot bubble once the run is done. */
+    | { kind: "text"; text: Localized };
 }
 
 export interface ReplayDefinition {

@@ -27,7 +27,8 @@ export function GiaPhaSimulationDemo({ locale }: { locale: Locale }) {
 
 /**
  * Replay/simulation demos by `Project.demo.component` key. Keep in sync with
- * `replaysByDemoComponent` in `src/content/replays/index.ts` (a test enforces it).
+ * `replaysByDemoComponent` in `src/content/replays/index.ts` (a test enforces it);
+ * the Knowledge Base replay is the exception, reached through `KnowledgeBaseSwitch`.
  */
 export const replayDemoComponents: Record<string, ComponentType<{ locale: Locale }>> = {
   "twistfit-replay": TwistfitReplayDemo,

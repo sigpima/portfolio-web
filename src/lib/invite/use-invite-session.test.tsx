@@ -1,6 +1,6 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { InviteSessionProvider, useInviteSession } from "./use-invite-session";
+import { InviteSessionProvider, useInviteSession, useInviteSessionActions } from "./use-invite-session";
 
 function Probe({ id }: { id: string }) {
   const s = useInviteSession();
@@ -8,6 +8,15 @@ function Probe({ id }: { id: string }) {
     <span data-testid={id}>
       {JSON.stringify({ ready: s.ready, invited: s.invited, features: s.features })}
     </span>
+  );
+}
+
+function Actions() {
+  const { invalidate } = useInviteSessionActions();
+  return (
+    <button type="button" onClick={invalidate}>
+      invalidate
+    </button>
   );
 }
 
@@ -112,5 +121,40 @@ describe("useInviteSession", () => {
     await waitFor(() => expect(state().ready).toBe(true));
     expect(getItem).not.toHaveBeenCalled();
     expect(setItem).not.toHaveBeenCalled();
+  });
+
+  it("invalidate() drops the session for every consumer without refetching", async () => {
+    const fetchMock = vi.fn(async () =>
+      Response.json({ invited: true, features: { chat: true, twistfit: false, gia_pha: false } }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    render(
+      <InviteSessionProvider>
+        <Actions />
+        <Probe id="a" />
+        <Probe id="b" />
+      </InviteSessionProvider>,
+    );
+    await waitFor(() => expect(state("a").invited).toBe(true));
+    act(() => screen.getByRole("button", { name: "invalidate" }).click());
+    expect(state("a")).toEqual({ ready: true, invited: false, features: OFF });
+    expect(state("b")).toEqual({ ready: true, invited: false, features: OFF });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("invalidate() before /api/session answers wins over the late answer", async () => {
+    let resolve!: (r: Response) => void;
+    vi.stubGlobal("fetch", vi.fn(() => new Promise<Response>((r) => (resolve = r))));
+    render(
+      <InviteSessionProvider>
+        <Actions />
+        <Probe id="a" />
+      </InviteSessionProvider>,
+    );
+    act(() => screen.getByRole("button", { name: "invalidate" }).click());
+    await act(async () => {
+      resolve(Response.json({ invited: true, features: { chat: true, twistfit: false, gia_pha: false } }));
+    });
+    expect(state("a")).toEqual({ ready: true, invited: false, features: OFF });
   });
 });

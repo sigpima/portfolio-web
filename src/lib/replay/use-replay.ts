@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReplaySample } from "@/content/replays/types";
 import type { Locale } from "@/content/types";
-import { applyPatch, type FlowState } from "@/lib/flow/model";
+import { applyPatch, type FlowRow, type FlowState } from "@/lib/flow/model";
 
 export type ReplayStatus = "idle" | "playing" | "done";
 
@@ -26,21 +26,27 @@ interface ReplayState {
   count: number;
 }
 
-/** One row (`r1`) with every node idle and its labels in `locale`. */
+/**
+ * Every node idle with its labels in `locale`: row `r1` first, then any extra rows
+ * (`node.row`) in first-seen order.
+ */
 export function initialReplayFlow(sample: ReplaySample, locale: Locale): FlowState {
-  return {
-    rows: [
-      {
-        id: "r1",
-        nodes: sample.nodes.map((node) => ({
-          id: node.id,
-          label: node.label[locale],
-          sublabel: node.sublabel?.[locale],
-          status: "idle" as const,
-        })),
-      },
-    ],
-  };
+  const rows: FlowRow[] = [{ id: "r1", nodes: [] }];
+  for (const node of sample.nodes) {
+    const rowId = node.row?.id ?? "r1";
+    let row = rows.find((r) => r.id === rowId);
+    if (!row) {
+      row = { id: rowId, title: node.row?.title?.[locale], nodes: [] };
+      rows.push(row);
+    }
+    row.nodes.push({
+      id: node.id,
+      label: node.label[locale],
+      sublabel: node.sublabel?.[locale],
+      status: "idle",
+    });
+  }
+  return { rows };
 }
 
 /** The flow after the first `count` steps, localized in `locale`. */
