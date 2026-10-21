@@ -54,15 +54,49 @@ describe("replay data integrity", () => {
     });
   }
 
-  it("marks every Twistfit sample as placeholder until real images are added", () => {
+  it("has three Twistfit samples", () => {
     expect(twistfitReplay.samples).toHaveLength(3);
-    for (const s of twistfitReplay.samples) expect(s.placeholder).toBe(true);
   });
 
+  const PLACEHOLDER_SVG = /\/(model|garment-[a-z-]+|result-[a-z-]+)\.svg$/;
+  const ILLUSTRATIVE = { vi: "(minh hoạ)", en: "(illustrative)" } as const;
+
+  for (const def of definitions) {
+    for (const sample of def.samples) {
+      const images = [
+        ...(sample.input.kind === "images" ? sample.input.items : []),
+        ...(sample.result.kind === "images" ? sample.result.items : []),
+      ];
+      const details = sample.steps.flatMap((s) => (s.detail ? [s.detail] : []));
+
+      it(`${def.id}/${sample.id}: placeholder flag is consistent with its images and facts`, () => {
+        if (sample.placeholder === true) {
+          for (const img of images) {
+            expect(img.alt.vi.toLowerCase()).toContain("giữ chỗ");
+            expect(img.alt.en.toLowerCase()).toContain("placeholder");
+          }
+          expect(details.some((d) => d.vi.includes(ILLUSTRATIVE.vi))).toBe(true);
+          expect(details.some((d) => d.en.includes(ILLUSTRATIVE.en))).toBe(true);
+        } else {
+          for (const img of images) expect(img.src).not.toMatch(PLACEHOLDER_SVG);
+          for (const d of details) {
+            expect(d.vi).not.toContain(ILLUSTRATIVE.vi);
+            expect(d.en).not.toContain(ILLUSTRATIVE.en);
+          }
+        }
+      });
+    }
+  }
+
   it("never puts Flux parameters, prompts or per-step timings in Twistfit details", () => {
-    const text = JSON.stringify(twistfitReplay.samples.map((s) => s.steps)).toLowerCase();
-    for (const word of ["prompt", "seed", "guidance", "steps", "cfg", "ms"]) {
-      expect(text).not.toMatch(new RegExp(`\\b${word}\\b`));
+    const details = twistfitReplay.samples.flatMap((s) =>
+      s.steps.flatMap((step) => (step.detail ? [step.detail.vi, step.detail.en] : [])),
+    );
+    expect(details.length).toBeGreaterThan(0);
+    for (const text of details.map((d) => d.toLowerCase())) {
+      for (const word of ["prompt", "seed", "guidance", "steps", "cfg", "ms"]) {
+        expect(text).not.toMatch(new RegExp(`\\b${word}\\b`));
+      }
     }
   });
 

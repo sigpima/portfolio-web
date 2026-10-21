@@ -113,6 +113,27 @@ describe("ReplayDemo", () => {
     expect(screen.queryByText("ảnh giữ chỗ")).toBeNull();
   });
 
+  it("qualifies the badge only while the current sample is a placeholder", () => {
+    renderDemo();
+    expect(screen.getByText("Phát lại từ lần chạy thật")).toBeInTheDocument();
+    expect(screen.getByText("Ảnh và dữ kiện giữ chỗ")).toBeInTheDocument();
+    expect(
+      screen.getByText("Mẫu giữ chỗ: chưa có bản ghi của lần chạy thật nào được gắn vào."),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Mẫu two" }));
+    expect(screen.getByText("Phát lại từ lần chạy thật")).toBeInTheDocument();
+    expect(screen.queryByText("Ảnh và dữ kiện giữ chỗ")).toBeNull();
+    expect(screen.queryByText(/Mẫu giữ chỗ/)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Mẫu one" }));
+    expect(screen.getByText("Ảnh và dữ kiện giữ chỗ")).toBeInTheDocument();
+  });
+
+  it("does not qualify the simulation badge (no placeholder samples)", () => {
+    renderDemo(giaPhaReplay, "simulation", "en");
+    expect(screen.getByText("Simulation · feature in development")).toBeInTheDocument();
+    expect(screen.queryByText("Placeholder images and facts")).toBeNull();
+  });
+
   it("shows the English ribbon text in en", () => {
     renderDemo(definition, "replay", "en");
     expect(screen.getByText("placeholder images")).toBeInTheDocument();

@@ -9,6 +9,11 @@ export interface DemoBadgeProps {
   kind: BadgeKind;
   /** Route locale, for the registry-style signature; text follows the active next-intl locale. */
   locale: Locale;
+  /**
+   * Qualifies the badge when the data behind it is not (yet) what the label says:
+   * `"placeholder"` adds a chip and swaps the description for a placeholder one.
+   */
+  qualifier?: "placeholder";
 }
 
 const STYLE_BY_KIND: Record<BadgeKind, string> = {
@@ -57,19 +62,31 @@ function KindIcon({ kind }: { kind: BadgeKind }) {
 
 /** Honesty label for a demo: what kind of demo this is, with a one-sentence explanation. */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function DemoBadge({ kind, locale: _locale }: DemoBadgeProps) {
-  const t = useTranslations("demo.badge");
+export function DemoBadge({ kind, locale: _locale, qualifier }: DemoBadgeProps) {
+  const t = useTranslations("demo");
   const activeLocale = useLocale();
   return (
-    <div lang={activeLocale} data-demo-kind={kind} className="flex flex-col items-start gap-1.5">
-      <p
-        className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-body-md font-semibold ${STYLE_BY_KIND[kind]}`}
-      >
-        <KindIcon kind={kind} />
-        <span>{t(`${kind}.label`)}</span>
-      </p>
+    <div
+      lang={activeLocale}
+      data-demo-kind={kind}
+      data-qualifier={qualifier}
+      className="flex flex-col items-start gap-1.5"
+    >
+      <div className="flex flex-wrap items-center gap-2">
+        <p
+          className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-body-md font-semibold ${STYLE_BY_KIND[kind]}`}
+        >
+          <KindIcon kind={kind} />
+          <span>{t(`badge.${kind}.label`)}</span>
+        </p>
+        {qualifier ? (
+          <p className="inline-flex items-center rounded-full border border-error bg-error-container px-3.5 py-1.5 text-body-md font-semibold text-on-error-container">
+            {t(`badgeQualifier.${qualifier}.chip`)}
+          </p>
+        ) : null}
+      </div>
       <p data-role="badge-description" className="text-body-md text-on-surface-variant">
-        {t(`${kind}.description`)}
+        {qualifier ? t(`badgeQualifier.${qualifier}.description`) : t(`badge.${kind}.description`)}
       </p>
     </div>
   );

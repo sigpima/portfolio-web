@@ -124,7 +124,7 @@
     },
     "placeholder": {
       "ribbon": "placeholder images",
-      "note": "This sample's images and facts (occasion, style, garments, total time) are illustrative placeholders, to be replaced with a real run's images and record."
+      "note": "This sample's images and facts are illustrative placeholders, not taken from a real run."
     },
     "resultHint": "Press Play to see each step and the result.",
     "people": {
@@ -137,6 +137,12 @@
     },
     "giaPha": {
       "scansPlanned": "Only a Word file input is simulated today. Support for photos and scans of genealogy documents is planned and not available yet."
+    },
+    "badgeQualifier": {
+      "placeholder": {
+        "chip": "Placeholder images and facts",
+        "description": "Placeholder sample: no record of a real run is attached yet."
+      }
     }
   }
 }

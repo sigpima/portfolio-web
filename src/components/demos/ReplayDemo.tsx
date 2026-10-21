@@ -176,7 +176,7 @@ export function ReplayDemo({ definition, kind, locale: _locale, footnote }: Repl
 
   return (
     <div lang={locale} className="flex flex-col gap-4">
-      <DemoBadge kind={kind} locale={locale} />
+      <DemoBadge kind={kind} locale={locale} qualifier={placeholder ? "placeholder" : undefined} />
 
       {definition.samples.length > 1 ? (
         <div role="group" aria-label={t("samplesLabel")} className="flex flex-wrap gap-1.5">

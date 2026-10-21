@@ -124,7 +124,7 @@
     },
     "placeholder": {
       "ribbon": "ảnh giữ chỗ",
-      "note": "Ảnh và dữ kiện của mẫu này (dịp, phong cách, món đồ, tổng thời gian) là minh hoạ giữ chỗ, sẽ được thay bằng ảnh và bản ghi của một lần chạy thật."
+      "note": "Ảnh và dữ kiện của mẫu này là minh hoạ giữ chỗ, chưa lấy từ một lần chạy thật."
     },
     "resultHint": "Bấm Chạy để xem từng bước và kết quả.",
     "people": {
@@ -137,6 +137,12 @@
     },
     "giaPha": {
       "scansPlanned": "Hiện chỉ mô phỏng đầu vào là file Word. Hỗ trợ ảnh chụp và ảnh scan giấy tờ gia phả là kế hoạch, chưa có."
+    },
+    "badgeQualifier": {
+      "placeholder": {
+        "chip": "Ảnh và dữ kiện giữ chỗ",
+        "description": "Mẫu giữ chỗ: chưa có bản ghi của lần chạy thật nào được gắn vào."
+      }
     }
   }
 }

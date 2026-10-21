@@ -26,8 +26,14 @@ Làm cho từng mẫu (`work-minimal`, `weekend-casual`, `evening-elegant`, ho�
    - đổi `placeholder: true` thành `placeholder: false`.
 4. **Chỉ dùng dữ kiện có trong bản ghi job.** Không đưa tham số Flux, prompt, hay thời gian từng bước
    (bản ghi không có các số đó; `atMs` chỉ là nhịp hoạt ảnh).
-5. Chạy `npx vitest run src/content src/components/demos` để kiểm tra (test kiểm tra ảnh tồn tại và có `alt`).
-   Lưu ý test hiện yêu cầu cả ba mẫu Twistfit có `placeholder: true`; khi thay ảnh thật hãy sửa test đó trong
-   `src/content/replays/replays.test.ts` cho khớp.
+5. Chạy `npx vitest run src/content src/components/demos` để kiểm tra. Test dữ liệu kiểm tra **tính nhất quán**
+   của cờ `placeholder`, không bắt buộc giá trị nào:
+   - mẫu `placeholder: true`: mọi `alt` phải chứa "giữ chỗ" (vi) / "placeholder" (en), và chi tiết bước phải có
+     "(minh hoạ)" / "(illustrative)";
+   - mẫu `placeholder: false` (dữ liệu thật): không ảnh nào được trỏ tới các SVG giữ chỗ có sẵn
+     (`model.svg`, `garment-*.svg`, `result-*.svg`), và không chi tiết nào còn chữ "(minh hoạ)" / "(illustrative)".
+
+   Khi `placeholder` là `false`, nhãn "Phát lại từ lần chạy thật" hiện mà không kèm thẻ "Ảnh và dữ kiện giữ chỗ"
+   và băng "ảnh giữ chỗ"; vì vậy chỉ đổi cờ khi ảnh và dữ kiện đều đã là của lần chạy thật.
 
 Khi mọi mẫu đã dùng ảnh thật, có thể xoá các file `.svg` giữ chỗ không còn được tham chiếu.
