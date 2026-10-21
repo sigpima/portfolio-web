@@ -7,23 +7,20 @@
 # service này chỉ gắn vào mạng mặc định của stack portfolio-api, KHÔNG gắn vào mạng
 # của knowledge_base (từ container web không với tới được chat:8003 để lách cổng).
 #
-# Thứ tự bật:
-#   1. knowledge_base (service chat):
-#        cd ../../knowledge_base && GEMINI_API_KEY=... docker compose --profile chat up -d
-#   2. portfolio-api:
-#        cd ../api && PORTFOLIO_API_KEY=... ADMIN_PASSWORD=... docker compose up -d --build
-#   3. web (file này):
-#        SITE_URL=https://ten-mien-cua-ban PORTFOLIO_API_KEY=... docker compose up -d --build
+# Biến môi trường: đặt trong file .env cạnh file này (chép từ .env.example, `chmod 600 .env`,
+# KHÔNG BAO GIỜ commit; .env đã nằm trong .gitignore). Mọi lệnh compose ở thư mục này
+# (up, logs, exec, cp, stop, down, ...) đều cần PORTFOLIO_API_KEY; thiếu thì (ít nhất up, logs,
+# ps) dừng ngay với lỗi "required variable PORTFOLIO_API_KEY is missing a value". Dạng
+# `VAR=... docker compose up` chỉ dùng cho một lần chạy thử.
 #
 # PORTFOLIO_API_KEY phải GIỐNG HỆT giá trị đặt cho portfolio-api (>= 32 ký tự ASCII nhìn
-# thấy được). SITE_URL cần cả lúc BUILD và lúc chạy (xem docs/RUNBOOK.md).
+# thấy được). SITE_URL cần cả lúc BUILD và lúc chạy.
 #
-# Mạng của portfolio-api: kiểm tra tên bằng `docker network ls`. Mặc định ở đây là
-# portfolio-api_default, tức <tên project của portfolio-api>_default; tên project mặc định
-# là tên thư mục (`api` -> mạng `api_default`), nên hãy đặt COMPOSE_PROJECT_NAME=portfolio-api
-# trong .env của portfolio-api, hoặc ghi đè ở đây bằng PORTFOLIO_API_NETWORK=api_default.
-# Mạng phải tồn tại (portfolio-api đã chạy) trước khi bật web, nếu không compose báo
-# "network ... not found".
+# Thứ tự bật (mỗi stack có .env riêng): 1. chat của knowledge_base,
+# 2. portfolio-api (../api), 3. web (file này: `docker compose up -d --build`).
+#
+# Mạng: chỉ gắn vào mạng mặc định của stack portfolio-api (portfolio-api_default). Cách kiểm
+# tra tên mạng và khi nào cần PORTFOLIO_API_NETWORK: docs/RUNBOOK.md, phần 3.
 
 services:
   portfolio:

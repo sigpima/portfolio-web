@@ -34,7 +34,7 @@ trình duyệt -> nginx (host) -> web: container `portfolio` (Next.js, 127.0.0.1
 | `PORTFOLIO_API_KEY` | **có** | Khoá nội bộ web <-> `portfolio-api` (header `X-Internal-Key`). **Phải giống hệt** giá trị đặt cho `portfolio-api`; >= 32 ký tự ASCII nhìn thấy được, không khoảng trắng. Compose từ chối chạy nếu thiếu. Khoá cũng dùng để băm IP người xem thành khoá giới hạn tần suất. |
 | `SITE_URL` | **có (production)** | Địa chỉ công khai, ví dụ `https://ten-mien-cua-ban`. Cần cả **lúc build** và **lúc chạy** (xem dưới). |
 | `PORTFOLIO_API_URL` | không | Mặc định `http://portfolio-api:8100` (tên service trong mạng Docker). |
-| `PORTFOLIO_API_NETWORK` | không | Tên mạng Docker của stack `portfolio-api`; mặc định `portfolio-api_default`. Kiểm tra bằng `docker network ls`. |
+| `PORTFOLIO_API_NETWORK` | không | Dự phòng: tên mạng của stack `portfolio-api` khi nó khác `portfolio-api_default` (xem phần 3). |
 | `PORTFOLIO_PORT` | không | Cổng trên host (mặc định `3100`, chỉ nghe `127.0.0.1`). |
 | `REQUIRE_SITE_URL` | không | Lúc build; với Docker mặc định `1`: build **thất bại** nếu `SITE_URL` trống. Ép `0` chỉ khi build thử trên máy. |
 | `NODE_ENV` | (đặt sẵn) | Image đặt `production`: cookie `pf_session`/`pf_admin` có cờ `Secure` (chỉ gửi qua HTTPS). |
@@ -73,7 +73,23 @@ python3 -c "import secrets;print(secrets.token_urlsafe(32))"
 - Dùng **cùng một** giá trị `PORTFOLIO_API_KEY` cho web và `portfolio-api` (sai lệch thì web in một lần
   `portfolio-api rejected the internal key: PORTFOLIO_API_KEY does not match.` và mọi tính năng mời/quản trị báo "tạm nghỉ").
 - `ADMIN_PASSWORD` dài ít nhất 12 ký tự; nên dùng luôn một chuỗi sinh như trên và cất trong trình quản lý mật khẩu.
-- Đặt các biến trong file `.env` cạnh `docker-compose.yml` của từng repo (đã nằm trong `.gitignore`, xem `.env.example`) hoặc trong môi trường của lệnh. **Không commit** file `.env`.
+- Đặt các biến trong file `.env` (mục ngay dưới).
+
+### File `.env`: cách đặt biến chính
+
+Mỗi stack có một file `.env` cạnh `docker-compose.yml` của nó (web: `portfolio/web/.env`; `portfolio-api`: `portfolio/api/.env`), chép từ `.env.example` cùng thư mục:
+
+```bash
+cp .env.example .env && chmod 600 .env    # rồi sửa các giá trị CHANGE_ME / chỗ giữ
+```
+
+- `.env` đã nằm trong `.gitignore` của cả hai repo. **Không bao giờ commit nó.** Các giá trị `CHANGE_ME` trong `.env.example` cố ý không hợp lệ
+  (`portfolio-api` từ chối khởi động), để một bản chép chưa sửa hỏng ngay thay vì chạy với khoá yếu.
+- docker compose tự đọc `.env` cho **mọi** lệnh chạy trong thư mục đó. Điều này quan trọng: không chỉ `up` mà cả `logs`, `exec`, `cp`, `stop`, `down`, `run`
+  đều cần các biến bắt buộc (`PORTFOLIO_API_KEY` ở web; `PORTFOLIO_API_KEY` và `ADMIN_PASSWORD` ở `portfolio-api`). Thiếu thì lệnh dừng ngay với lỗi
+  `required variable ... is missing a value` (đã thấy với `logs`, `ps` ở cả hai stack và `exec` ở `portfolio-api`; vài lệnh khác tuỳ phiên bản compose
+  có thể chạy được, đừng dựa vào đó). Mọi lệnh compose trong tài liệu này giả định `.env` đã có.
+- Dạng `VAR=... docker compose up` (đặt biến ngay trên dòng lệnh) chỉ dùng cho **một lần chạy thử**; khi đó mọi lệnh compose khác cũng phải kèm đủ các biến đó.
 
 ## 3. Thứ tự bật
 
@@ -87,13 +103,12 @@ Kiểm tra tên các mạng:
 docker network ls    # phải thấy knowledge_base_default và portfolio-api_default
 ```
 
-Tên mạng mặc định của một stack là `<tên project>_default`, và tên project mặc định là **tên thư mục**. Repo `portfolio-api` nằm ở thư mục `portfolio/api`,
-nên nếu chạy `docker compose up` trần ở đó, project tên là `api` và mạng là **`api_default`**, không phải `portfolio-api_default` mà web mặc định tìm. Chọn MỘT trong hai cách:
-
-- (khuyến nghị) đặt tên project cho `portfolio-api` bằng dòng `COMPOSE_PROJECT_NAME=portfolio-api` trong file `.env` cạnh `docker-compose.yml` của `portfolio/api`
-  (mọi lệnh `docker compose ...` trong thư mục đó, kể cả sao lưu và `up -d`, sẽ dùng tên này). Làm việc này **trước lần chạy đầu**: đổi tên project sau khi đã có dữ liệu
-  thì compose tạo volume mới (`portfolio-api_portfolio_data`) và dữ liệu cũ nằm lại ở `api_portfolio_data`;
-- hoặc giữ tên `api` và đặt `PORTFOLIO_API_NETWORK=api_default` cho web.
+**Tên mạng của `portfolio-api` (mục duy nhất về chuyện này; các chỗ khác trỏ về đây):** mạng mặc định của một stack compose là `<tên project>_default`.
+Compose của `portfolio-api` đặt `name: portfolio-api`, nên mạng là `portfolio-api_default` (và volume là `portfolio-api_portfolio_data`); biến `COMPOSE_PROJECT_NAME`
+hay cờ `-p` ghi đè `name:` nếu bạn đặt chúng. Web mặc định tìm đúng `portfolio-api_default`.
+`PORTFOLIO_API_NETWORK` (trong `.env` của web) chỉ là **phương án dự phòng**: chỉ đặt khi `docker network ls` cho thấy mạng của `portfolio-api` có tên khác.
+Một triển khai cũ từng chạy `portfolio-api` dưới tên project khác sẽ có mạng và volume mang tên khác: kiểm tra bằng `docker network ls` và `docker volume ls`
+(dữ liệu cũ nằm trong volume của tên project cũ).
 
 Nếu mạng của knowledge_base khác `knowledge_base_default`, đặt `KB_NETWORK=<tên-thật>` cho `portfolio-api`.
 Thiếu mạng thì compose báo `network ... not found` và không chạy.
@@ -113,14 +128,17 @@ Service `chat` chỉ publish `127.0.0.1:8003` và gắn vào mạng `knowledge_b
 
 ```bash
 cd /home/nuc/Documents/project/portfolio/api
-PORTFOLIO_API_KEY=... ADMIN_PASSWORD=... docker compose up -d --build
+cp .env.example .env && chmod 600 .env    # lần đầu: điền PORTFOLIO_API_KEY, ADMIN_PASSWORD (phần 2)
+docker compose up -d --build
 curl -s localhost:8100/healthz           # {"status":"ok"}
 ```
 
-- Dữ liệu (link, phiên người xem, nhật ký) nằm trong file SQLite ở volume `portfolio_data` (`/data/portfolio.sqlite`).
+Các lệnh compose khác trong thư mục này (`logs`, `exec`, `cp`, `stop`, `down`, sao lưu ở phần 11) cũng đọc `.env`; không có nó thì chúng hỏng (phần 2).
+
+- Dữ liệu (link, phiên người xem, nhật ký) nằm trong file SQLite ở volume `portfolio-api_portfolio_data` (`/data/portfolio.sqlite` trong container).
 - **Chỉ chạy MỘT worker** (đúng như `CMD` của Dockerfile). Không bao giờ thêm `--workers` > 1 hay nhân bản service: phiên quản trị, bộ giới hạn tần suất và trần luồng chat
   nằm trong bộ nhớ của tiến trình; nhiều worker làm phiên quản trị "biến mất" ngẫu nhiên và nhân các trần lên.
-- **Đổi mật khẩu quản trị hay bất kỳ biến nào**: sửa giá trị (trong `.env` hoặc môi trường lệnh) rồi chạy `docker compose up -d` trong thư mục `portfolio/api`.
+- **Đổi mật khẩu quản trị hay bất kỳ biến nào**: sửa giá trị trong `.env` rồi chạy `docker compose up -d` trong thư mục `portfolio/api`.
   **Không** dùng `docker compose restart`: lệnh đó khởi động lại với môi trường CŨ. `up -d` tạo lại container với giá trị mới; việc này cũng xoá mọi phiên quản trị
   (phải đăng nhập lại) và đặt lại các bộ giới hạn. Link, phiên người xem và nhật ký trong SQLite được giữ nguyên.
   Đổi `PORTFOLIO_API_KEY` thì phải đổi ở **cả hai** service rồi `up -d` cả hai.
@@ -129,34 +147,55 @@ curl -s localhost:8100/healthz           # {"status":"ok"}
 
 ```bash
 cd /home/nuc/Documents/project/portfolio/web
-SITE_URL=https://ten-mien-cua-ban PORTFOLIO_API_KEY=... docker compose up -d --build
+cp .env.example .env && chmod 600 .env    # lần đầu: điền PORTFOLIO_API_KEY (giống portfolio-api) và SITE_URL (phần 2)
+docker compose up -d --build
 ```
 
-Nếu tên mạng của `portfolio-api` khác mặc định: thêm `PORTFOLIO_API_NETWORK=<ten-mang>`.
-Cập nhật sau khi sửa nội dung: chạy lại đúng lệnh trên. Xem log: `docker compose logs -f portfolio`.
+Tên mạng của `portfolio-api`: xem phần 3 (chỉ khi khác mặc định mới thêm `PORTFOLIO_API_NETWORK` vào `.env`).
+Cập nhật sau khi sửa nội dung: chạy lại `docker compose up -d --build`. Xem log: `docker compose logs -f portfolio` (cũng cần `.env`, phần 2).
 
 Sau đó dán `deploy/nginx.conf.example` vào nginx của host (đổi tên miền, đường dẫn TLS đang đánh dấu `TODO`), `nginx -t`, rồi reload. Những điểm bắt buộc trong mẫu đó:
 
 - `location /api/chat/stream` giữ `proxy_buffering off`, `proxy_http_version 1.1`, `proxy_set_header Connection ""`, `proxy_read_timeout 120s`,
   nếu không các sự kiện SSE bị dồn lại và sơ đồ không sáng từng bước.
-- **`location /i/` có `access_log off`**: mã link nằm trên đường dẫn `/i/<mã>`, access log của nginx sẽ lưu nguyên mã nếu không tắt.
-  Ứng dụng tự nó không ghi đường dẫn này; hãy kiểm tra mọi proxy, CDN hay công cụ phân tích khác đứng trước nginx cũng không ghi.
+- **`location /i/` có `access_log off` VÀ `error_log /dev/null crit`**: mã link nằm trên đường dẫn `/i/<mã>`. Access log lưu nguyên đường dẫn nếu không tắt;
+  error log cũng ghi `request: "GET /i/<mã> HTTP/1.1"` khi limit_req từ chối một yêu cầu hay khi upstream lỗi (`connect() failed`, 502 lúc web đang khởi động lại).
+  Với mẫu này, các lần `/i/` bị giới hạn tần suất hay lỗi upstream **không được ghi ở đâu cả** (đổi lại bạn không thấy chúng trong log).
+  Đừng thêm nơi nhận `error_log` nào khác (syslog, file mức `debug`, ...) ghi được đường dẫn này. Ứng dụng tự nó không ghi đường dẫn này;
+  hãy kiểm tra mọi proxy, CDN hay công cụ phân tích khác đứng trước nginx cũng không ghi.
 - Mọi `location` proxy đặt `X-Real-IP $remote_addr` và `X-Forwarded-For $remote_addr` (không dùng `$proxy_add_x_forwarded_for`, client tự khai được chuỗi đó).
   Web băm IP này thành khoá giới hạn tần suất; thiếu `X-Real-IP` thì log web in `X-Real-IP header is missing` và mọi người xem dùng chung một khoá.
 - **Sau CDN** (Cloudflare, ...): bật `set_real_ip_from <dải IP của CDN>` + `real_ip_header` (ghi chú trong mẫu), nếu không `$remote_addr` là IP của CDN
   và mọi người xem dùng chung một khoá giới hạn (cả ở nginx lẫn ở `portfolio-api`).
 - Giới hạn tần suất của nginx (theo IP): `/api/chat/stream` 6 yêu cầu/phút (burst 4), `/i/` 30/phút (burst 10), `/api/admin/login` 10/phút (burst 5), quá thì 429;
-  `client_max_body_size 64k`.
+  với hai tuyến `/api/` thân 429 là JSON `{"code":"rate_limited"}` (qua `error_page 429 = @rate_limited`) để trang hiện đúng thông báo; `client_max_body_size 64k`.
+  `$binary_remote_addr` tính riêng từng địa chỉ IPv6 (/128) còn ứng dụng gộp theo /64, nên một máy có cả dải /64 né được giới hạn của nginx;
+  trần luồng chat đồng thời của `portfolio-api` (2 mỗi link, 40 toàn hệ thống) vẫn chặn.
 - **Khuyến nghị mạnh:** bỏ chú thích `allow <IP CỦA BẠN>; deny all;` ở `/admin`, `/api/admin/login` và `/api/admin/`. Đó là biện pháp chính để trang quản trị
   không lộ ra ngoài và để người lạ dò mật khẩu không làm bạn bị khoá (xem phần 9).
 
+**Khi IP của bạn đổi (bị chính danh sách `allow` chặn, nhận 403):**
+
+1. Trên máy chủ (qua SSH), sửa các dòng `allow` ở **cả ba** location `/admin`, `= /api/admin/login`, `/api/admin/`; thêm cả địa chỉ IPv6 nếu mạng của bạn có IPv6
+   (ví dụ `allow 2001:db8:1234:5678::/64;`), vì trình duyệt có thể đi bằng IPv6.
+2. `sudo nginx -t` rồi `sudo systemctl reload nginx` (hoặc `sudo nginx -s reload`).
+
+Cách khác, không sửa nginx: mở đường hầm SSH tới cổng của web rồi vào thẳng `http://localhost:3100/admin` (không qua nginx):
+
+```bash
+ssh -L 3100:127.0.0.1:3100 <user>@<may-chu>
+```
+
+Cookie `pf_admin` có cờ `Secure`, nhưng các trình duyệt hiện đại coi `http://localhost` là ngữ cảnh an toàn nên vẫn nhận nó. **Cách đường hầm này chưa được kiểm tra thực tế.**
+Đi đường hầm thì không có `X-Real-IP`: mọi lần đăng nhập qua đó chung một khoá giới hạn `unknown` (web in cảnh báo một lần trong log), chấp nhận được cho một người dùng.
+
 ## 7. Việc phải làm lần đầu (trước khi gửi link cho ai)
 
-1. Sinh `PORTFOLIO_API_KEY` và `ADMIN_PASSWORD` mạnh (phần 2), đặt vào `.env` của `portfolio/api` và (khoá) của `web`;
-   thêm `COMPOSE_PROJECT_NAME=portfolio-api` vào `.env` của `portfolio/api` (phần 3) rồi kiểm tra `docker network ls` có `portfolio-api_default`.
+1. Sinh `PORTFOLIO_API_KEY` và `ADMIN_PASSWORD` mạnh (phần 2), đặt vào `.env` (`chmod 600`) của `portfolio/api` và (khoá, `SITE_URL`) của `web`.
+   Sau khi bật `portfolio-api`, chạy `docker network ls`: nếu không có `portfolio-api_default`, làm theo phần 3 (đặt `PORTFOLIO_API_NETWORK` cho web).
 2. Bật theo thứ tự `chat` -> `portfolio-api` -> web (phần 3-6), với `SITE_URL` là địa chỉ thật (build lại nếu trước đó build thiếu).
-3. Cấu hình nginx theo mẫu: `access_log off` cho `/i/`, `limit_req`, `X-Real-IP`, giới hạn IP cho `/admin` và `/api/admin/`; `nginx -t` rồi reload.
-4. Chạy các kiểm tra ở phần 10 (đặc biệt: `POST /api/chat/stream` không cookie phải trả 401; `docker compose logs` không chứa mã link).
+3. Cấu hình nginx theo mẫu: `access_log off` và `error_log /dev/null crit` cho `/i/`, `limit_req`, `X-Real-IP`, giới hạn IP cho `/admin` và `/api/admin/`; `nginx -t` rồi reload.
+4. Chạy các kiểm tra ở phần 10 (đặc biệt: `POST /api/chat/stream` không cookie phải trả 401; `docker compose logs` và log nginx không chứa mã link).
 5. Mở `https://ten-mien-cua-ban/admin`, đăng nhập, tạo một link thử, mở nó trong cửa sổ ẩn danh, hỏi bot một câu, xem nhật ký của link, rồi thu hồi link đó.
 6. Ghi các mẫu phát lại thật cho Knowledge Base (phần 12) để người không có link thấy dữ liệu thật thay vì mẫu giữ chỗ.
 7. Điền hoặc xác nhận các nội dung chưa được xác nhận (phần 16).
@@ -215,7 +254,7 @@ Trang `/admin` chỉ có tiếng Việt và không được lập chỉ mục (`
 1. **Đăng nhập** bằng `ADMIN_PASSWORD`. Phiên quản trị hết hạn sau 120 phút không hoạt động, và mất khi `portfolio-api` được tạo lại/khởi động lại.
    Sai mật khẩu nhiều lần bị chặn tạm (429): 5 lần/15 phút cho mỗi IP và 60 lần/15 phút cho cả hệ thống (mọi lần thử đều tính, kể cả lần đúng).
    **Nếu bị khoá** (kể cả do người khác dò mật khẩu): chờ hết cửa sổ 15 phút, hoặc chạy `docker compose up -d` trong thư mục `portfolio/api` để xoá bộ giới hạn
-   (link và nhật ký giữ nguyên). Cách phòng chính là giới hạn IP ở nginx (phần 6).
+   (link và nhật ký giữ nguyên). Cách phòng chính là giới hạn IP ở nginx (phần 6); nếu chính bạn bị danh sách `allow` chặn vì IP đổi, xem "Khi IP của bạn đổi" ở phần 6.
 2. **Tạo link**: nhập tên gợi nhớ (ví dụ tên công ty/người nhận; 1..80 ký tự), tuỳ chọn ngày hết hạn. Link đầy đủ `SITE_URL/i/<mã>` **chỉ hiện đúng một lần**:
    sao chép ngay rồi gửi cho người nhận. Hệ thống chỉ lưu băm của mã nên không ai (kể cả bạn) xem lại được; lỡ mất thì thu hồi và tạo link mới.
 3. **Bảng link**: tên, trạng thái (`active` đang dùng, `unused` chưa ai mở, `revoked` đã thu hồi, `expired` hết hạn), thời điểm tạo/hết hạn/lần dùng cuối, số lần dùng thành công.
@@ -247,19 +286,23 @@ curl -s localhost:3100/vi | grep -o '<link rel="canonical"[^>]*>'   # phải là
 
 Qua nginx (từ ngoài), lặp lại dòng `POST /api/chat/stream` với `https://ten-mien-cua-ban`: phải là 401.
 
-Kiểm tra log không chứa mã link: sau khi tạo và mở một link thử, tìm một đoạn của mã trong log của cả hai service (không được thấy gì):
+Kiểm tra log không chứa mã link: sau khi tạo và mở (qua nginx) một link thử, tìm mã đó trong log của cả hai service **và** trong access log lẫn error log của nginx
+trên host (không được thấy gì; các lệnh compose cần `.env`, phần 2):
 
 ```bash
-cd /home/nuc/Documents/project/portfolio/web && docker compose logs portfolio | grep -c '<đoạn-mã>'      # 0
-cd /home/nuc/Documents/project/portfolio/api && docker compose logs portfolio-api | grep -c '<đoạn-mã>' # 0
+cd /home/nuc/Documents/project/portfolio/web && docker compose logs portfolio | grep -c '<mã>'       # 0
+cd /home/nuc/Documents/project/portfolio/api && docker compose logs portfolio-api | grep -c '<mã>'  # 0
+sudo grep -r '<mã>' /var/log/nginx/                                                                  # không in gì (cả access.log lẫn error.log)
 ```
+
+Nếu cấu hình nginx ghi log ở nơi khác (`access_log`/`error_log` trỏ tới file khác, syslog, journald), tìm cả ở đó. Thu hồi link thử sau khi kiểm tra.
 
 Khi `chat` tắt hoặc không với tới được, `/api/chat/status` trả `{"enabled":false}`: người có link thấy bảng "demo tạm nghỉ", người không có link vẫn thấy bản phát lại.
 Khi `portfolio-api` tắt: mọi người đều thấy bản phát lại, `/i/<mã>` chuyển về `/?invite=invalid`, phần còn lại của site vẫn chạy.
 
 ## 11. Sao lưu và khôi phục SQLite
 
-Toàn bộ dữ liệu của `portfolio-api` là một file SQLite trong volume `portfolio_data`. Lệnh sao lưu nóng (nhất quán, trong container) và khôi phục nằm ở mục
+Toàn bộ dữ liệu của `portfolio-api` là một file SQLite trong volume `portfolio-api_portfolio_data`. Các lệnh dưới chạy trong `portfolio/api` và cần `.env` (phần 2). Lệnh sao lưu nóng (nhất quán, trong container) và khôi phục nằm ở mục
 "Sao lưu SQLite" và "Khôi phục từ bản sao lưu" của `README.md` trong repo `portfolio/api`. Tóm tắt:
 
 ```bash
@@ -269,7 +312,19 @@ docker compose cp portfolio-api:/data/backup.sqlite ./backup.sqlite && chmod 600
 docker compose exec portfolio-api rm -f /data/backup.sqlite
 ```
 
-Khôi phục: dừng `portfolio-api`, chép bản sao lưu đè lên `/data/portfolio.sqlite`, xoá các file `-wal`/`-shm` cũ, rồi `docker compose up -d` (chi tiết và lệnh `chown` khi cần: README của api).
+Khôi phục: dừng dịch vụ, chép bản sao lưu đè lên file CSDL, **luôn** trả quyền sở hữu file cho uid 10001 (người dùng của container; file chép bằng
+`docker compose cp` không tự thuộc uid đó), xoá các file `-wal`/`-shm` cũ, rồi khởi động lại:
+
+```bash
+cd /home/nuc/Documents/project/portfolio/api
+docker compose stop portfolio-api
+docker compose cp ./backup.sqlite portfolio-api:/data/portfolio.sqlite
+docker compose run --rm --no-deps -u 0 --entrypoint chown portfolio-api 10001:10001 /data/portfolio.sqlite
+docker compose run --rm --no-deps --entrypoint sh portfolio-api -c "rm -f /data/portfolio.sqlite-wal /data/portfolio.sqlite-shm"
+docker compose up -d
+```
+
+`docker compose cp` hoạt động cả khi container đã dừng. Mọi phiên quản trị bị xoá khi khởi động lại; link, phiên người xem và nhật ký lấy theo bản sao lưu.
 File sao lưu chứa băm mã link và nhật ký sử dụng: **giữ riêng tư** (`chmod 600`), không commit, không để trong thư mục chia sẻ hay đồng bộ công khai.
 
 ## 12. Ghi mẫu phát lại thật cho Knowledge Base

@@ -13,14 +13,15 @@ chỉ `portfolio-api` gọi bot chat. Demo Twistfit (phát lại) và Gia phả 
 
 ## Environment / Biến môi trường
 
-See `.env.example` (placeholders only; never commit `.env`).
+Put them in a `.env` file next to `docker-compose.yml` (`cp .env.example .env && chmod 600 .env`; it is git-ignored, never commit it).
+Every compose command (`up`, `logs`, `exec`, `cp`, `stop`, `down`) needs `PORTFOLIO_API_KEY`, so keep it in `.env` rather than on the command line.
 
 | Variable | Required | Meaning |
 | --- | --- | --- |
 | `PORTFOLIO_API_KEY` | yes | Shared internal key with `portfolio-api`; the SAME value in both services, >= 32 visible ASCII chars. |
 | `SITE_URL` | yes in production | Public origin, needed at build time AND runtime (canonical URLs, invite redirects, links shown on `/admin`). |
 | `PORTFOLIO_API_URL` | no | Default `http://portfolio-api:8100`. |
-| `PORTFOLIO_API_NETWORK` | no (compose) | Docker network of the `portfolio-api` stack, default `portfolio-api_default`; check with `docker network ls`. |
+| `PORTFOLIO_API_NETWORK` | no (compose) | Fallback only, when `docker network ls` shows the `portfolio-api` network under a name other than `portfolio-api_default` (see `docs/RUNBOOK.md`, section 3). |
 | `PORTFOLIO_PORT` | no (compose) | Host port on 127.0.0.1, default `3100`. |
 
 Start order: knowledge_base `chat` -> `portfolio-api` -> this web app. The web container joins only the

@@ -22,6 +22,8 @@
 #   set_real_ip_from 0.0.0.0/0: ai cũng tự khai được IP.
 
 # Giới hạn tần suất theo IP (ngữ cảnh `http`). Mỗi câu hỏi chat tốn một lượt gọi Gemini của bạn.
+# Lưu ý: $binary_remote_addr tính riêng từng địa chỉ IPv6 (/128), còn ứng dụng gộp IPv6 theo /64;
+# một máy có cả dải /64 né được giới hạn của nginx, nhưng vẫn bị trần luồng đồng thời của portfolio-api chặn.
 limit_req_zone $binary_remote_addr zone=chat_stream:10m rate=6r/m;
 limit_req_zone $binary_remote_addr zone=invite_open:10m rate=30r/m;
 limit_req_zone $binary_remote_addr zone=admin_login:10m rate=10r/m;
@@ -45,9 +47,18 @@ server {
     # Bị limit_req chặn thì trả 429 (mặc định nginx trả 503).
     limit_req_status 429;
 
+    # Thân JSON cho 429 của các tuyến /api/ (trang web đọc được mã `rate_limited`;
+    # trang lỗi HTML mặc định của nginx thì không). Dùng qua `error_page 429 = @rate_limited;`.
+    location @rate_limited {
+        default_type application/json;
+        add_header Cache-Control "no-store" always;
+        return 429 '{"code":"rate_limited"}';
+    }
+
     # SSE của demo Knowledge Base: phải tắt buffer để các sự kiện chảy liền.
     location /api/chat/stream {
         limit_req zone=chat_stream burst=4 nodelay;
+        error_page 429 = @rate_limited;
 
         proxy_pass http://127.0.0.1:3100;
         proxy_http_version 1.1;
@@ -65,9 +76,15 @@ server {
 
     # Link mời /i/<mã>: MÃ LINK NẰM TRÊN ĐƯỜNG DẪN. Access log của nginx ghi nguyên đường dẫn,
     # nên phải tắt log ở đây, nếu không mọi mã link (đủ để vào demo) nằm trong file log.
-    # Nhớ kiểm tra mọi proxy/CDN/công cụ phân tích khác đứng trước nginx cũng không ghi đường dẫn này.
+    # `access_log off` KHÔNG tắt error log: lần bị limit_req từ chối (mức `error`) và lỗi upstream
+    # (`connect() failed`, `upstream prematurely closed`, 502 khi web đang khởi động lại) đều ghi
+    # `request: "GET /i/<mã> HTTP/1.1"` vào error.log. Vì vậy error log của location này đổ vào
+    # /dev/null (chỉ mức crit). Mọi nơi nhận error_log khác (syslog, file thêm ở `http`/`server`
+    # kèm mức debug, ...) cũng KHÔNG được ghi đường dẫn này. Nhớ kiểm tra mọi proxy/CDN/công cụ
+    # phân tích khác đứng trước nginx cũng không ghi đường dẫn này.
     location /i/ {
         access_log off;
+        error_log /dev/null crit;
         limit_req zone=invite_open burst=10 nodelay;
 
         proxy_pass http://127.0.0.1:3100;
@@ -101,6 +118,7 @@ server {
         # allow <IP CỦA BẠN>;
         # deny all;
         limit_req zone=admin_login burst=5 nodelay;
+        error_page 429 = @rate_limited;
 
         proxy_pass http://127.0.0.1:3100;
         proxy_set_header Host $host;
