@@ -166,6 +166,19 @@ describe("KnowledgeBaseDemo", () => {
     expect(screen.getByText(/không được lưu/i)).toBeInTheDocument();
   });
 
+  it("the privacy note says questions are not stored AND that the link's feature use is logged (vi and en)", async () => {
+    const expected = {
+      vi: ["Câu hỏi của bạn không được lưu.", "ghi lại rằng link mời của bạn đã dùng tính năng nào và lúc nào"],
+      en: ["Your questions are not stored.", "records which feature your invite link used, and when"],
+    } as const;
+    for (const locale of ["vi", "en"] as const) {
+      const { unmount } = await renderDemo(locale);
+      const note = await screen.findByText(expected[locale][0], { exact: false });
+      expect(note.textContent).toContain(expected[locale][1]);
+      unmount();
+    }
+  });
+
   it("progresses the diagram nodes in order and types out the answer", async () => {
     const s = controlledStream();
     mockStream.mockImplementation(s.gen);

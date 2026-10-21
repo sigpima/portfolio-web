@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Portfolio AI Engineer",
-    "description": "Portfolio của một AI Engineer: các dự án có demo chạy thật, bản phát lại và bản mô phỏng, được ghi nhãn trung thực."
+    "description": "Portfolio của một AI Engineer: các dự án có demo chạy thật (khi có link mời), bản phát lại và bản mô phỏng, được ghi nhãn trung thực."
   },
   "header": {
     "brand": "Portfolio · AI Engineer",
@@ -77,7 +77,7 @@
     },
     "notes": {
       "synthetic": "Toàn bộ là dữ liệu giả lập: công ty \"Sơn Việt Demo Co.\", 24 công trình, 126 hạng mục.",
-      "privacy": "Câu hỏi của bạn không được lưu."
+      "privacy": "Câu hỏi của bạn không được lưu. Hệ thống chỉ ghi lại rằng link mời của bạn đã dùng tính năng nào và lúc nào."
     },
     "errors": {
       "tooLong": "Câu hỏi dài quá 500 ký tự. Hãy rút gọn lại.",
@@ -92,11 +92,15 @@
     "replayNoticeNoChat": "Tính năng trò chuyện trực tiếp hiện chưa bật cho link của bạn. Bạn đang xem bản phát lại.",
     "modeLoading": "Đang tải demo…"
   },
+  "invite": {
+    "notice": "Link mời không còn hiệu lực. Bạn vẫn xem được các bản phát lại.",
+    "dismiss": "Đóng thông báo"
+  },
   "demo": {
     "badge": {
       "live": {
         "label": "Chạy thật",
-        "description": "Demo này gọi hệ thống thật mỗi khi bạn dùng."
+        "description": "Demo này gọi hệ thống thật khi bạn mở bằng link mời của chủ trang."
       },
       "liveInvite": {
         "label": "Chạy thật · cần link mời"

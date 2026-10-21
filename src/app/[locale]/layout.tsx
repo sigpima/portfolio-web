@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import { InviteNotice } from "@/components/InviteNotice";
 import { InviteSessionProvider } from "@/lib/invite/use-invite-session";
 import { metadataBase } from "@/lib/alternates";
 import { fontVariables } from "../fonts";
@@ -51,6 +53,10 @@ export default async function LocaleLayout({
               {t("skipToContent")}
             </a>
             <SiteHeader locale={locale} />
+            {/* useSearchParams needs a Suspense boundary so the pages stay statically rendered. */}
+            <Suspense fallback={null}>
+              <InviteNotice />
+            </Suspense>
             <main id="main" tabIndex={-1} className="flex-1">
               {children}
             </main>
