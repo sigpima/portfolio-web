@@ -10,6 +10,7 @@ const labels: FlowLabels = {
   database: { label: "Database" },
   answer: { label: "Answer" },
   extraCall: (n) => `Call ${n}`,
+  rowCount: (n) => `${n} dòng`,
 };
 
 function run(events: FlowEvent[], from: FlowState = initialChatFlow(labels)): FlowState {
@@ -75,6 +76,8 @@ describe("reduceChatFlow", () => {
     expect(node(state, "tool-1").detail).toContain("42");
     expect(node(state, "db-1").status).toBe("done");
     expect(node(state, "db-1").detail).toContain("7");
+    expect(node(state, "db-1").detail).toContain(labels.rowCount(7));
+    expect(node(state, "db-1").detail).not.toContain("rows");
     expect(node(state, "db-1").detail).toContain("SELECT 1");
     expect(node(state, "answer").status).toBe("active");
   });
@@ -139,6 +142,20 @@ describe("reduceChatFlow", () => {
   it("start and done do not change the diagram", () => {
     const base = run([{ type: "submit" }]);
     expect(run([{ type: "start", session_id: "s" }, { type: "done", duration_ms: 5 }], base)).toEqual(base);
+  });
+
+  it("submit after a finished or failed run resets to a fresh initial flow", () => {
+    const finished = run([{ type: "submit" }, call(1), result(1), call(2), result(2), { type: "answer", text: "hi" }]);
+    const failed = run([{ type: "submit" }, call(1), { type: "error", code: "internal", message: "x" }]);
+    for (const previous of [finished, failed]) {
+      const state = reduceChatFlow(previous, { type: "submit" }, labels);
+      expect(state.rows.map((r) => r.id)).toEqual(["r1"]);
+      expect(state).toEqual(run([{ type: "submit" }]));
+      expect(node(state, "question").status).toBe("done");
+      expect(node(state, "model-1").status).toBe("active");
+      expect(node(state, "tool-1").status).toBe("idle");
+      expect(node(state, "answer").detail).toBeUndefined();
+    }
   });
 
   it("never mutates the input state", () => {

@@ -15,6 +15,7 @@ export interface FlowLabels {
   database: NodeLabel;
   answer: NodeLabel;
   extraCall: (n: number) => string;
+  rowCount: (n: number) => string;
 }
 
 function makeNode(id: string, text: NodeLabel): FlowNode {
@@ -64,15 +65,18 @@ function statusOf(state: FlowState, nodeId: string): FlowNode["status"] | undefi
   return undefined;
 }
 
-function dbDetail(event: Extract<ChatEvent, { type: "tool_result" }>): string {
+function dbDetail(event: Extract<ChatEvent, { type: "tool_result" }>, labels: FlowLabels): string {
   const parts: string[] = [];
-  if (event.row_count !== null) parts.push(`${event.row_count} rows`);
+  if (event.row_count !== null) parts.push(labels.rowCount(event.row_count));
   if (event.sql !== null && event.sql !== "") parts.push(event.sql);
   if (event.preview !== "") parts.push(event.preview);
   return parts.join("\n");
 }
 
-/** Pure reducer: folds one event into the diagram, showing only what actually happened. */
+/**
+ * Pure reducer: folds one event into the diagram, showing only what actually happened.
+ * Call ids are assumed sequential starting at 1 (backend contract).
+ */
 export function reduceChatFlow(state: FlowState, event: FlowEvent, labels: FlowLabels): FlowState {
   switch (event.type) {
     case "submit":
@@ -103,7 +107,7 @@ export function reduceChatFlow(state: FlowState, event: FlowEvent, labels: FlowL
       const status = event.ok ? "done" : "error";
       return patchAll(ensureCallRow(state, n, labels), [
         { type: "set", nodeId: `tool-${n}`, status, detail: `${event.duration_ms} ms` },
-        { type: "set", nodeId: `db-${n}`, status, detail: dbDetail(event) },
+        { type: "set", nodeId: `db-${n}`, status, detail: dbDetail(event, labels) },
         { type: "set", nodeId: "answer", status: "active" },
       ]);
     }
