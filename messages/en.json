@@ -135,13 +135,13 @@
         "alt": "Model {model} wearing: {items}"
       },
       "errors": {
-        "busy": "Someone else is using it right now. Try again in a few seconds.",
+        "busy": "Twistfit is busy right now (an earlier generation, possibly your own, is still running). Try again in a minute or two.",
         "limit": "Your link has used up its image generations.",
         "moderated": "Flux declined this combination. Try different items or another model.",
         "timeout": "Flux took too long to respond. Please try again.",
         "generic": "Couldn't generate the image right now. Please try again.",
         "inviteRequired": "Your invite link is no longer valid.",
-        "resultExpired": "The image has expired or is no longer available. Please make it again."
+        "resultExpired": "The image has expired or is no longer available. Please make it again (this uses another run)."
       },
       "notes": {
         "source": "Flux generates the image from model and clothing photos provided by the site owner, so you don't upload anything.",

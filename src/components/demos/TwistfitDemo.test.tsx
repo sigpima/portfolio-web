@@ -250,7 +250,7 @@ describe("TwistfitDemo", () => {
     await user.dblClick(generate);
     await user.click(generate);
     expect(mockStart).toHaveBeenCalledTimes(1);
-    expect(generate).toBeDisabled();
+    expect(generate).toHaveAttribute("aria-disabled", "true");
     expect(button(L.vi.back)).toBeDisabled();
     expect(screen.getByRole("status")).toHaveTextContent(L.vi.stages.starting);
     await act(async () => start.resolve({ jobId: "job_1" }));
@@ -289,6 +289,25 @@ describe("TwistfitDemo", () => {
     expect(document.activeElement).toBe(focused);
   });
 
+  it("keeps focus on the Generate button while generating, and a second activation starts nothing", async () => {
+    const poll = controlledPoll();
+    const { user } = renderDemo();
+    await toStep3(user);
+    const generate = button(L.vi.generate);
+    await user.click(generate);
+    await poll.started();
+    // Not natively disabled (that would drop focus to <body>): aria-disabled + a guard.
+    expect(generate).toBeEnabled();
+    expect(generate).toHaveAttribute("aria-disabled", "true");
+    expect(generate).toHaveFocus();
+    expect(document.activeElement).not.toBe(document.body);
+    await user.click(generate);
+    await user.keyboard("{Enter}");
+    expect(mockStart).toHaveBeenCalledTimes(1);
+    expect(mockPoll).toHaveBeenCalledTimes(1);
+    await poll.finish({ status: "done", stage: "downloading", elapsed_seconds: 30, result_id: "r_1" });
+  });
+
   it("keeps the ticking seconds out of the live region", async () => {
     const poll = controlledPoll();
     const { user } = renderDemo();
@@ -306,6 +325,8 @@ describe("TwistfitDemo", () => {
       ["twistfit_limit", "limit"],
       ["invalid_request", "generic"],
       ["demo_disabled", "generic"],
+      // nginx's own 429 for /api/twistfit/run (deploy/nginx.conf.example)
+      ["rate_limited", "generic"],
     ] as const)("shows the %s run rejection as errors.%s", async (code, key) => {
       controlledPoll();
       mockStart.mockRejectedValue(new TwistfitError(code, 429));
@@ -314,7 +335,8 @@ describe("TwistfitDemo", () => {
       await user.click(button(t.generate));
       const alert = await screen.findByRole("alert");
       expect(alert).toHaveTextContent(t.errors[key]);
-      expect(alert).not.toHaveTextContent(code);
+      // The raw code is never shown (the friendly text itself may use the same word, e.g. "busy").
+      expect((alert.textContent ?? "").replace(t.errors[key], "")).not.toContain(code);
       expect(within(alert).getByText(t.errors[key])).toHaveFocus();
     });
 

@@ -5,6 +5,7 @@ import type { Locale } from "@/content/types";
 import { InviteSessionProvider } from "@/lib/invite/use-invite-session";
 import viMessages from "../../../messages/vi.json";
 import enMessages from "../../../messages/en.json";
+import { LiveAwareBadge } from "./LiveAwareBadge";
 import { TwistfitSwitch } from "./TwistfitSwitch";
 
 const ON = { chat: false, twistfit: true, gia_pha: false };
@@ -36,10 +37,11 @@ function twistfitCalls(fetchMock: ReturnType<typeof stubFetch>) {
   return fetchMock.mock.calls.filter(([url]) => String(url).startsWith("/api/twistfit/"));
 }
 
-function renderSwitch(locale: Locale = "vi") {
+function renderSwitch(locale: Locale = "vi", withPageBadge = false) {
   return render(
     <NextIntlClientProvider locale={locale} messages={locale === "vi" ? viMessages : enMessages}>
       <InviteSessionProvider>
+        {withPageBadge ? <LiveAwareBadge locale={locale} feature="twistfit" /> : null}
         <TwistfitSwitch locale={locale} />
       </InviteSessionProvider>
     </NextIntlClientProvider>,
@@ -124,5 +126,17 @@ describe("TwistfitSwitch", () => {
     expect(screen.queryByRole("button", { name: viMessages.twistfit.live.next })).toBeNull();
     await waitFor(() => expect(lost.closest("[tabindex='-1']")).toHaveFocus());
     expect(twistfitCalls(fetchMock)).toHaveLength(1);
+  });
+
+  it("invalidates the shared invite session on a 401, so the page-level badge flips to replay too", async () => {
+    // Revoked mid-visit: /api/session said invited and twistfit, the catalog says it is not any more.
+    stubFetch({ invited: true, features: ON }, () => Response.json({ code: "invite_required" }, { status: 401 }));
+    const { container } = renderSwitch("vi", true);
+    // The notice and replay show...
+    expect(await screen.findByText(viMessages.twistfit.live.errors.inviteRequired)).toBeInTheDocument();
+    expect(container.querySelector('[data-twistfit-mode="replay"]')).not.toBeNull();
+    // ...and the badge outside the switch (same provider, rendered first) no longer says "live".
+    await waitFor(() => expect(container.querySelector("[data-demo-kind]")).toHaveAttribute("data-demo-kind", "replay"));
+    expect(screen.queryByText(viMessages.demo.badge.live.label, { exact: true })).toBeNull();
   });
 });

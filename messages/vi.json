@@ -120,7 +120,7 @@
       "next": "Tiếp tục",
       "back": "Quay lại",
       "generate": "Tạo ảnh",
-      "regenerate": "Tạo lại",
+      "regenerate": "Tạo ảnh khác",
       "retry": "Thử lại",
       "download": "Tải ảnh về",
       "stages": {
@@ -135,13 +135,13 @@
         "alt": "Người mẫu {model} mặc: {items}"
       },
       "errors": {
-        "busy": "Đang có người khác dùng, thử lại sau ít giây.",
+        "busy": "Twistfit đang bận (có thể một lượt tạo ảnh trước, kể cả của bạn, chưa xong). Hãy thử lại sau ít phút.",
         "limit": "Link của bạn đã dùng hết lượt tạo ảnh.",
         "moderated": "Flux từ chối tạo ảnh với lựa chọn này. Hãy thử món đồ hoặc người mẫu khác.",
         "timeout": "Flux phản hồi quá lâu nên chưa có ảnh. Hãy thử lại.",
         "generic": "Không tạo được ảnh lúc này, hãy thử lại.",
         "inviteRequired": "Link mời không còn hiệu lực.",
-        "resultExpired": "Ảnh đã hết hạn hoặc không còn nữa. Hãy tạo lại."
+        "resultExpired": "Ảnh đã hết hạn hoặc không còn nữa. Hãy tạo lại (dùng thêm một lượt)."
       },
       "notes": {
         "source": "Ảnh do Flux tạo từ ảnh người mẫu và món đồ có sẵn của chủ trang, bạn không tải ảnh nào lên.",

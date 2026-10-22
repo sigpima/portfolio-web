@@ -46,7 +46,7 @@ function isAbortError(err: unknown): boolean {
 }
 
 const PRIMARY_BUTTON =
-  "inline-flex min-h-11 items-center justify-center rounded-lg bg-primary-container px-4 py-2.5 text-body-md font-semibold text-on-primary-container disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex min-h-11 items-center justify-center rounded-lg bg-primary-container px-4 py-2.5 text-body-md font-semibold text-on-primary-container disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50";
 const SECONDARY_BUTTON =
   "inline-flex min-h-11 items-center justify-center rounded-lg border border-secondary px-4 py-2.5 text-body-md text-secondary hover:bg-secondary/10 disabled:cursor-not-allowed disabled:opacity-50";
 const CHOICE_CARD =
@@ -87,7 +87,7 @@ export function TwistfitDemo({ onInviteRequired }: TwistfitDemoProps) {
   const errorRef = useRef<HTMLParagraphElement>(null);
   const catalogErrorRef = useRef<HTMLParagraphElement>(null);
 
-    const runAbortRef = useRef<AbortController | null>(null);
+  const runAbortRef = useRef<AbortController | null>(null);
   const runningRef = useRef(false);
   const onInviteRequiredRef = useRef(onInviteRequired);
   useEffect(() => {
@@ -115,7 +115,7 @@ export function TwistfitDemo({ onInviteRequired }: TwistfitDemoProps) {
 
   useEffect(() => {
     const controller = new AbortController();
-        fetchCatalog(controller.signal).then(
+    fetchCatalog(controller.signal).then(
       (catalog) => {
         if (controller.signal.aborted) return;
         setCatalogState({ kind: "ready", catalog });
@@ -343,7 +343,7 @@ export function TwistfitDemo({ onInviteRequired }: TwistfitDemoProps) {
                         onChange={() => toggleItem(item.id)}
                         className="size-5 shrink-0 accent-secondary"
                       />
-                      <span aria-hidden="true" className="break-words">
+                      <span aria-hidden="true" className="min-w-0 [overflow-wrap:anywhere]">
                         {name}
                       </span>
                     </span>
@@ -388,7 +388,7 @@ export function TwistfitDemo({ onInviteRequired }: TwistfitDemoProps) {
                       onChange={() => setModel(entry.id)}
                       className="size-5 shrink-0 accent-secondary"
                     />
-                    <span aria-hidden="true" className="break-words">
+                    <span aria-hidden="true" className="min-w-0 [overflow-wrap:anywhere]">
                       {name}
                     </span>
                   </span>
@@ -499,7 +499,14 @@ export function TwistfitDemo({ onInviteRequired }: TwistfitDemoProps) {
                 {t("back")}
               </button>
               {run.phase === "error" ? null : (
-                <button type="button" disabled={running} onClick={() => void generate()} className={PRIMARY_BUTTON}>
+                // aria-disabled, not disabled: a disabled button would drop the focus it just had to <body>.
+                // generate() ignores activations while a run is in flight (runningRef).
+                <button
+                  type="button"
+                  aria-disabled={running ? true : undefined}
+                  onClick={() => void generate()}
+                  className={PRIMARY_BUTTON}
+                >
                   {t("generate")}
                 </button>
               )}

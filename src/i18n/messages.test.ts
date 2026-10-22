@@ -122,6 +122,26 @@ describe("messages", () => {
     expect(twistfit.summary.en).toMatch(/replay/i);
   });
 
+  it("does not blame 'someone else' for a busy Twistfit, and says a retry costs another run", () => {
+    const live = (m: unknown) =>
+      (m as { twistfit: { live: { errors: Record<string, string>; regenerate: string } } }).twistfit.live;
+    expect(live(vi).errors.busy).toMatch(/kể cả của bạn/);
+    expect(live(vi).errors.busy).not.toMatch(/người khác/);
+    expect(live(en).errors.busy).toMatch(/possibly your own/);
+    expect(live(en).errors.busy).not.toMatch(/someone else/i);
+    expect(live(vi).errors.resultExpired).toMatch(/dùng thêm một lượt/);
+    expect(live(en).errors.resultExpired).toMatch(/uses another run/);
+    // "Make another" goes back to step 1; the vi label matches it.
+    expect(live(vi).regenerate).toBe("Tạo ảnh khác");
+  });
+
+  it("does not promise the Twistfit live run to the owner's link alone, only to links that enable it", () => {
+    expect(twistfit.summary.vi).not.toMatch(/link mời của chủ trang/);
+    expect(twistfit.summary.en).not.toMatch(/owner's invite/i);
+    expect(twistfit.summary.vi).toMatch(/bật tính năng này/);
+    expect(twistfit.summary.en).toMatch(/that has it enabled/);
+  });
+
   it("flags location claims but not ordinary English", () => {
     for (const claim of [
       "Flux chạy trên máy chủ riêng.",
