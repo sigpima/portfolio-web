@@ -223,7 +223,8 @@ Mọi mục dưới đây là **bắt buộc**.
    2. Chuẩn bị 1-6 ảnh người mẫu, 1-12 ảnh món đồ (bạn phải có quyền dùng ảnh; ảnh người thật cần sự đồng ý của họ) và `catalog.json` trong `portfolio/api/twistfit-assets/`,
       theo `twistfit-assets/README.md` và `catalog.example.json` ở đó. Thư mục phải đọc được với uid 10001 của container (`chmod a+rx twistfit-assets && chmod a+r twistfit-assets/*`).
    3. Tạo lại container để nạp khoá và ảnh: `cd /home/nuc/Documents/project/portfolio/api && docker compose up -d --force-recreate portfolio-api`.
-      Kiểm tra `docker compose logs portfolio-api` không có dòng warning về danh mục; `/v1/session` của một phiên hợp lệ phải báo `twistfit: true`.
+      Kiểm tra `docker compose logs portfolio-api` không có dòng warning về danh mục; sau khi tạo link thử ở bước 4 ngay dưới và mở nó (lấy giá trị cookie `pf_session` trong DevTools), `curl -s localhost:3100/api/session -b 'pf_session=<giá trị>'` phải báo `features.twistfit` là `true`
+      (dùng tuyến web `/api/session`, như phần 8; `/v1/session` là tuyến nội bộ của `portfolio-api`, cần khoá nội bộ, không dùng ở đây).
    4. Trên `/admin` tạo một link thử **có đặt "Tối đa lượt Twistfit"** (ví dụ 2), mở nó trong cửa sổ ẩn danh, đi hết 3 bước (chọn đồ, chọn người mẫu, tạo ảnh) và chạy **MỘT lượt thật**.
       Lượt này cũng xác minh giả định về miền URL polling của BFL (xem `README.md` của `portfolio/api`); nếu sai thì lượt báo "lỗi", không có khoá nào bị lộ.
    5. Mở nhật ký của link trên `/admin`: phải có một sự kiện `twistfit` / thành công với chi tiết `Đồ đã chọn: ... · Người mẫu: ...` (chỉ tên, không có ảnh).
@@ -337,6 +338,8 @@ Trang `/admin` có ghi chú này dưới nhật ký.
   `twistfit_limit` "Hết lượt Twistfit của link", `concurrent_limit`/`global_concurrent_limit`/`busy` "Đang bận", `cancelled` "Bị huỷ khi dịch vụ tắt"); mã lạ hiện nguyên văn.
   Mỗi lượt chạy đúng một sự kiện. Lượt lỗi sau khi Flux đã được gọi vẫn có thể bị BFL tính phí nhưng không tính vào `twistfit_max`.
 - **Không bao giờ có**: nội dung câu hỏi hay câu trả lời, ảnh (kể cả ảnh người mẫu, món đồ và ảnh kết quả của Twistfit), địa chỉ IP, chuỗi trình duyệt (user agent), mã link gốc hay mã phiên (CSDL chỉ lưu băm SHA-256).
+- `location = /api/twistfit/run` có `limit_req` riêng (zone `twistfit_run`, 6 lượt/phút/IP, burst 4, trả JSON 429 `rate_limited` như chat): mỗi POST `/run` bị từ chối (hết lượt, bận, thân sai) ghi một dòng `blocked`
+  vào nhật ký, nên một link bị lạm dụng có thể làm ngập nhật ký. **Không** đặt giới hạn cho `/api/twistfit/jobs/` (client hỏi trạng thái mỗi 1,5 giây), `/catalog`, `/assets/` và `/results/`.
 - Log tiến trình (`docker compose logs`) của web và `portfolio-api` cũng không ghi mã link, phiên, mật khẩu hay nội dung câu hỏi.
 
 ## 10. Kiểm tra nhanh (sau mỗi lần triển khai)
@@ -357,6 +360,8 @@ curl -s localhost:3100/vi | grep -o '<link rel="canonical"[^>]*>'   # phải là
 ```
 
 Qua nginx (từ ngoài), lặp lại dòng `POST /api/chat/stream` và dòng `GET /api/twistfit/catalog` với `https://ten-mien-cua-ban`: phải là 401.
+Kiểm tra giới hạn tần suất của nginx cho Twistfit (không cookie nên không chạm Flux và không ghi nhật ký): gửi nhanh khoảng 8 lần `POST https://ten-mien-cua-ban/api/twistfit/run` (thân bất kỳ, `content-type: application/json`);
+5 lần đầu phải là 401, các lần sau 429 với `{"code":"rate_limited"}`. Chờ vài chục giây rồi mới thử lại để khỏi tự khoá IP của mình.
 
 Kiểm tra log không chứa mã link: sau khi tạo và mở (qua nginx) một link thử, tìm mã đó trong log của cả hai service **và** trong access log lẫn error log của nginx
 trên host (không được thấy gì; các lệnh compose cần `.env`, phần 2):
@@ -423,10 +428,10 @@ Khi file có ít nhất một mẫu, mẫu giữ chỗ và nhãn "giữ chỗ" c
 Twistfit có **hai** bộ ảnh khác nhau, đừng nhầm:
 
 - **Bản chạy thật** (người có link mời) dùng ảnh người mẫu và món đồ trong `portfolio/api/twistfit-assets/` (kèm `catalog.json`; phần 7, mục 8). Ảnh này nằm ngoài git và chỉ `portfolio-api` đọc.
-- **Bản phát lại** (người không có link) **vẫn dùng ảnh giữ chỗ** trong `public/replays/twistfit/` cho tới khi bạn thay bằng ảnh thật của một lần chạy. Hiện chưa có script lưu một lượt chạy thật thành mẫu phát lại; thay bằng tay:
+- **Bản phát lại** (người không có link) **vẫn dùng ảnh giữ chỗ** trong `public/replays/twistfit/` cho tới khi bạn thay bằng ảnh thật của một lần chạy. Hiện chưa có script lưu một lượt chạy thật thành mẫu phát lại; thay bằng tay theo `public/replays/twistfit/README.md`
+  (chọn một `TryOnJob` đã `done`, đặt ảnh vào thư mục, sửa `src/content/replays/twistfit.ts`, bỏ chữ "(minh hoạ)" khi số liệu là thật).
+  Khi **mọi mẫu** đã có `placeholder: false`, băng "ảnh giữ chỗ" và chữ "(minh hoạ)" trong demo phát lại (phần người không có link thấy) tự biến mất (trạng thái này tính từ chính dữ liệu mẫu, không có cờ riêng nào phải đồng bộ).
 
-Làm theo `public/replays/twistfit/README.md` (chọn một `TryOnJob` đã `done`, đặt ảnh vào thư mục, sửa `src/content/replays/twistfit.ts`, bỏ chữ "(minh hoạ)" khi số liệu là thật).
-Khi **mọi mẫu** đã có `placeholder: false`, băng "ảnh giữ chỗ" và chữ "(minh hoạ)" trong demo phát lại (phần người không có link thấy) tự biến mất (trạng thái này tính từ chính dữ liệu mẫu, không có cờ riêng nào phải đồng bộ).
 Thẻ dự án và dòng nhãn (eyebrow) đầu trang chi tiết của Twistfit **không** mang nhãn "giữ chỗ": chúng luôn mang nhãn "Chạy thật · cần link mời" (vì demo là chạy thật khi có link); chỉ phần phát lại bên trong demo mới có nhãn giữ chỗ.
 Kiểm tra bằng `npx vitest run src/content src/components/demos`, rồi build lại image.
 
@@ -487,7 +492,7 @@ grep -rn "TODO:" src/content
 
 ### Nội dung chưa được xác nhận (cần bạn điền hoặc quyết định)
 
-- **Hosting của Flux**: vẫn chưa xác nhận Flux chạy ở đâu (BFL API hay chỗ khác); không viết ra nơi chạy lên site cho tới khi bạn xác nhận. Ghi chú quyền riêng tư của Twistfit chỉ nói điều đã biết: ảnh người mẫu và món đồ của chủ trang được gửi tới dịch vụ ghép ảnh; người xem không tải gì lên.
+- **Hosting của Flux**: vẫn chưa xác nhận Flux chạy ở đâu (BFL API hay chỗ khác); không viết ra nơi chạy lên site cho tới khi bạn xác nhận. Ghi chú quyền riêng tư của Twistfit chỉ nói điều đã biết: ảnh người mẫu và các món đồ bạn chọn được gửi tới Flux (Black Forest Labs), không nói Flux chạy ở đâu; người xem không tải gì lên.
 - **Quyền dùng ảnh Twistfit**: ảnh người mẫu và món đồ trong `twistfit-assets/` phải là ảnh bạn có quyền dùng (ảnh người thật cần sự đồng ý của họ), vì chúng được gửi tới Flux và kết quả hiện cho người có link.
 - **Google Gemini lưu câu hỏi bao lâu, có dùng để huấn luyện không**: tuỳ tài khoản Google và gói (miễn phí hay trả phí) của khoá `GEMINI_API_KEY`. Hãy kiểm tra điều khoản
   của gói bạn dùng và xác nhận; nếu gói đó cho Google giữ hay dùng dữ liệu, cân nhắc ghi thêm điều đó vào ghi chú quyền riêng tư (`kb.notes.privacy`) hoặc đổi sang gói trả phí.
@@ -500,6 +505,6 @@ grep -rn "TODO:" src/content
 
 - **Script lưu một lần chạy thật của Twistfit làm mẫu phát lại** (tương tự `npm run record:kb`): chưa làm. Cho tới khi có, bản phát lại Twistfit dùng ảnh giữ chỗ và bạn thay bằng tay (phần 13).
 - **Gia phả live**: Gia phả vẫn là mô phỏng (phần 16). Chạy thật cần xây tính năng đọc ảnh/bản quét gia phả trước; chưa có kế hoạch cụ thể.
-- **Twistfit chạy thật qua link mời** (tính năng `twistfit`, trần `twistfit_max` mỗi link) đã có ở web và `portfolio-api` (phần 7 mục 8 là việc bật lần đầu). Chưa có giới hạn tần suất riêng của nginx cho `/api/twistfit/*`
-  (nằm trong `location /`): các chốt chặn là phiên mời, `twistfit_max`, 1 job đồng thời mỗi link và 2 toàn hệ thống.
+- **Twistfit chạy thật qua link mời** (tính năng `twistfit`, trần `twistfit_max` mỗi link) đã có ở web và `portfolio-api` (phần 7 mục 8 là việc bật lần đầu). Các chốt chặn là phiên mời, `twistfit_max`, 1 job đồng thời mỗi link, 2 toàn hệ thống và
+  `limit_req` của nginx cho `POST /api/twistfit/run` (mẫu nginx, phần 6); các tuyến `/api/twistfit/*` khác cố ý không bị giới hạn tần suất.
 - **Markdown trong câu trả lời của bot**: Gemini hay trả lời bằng markdown, còn demo hiển thị chữ thuần (an toàn, không chèn HTML). Chọn một trong hai: yêu cầu backend (system prompt) trả lời bằng chữ thuần, hoặc sau này hiển thị một tập con markdown an toàn ở frontend.

@@ -30,6 +30,9 @@ limit_req_zone $binary_remote_addr zone=invite_open:10m rate=30r/m;
 limit_req_zone $binary_remote_addr zone=admin_login:10m rate=10r/m;
 # Trang dự án hỏi /api/chat/status mỗi lần tải; mỗi lần là một lời gọi tới portfolio-api và chat.
 limit_req_zone $binary_remote_addr zone=chat_status:10m rate=30r/m;
+# Twistfit: mỗi POST /api/twistfit/run bị từ chối (hết lượt, bận, thân sai) vẫn ghi một dòng `blocked` vào nhật ký,
+# nên một link bị lạm dụng có thể làm ngập nhật ký; giới hạn riêng tuyến này (6 lượt/phút/IP, burst 4).
+limit_req_zone $binary_remote_addr zone=twistfit_run:10m rate=6r/m;
 
 server {
     listen 80;
@@ -80,6 +83,20 @@ server {
     # Trạng thái demo chat: rẻ nhưng mỗi lần đi tới portfolio-api và chat, nên cũng giới hạn.
     location = /api/chat/status {
         limit_req zone=chat_status burst=20 nodelay;
+        error_page 429 = @rate_limited;
+
+        proxy_pass http://127.0.0.1:3100;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Bắt đầu một lượt Twistfit (tốn tiền Flux). CHỈ tuyến này bị giới hạn: client hỏi trạng thái
+    # /api/twistfit/jobs/ mỗi 1,5 giây, còn /catalog, /assets/ và /results/ được tải nhiều lần
+    # mỗi lượt xem, nên chúng nằm trong `location /` và KHÔNG có limit_req.
+    location = /api/twistfit/run {
+        limit_req zone=twistfit_run burst=4 nodelay;
         error_page 429 = @rate_limited;
 
         proxy_pass http://127.0.0.1:3100;
