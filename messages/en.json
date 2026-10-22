@@ -92,6 +92,60 @@
     "replayNoticeNoChat": "Live chat is not enabled for your invite link yet. You are watching a replay.",
     "modeLoading": "Loading the demo…"
   },
+  "twistfit": {
+    "live": {
+      "label": "Twistfit, live",
+      "loading": "Loading the catalog…",
+      "unavailable": "This isn't available right now.",
+      "stepsLabel": "Steps",
+      "steps": {
+        "items": "Pick items",
+        "model": "Pick a model",
+        "generate": "Generate"
+      },
+      "items": {
+        "hint": "Pick 1 to {max} items.",
+        "count": "{count} of {max} selected"
+      },
+      "model": {
+        "hint": "Pick who will wear them."
+      },
+      "summary": {
+        "items": "Items",
+        "model": "Model"
+      },
+      "next": "Continue",
+      "back": "Back",
+      "generate": "Generate image",
+      "regenerate": "Make another",
+      "retry": "Try again",
+      "download": "Download image",
+      "stages": {
+        "starting": "Sending the request…",
+        "merging": "Combining the items…",
+        "waiting": "Waiting for Flux to generate the image…",
+        "downloading": "Fetching the image…"
+      },
+      "elapsed": "{seconds, plural, one {# second} other {# seconds}}",
+      "result": {
+        "title": "Your image is ready",
+        "alt": "Model {model} wearing: {items}"
+      },
+      "errors": {
+        "busy": "Someone else is using it right now. Try again in a few seconds.",
+        "limit": "Your link has used up its image generations.",
+        "moderated": "Flux declined this combination. Try different items or another model.",
+        "timeout": "Flux took too long to respond. Please try again.",
+        "generic": "Couldn't generate the image right now. Please try again.",
+        "inviteRequired": "Your invite link is no longer valid."
+      },
+      "notes": {
+        "source": "Flux generates the image from model and clothing photos provided by the site owner, so you don't need to upload anything.",
+        "flux": "The model and item photos you pick are sent to Flux (Black Forest Labs).",
+        "privacy": "Only which items were picked, and when, is recorded. No images are stored."
+      }
+    }
+  },
   "invite": {
     "notice": "This invite link is no longer valid. You can still view the replays.",
     "dismiss": "Dismiss notice",

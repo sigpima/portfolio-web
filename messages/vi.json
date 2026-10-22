@@ -92,6 +92,60 @@
     "replayNoticeNoChat": "Tính năng trò chuyện trực tiếp hiện chưa bật cho link của bạn. Bạn đang xem bản phát lại.",
     "modeLoading": "Đang tải demo…"
   },
+  "twistfit": {
+    "live": {
+      "label": "Twistfit chạy thật",
+      "loading": "Đang tải danh mục…",
+      "unavailable": "Chưa dùng được lúc này.",
+      "stepsLabel": "Các bước",
+      "steps": {
+        "items": "Chọn đồ",
+        "model": "Chọn người mẫu",
+        "generate": "Tạo ảnh"
+      },
+      "items": {
+        "hint": "Chọn từ 1 đến {max} món đồ.",
+        "count": "Đã chọn {count}/{max}"
+      },
+      "model": {
+        "hint": "Chọn một người mẫu để mặc thử."
+      },
+      "summary": {
+        "items": "Món đồ",
+        "model": "Người mẫu"
+      },
+      "next": "Tiếp tục",
+      "back": "Quay lại",
+      "generate": "Tạo ảnh",
+      "regenerate": "Tạo lại",
+      "retry": "Thử lại",
+      "download": "Tải ảnh về",
+      "stages": {
+        "starting": "Đang gửi yêu cầu…",
+        "merging": "Đang ghép các món đồ…",
+        "waiting": "Đang chờ Flux tạo ảnh…",
+        "downloading": "Đang tải ảnh…"
+      },
+      "elapsed": "{seconds} giây",
+      "result": {
+        "title": "Ảnh đã xong",
+        "alt": "Người mẫu {model} mặc: {items}"
+      },
+      "errors": {
+        "busy": "Đang có người khác dùng, thử lại sau ít giây.",
+        "limit": "Link của bạn đã dùng hết lượt tạo ảnh.",
+        "moderated": "Flux từ chối tạo ảnh với lựa chọn này. Hãy thử món đồ hoặc người mẫu khác.",
+        "timeout": "Flux phản hồi quá lâu nên chưa có ảnh. Hãy thử lại.",
+        "generic": "Không tạo được ảnh lúc này, hãy thử lại.",
+        "inviteRequired": "Link mời không còn hiệu lực."
+      },
+      "notes": {
+        "source": "Ảnh do Flux tạo từ ảnh người mẫu và món đồ có sẵn của chủ trang, bạn không cần tải ảnh nào lên.",
+        "flux": "Ảnh người mẫu và các món đồ bạn chọn được gửi tới Flux (Black Forest Labs).",
+        "privacy": "Hệ thống chỉ ghi lại món nào được chọn và lúc nào, không lưu ảnh."
+      }
+    }
+  },
   "invite": {
     "notice": "Link mời không còn hiệu lực. Bạn vẫn xem được các bản phát lại.",
     "dismiss": "Đóng thông báo",

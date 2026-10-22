@@ -39,6 +39,24 @@ describe("messages", () => {
     }
   });
 
+  it("has the same twistfit.live keys in vi and en", () => {
+    const viLive = (vi as { twistfit?: { live?: Record<string, unknown> } }).twistfit?.live;
+    const enLive = (en as { twistfit?: { live?: Record<string, unknown> } }).twistfit?.live;
+    expect(viLive).toBeDefined();
+    expect(enLive).toBeDefined();
+    expect(flatten(viLive!).sort()).toEqual(flatten(enLive!).sort());
+  });
+
+  it("keeps the twistfit honesty notes silent about where Flux runs", () => {
+    for (const messages of [vi, en]) {
+      const notes = Object.values(
+        (messages as { twistfit: { live: { notes: Record<string, string> } } }).twistfit.live.notes,
+      ).join(" ");
+      expect(notes).toMatch(/Black Forest Labs/);
+      expect(notes).not.toMatch(/máy chủ|server|cloud|đám mây|cục bộ|local|Việt Nam|Vietnam|Mỹ|\bUS\b|EU|châu Âu|Europe|Đức|German/i);
+    }
+  });
+
   it("uses a neutral sublabel for the answer node (the bot may not cite figures)", () => {
     expect(vi.kb.nodes.answer.sublabel).not.toMatch(/số liệu/);
     expect(en.kb.nodes.answer.sublabel).not.toMatch(/figure/i);
