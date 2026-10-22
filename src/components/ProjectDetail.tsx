@@ -3,6 +3,7 @@ import { useTranslations } from "next-intl";
 import { demoComponents } from "@/components/demos/registry";
 import { DemoBadge, PageBadgeProvider } from "@/components/demos/DemoBadge";
 import { LiveAwareBadge } from "@/components/demos/LiveAwareBadge";
+import { liveFeatureOf } from "@/components/demos/live-feature";
 import type { Locale, Project } from "@/content/types";
 import { placeholderQualifier } from "@/content/replays";
 import { chipClass, placeholderChipClass, staticDemoLabelKey } from "./ProjectCard";
@@ -96,7 +97,7 @@ export function ProjectDetail({ project, locale }: { project: Project; locale: L
           </h2>
           {demoKind === "live" ? (
             // Depends on the visitor's invite: a client component decides after /api/session.
-            <LiveAwareBadge locale={locale} replayQualifier={qualifier} />
+            <LiveAwareBadge locale={locale} replayQualifier={qualifier} feature={liveFeatureOf(project)} />
           ) : (
             <DemoBadge kind={demoKind} locale={locale} qualifier={qualifier} />
           )}

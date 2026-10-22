@@ -93,6 +93,9 @@
     "modeLoading": "Đang tải demo…"
   },
   "twistfit": {
+    "replayNotice": "Bạn đang xem bản phát lại một lượt mẫu. Mở link mời của chủ trang để thử tạo ảnh thật.",
+    "replayNoticeNoTwistfit": "Tính năng mặc thử trực tiếp hiện chưa bật cho link của bạn. Bạn đang xem bản phát lại một lượt mẫu.",
+    "modeLoading": "Đang tải demo…",
     "live": {
       "label": "Twistfit chạy thật",
       "loading": "Đang tải danh mục…",

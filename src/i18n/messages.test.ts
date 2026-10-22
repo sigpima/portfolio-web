@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import vi from "../../messages/vi.json";
 import en from "../../messages/en.json";
+import { twistfit } from "@/content/projects/twistfit";
 
 function flatten(obj: Record<string, unknown>, prefix = ""): string[] {
   return Object.entries(obj).flatMap(([key, value]) => {
@@ -97,6 +98,28 @@ describe("messages", () => {
       expect(notes).toMatch(/Black Forest Labs/);
       expect(claimsLocation(notes)).toBe(false);
     }
+  });
+
+  it("has the twistfit replay notices and mode-loading text in vi and en, saying nothing about where Flux runs", () => {
+    for (const messages of [vi, en]) {
+      const t = (messages as unknown as { twistfit: Record<string, string> }).twistfit;
+      for (const key of ["replayNotice", "replayNoticeNoTwistfit", "modeLoading"]) {
+        expect(typeof t[key], key).toBe("string");
+        expect(claimsLocation(t[key]), key).toBe(false);
+      }
+    }
+  });
+
+  it("describes Twistfit as a replay for visitors and live for the owner's invite link, without saying where Flux runs", () => {
+    expect(twistfit.demoKind).toBe("live");
+    for (const text of [twistfit.summary.vi, twistfit.summary.en]) {
+      expect(text).not.toMatch(/không gọi Flux khi có người xem|does not call Flux when someone views it/i);
+      expect(claimsLocation(text)).toBe(false);
+    }
+    expect(twistfit.summary.vi).toMatch(/link mời/);
+    expect(twistfit.summary.en).toMatch(/invite link/);
+    expect(twistfit.summary.vi).toMatch(/phát lại/);
+    expect(twistfit.summary.en).toMatch(/replay/i);
   });
 
   it("flags location claims but not ordinary English", () => {

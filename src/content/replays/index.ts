@@ -14,11 +14,11 @@ export {
 
 /**
  * Replay data by `Project.demo.component` key: replay/simulation demos, plus live demos
- * that fall back to a replay for visitors without an invite (Knowledge Base).
+ * that fall back to a replay for visitors without an invite (Knowledge Base, Twistfit).
  */
 export const replaysByDemoComponent: Record<string, ReplayDefinition> = {
   "knowledge-base": knowledgeBaseReplay,
-  "twistfit-replay": twistfitReplay,
+  twistfit: twistfitReplay,
   "gia-pha-simulation": giaPhaReplay,
 };
 

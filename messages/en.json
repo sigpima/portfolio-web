@@ -93,6 +93,9 @@
     "modeLoading": "Loading the demo…"
   },
   "twistfit": {
+    "replayNotice": "You are watching a replay of a sample run. Open the site owner's invite link to try a real one.",
+    "replayNoticeNoTwistfit": "The live try-on is not enabled for your invite link yet. You are watching a replay of a sample run.",
+    "modeLoading": "Loading the demo…",
     "live": {
       "label": "Twistfit, live",
       "loading": "Loading the catalog…",

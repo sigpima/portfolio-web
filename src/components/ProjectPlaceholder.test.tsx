@@ -1,16 +1,17 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
-import { describe, expect, it, vi as vitest } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi as vitest } from "vitest";
 import type { Locale } from "@/content/types";
 import { getProject } from "@/content/registry";
 import { twistfitReplay } from "@/content/replays/twistfit";
+import { InviteSessionProvider } from "@/lib/invite/use-invite-session";
 import viMessages from "../../messages/vi.json";
 import enMessages from "../../messages/en.json";
 import { ProjectCard } from "./ProjectCard";
 import { ProjectDetail } from "./ProjectDetail";
 
 vitest.mock("@/components/demos/registry", () => ({
-  demoComponents: { "twistfit-replay": () => <div data-testid="demo-stub" /> },
+  demoComponents: { twistfit: () => <div data-testid="demo-stub" /> },
 }));
 
 const CHIP = { vi: "Ảnh và dữ kiện giữ chỗ", en: "Placeholder images and facts" } as const;
@@ -27,25 +28,42 @@ const DEFAULT_DESC = {
 function wrap(locale: Locale, ui: React.ReactNode) {
   return render(
     <NextIntlClientProvider locale={locale} messages={locale === "vi" ? viMessages : enMessages}>
-      {ui}
+      <InviteSessionProvider>{ui}</InviteSessionProvider>
     </NextIntlClientProvider>,
   );
 }
 
-describe("Twistfit placeholder state follows the replay data", () => {
+// A visitor without an invite: Twistfit is live only with a link, so they get the replay variant.
+beforeEach(() => {
+  vitest.stubGlobal(
+    "fetch",
+    vitest.fn(async () => Response.json({ invited: false, features: { chat: false, twistfit: false, gia_pha: false } })),
+  );
+});
+
+afterEach(() => {
+  vitest.unstubAllGlobals();
+});
+
+describe("Twistfit placeholder state follows the replay data (not-invited view)", () => {
   for (const locale of ["vi", "en"] as const) {
-    it(`placeholder samples: detail eyebrow, facts and badge are qualified (${locale})`, () => {
+    it(`placeholder samples: only the in-demo replay badge is qualified; eyebrow and facts say live-invite (${locale})`, async () => {
       const project = getProject("twistfit")!;
       const { container } = wrap(locale, <ProjectDetail project={project} locale={locale} />);
-      // eyebrow + facts strip + demo badge each carry the chip
-      expect(screen.getAllByText(CHIP[locale], { exact: false }).length).toBeGreaterThanOrEqual(3);
-      const badge = container.querySelector("[data-demo-kind='replay']");
+      const m = locale === "vi" ? viMessages : enMessages;
+      const badge = await findReplayBadge(container);
       expect(badge).toHaveTextContent(LABEL[locale]);
+      expect(badge).toHaveTextContent(CHIP[locale]);
       expect(badge).toHaveTextContent(PLACEHOLDER_DESC[locale]);
       expect(badge).not.toHaveTextContent(DEFAULT_DESC[locale]);
+      // Outside the demo area the static label is the invite-only one, with no placeholder chip.
+      expect(container.querySelector("header p span")).toHaveTextContent(m.demo.badge.liveInvite.label);
+      expect(container.querySelector("dl")).toHaveTextContent(m.demo.badge.liveInvite.label);
+      expect(container.querySelector("header")).not.toHaveTextContent(CHIP[locale]);
+      expect(container.querySelector("dl")).not.toHaveTextContent(CHIP[locale]);
     });
 
-    it(`real samples: no qualifier anywhere, default description (${locale})`, () => {
+    it(`real samples: no qualifier anywhere, default description (${locale})`, async () => {
       const saved = twistfitReplay.samples.map((s) => s.placeholder);
       twistfitReplay.samples.forEach((s) => (s.placeholder = false));
       try {
@@ -57,8 +75,8 @@ describe("Twistfit placeholder state follows the replay data", () => {
             <ProjectDetail project={project} locale={locale} />
           </>,
         );
+        const badge = await findReplayBadge(container);
         expect(screen.queryByText(CHIP[locale], { exact: false })).toBeNull();
-        const badge = container.querySelector("[data-demo-kind='replay']");
         expect(badge).toHaveTextContent(LABEL[locale]);
         expect(badge).toHaveTextContent(DEFAULT_DESC[locale]);
       } finally {
@@ -67,3 +85,10 @@ describe("Twistfit placeholder state follows the replay data", () => {
     });
   }
 });
+
+/** The in-demo replay badge, once the invite session has settled (no invite). */
+async function findReplayBadge(container: HTMLElement) {
+  await screen.findByTestId("demo-stub");
+  await waitFor(() => expect(container.querySelector("[data-demo-kind='replay']")).not.toBeNull());
+  return container.querySelector("[data-demo-kind='replay']") as HTMLElement;
+}

@@ -55,7 +55,7 @@ afterEach(() => {
 
 describe("live projects are labelled invite-only on every surface", () => {
   it("has at least one live project to check", () => {
-    expect(live.map((p) => p.slug)).toContain("knowledge-base");
+    expect(live.map((p) => p.slug)).toEqual(expect.arrayContaining(["knowledge-base", "twistfit"]));
   });
 
   for (const project of live) {
@@ -69,7 +69,9 @@ describe("live projects are labelled invite-only on every surface", () => {
             </NextIntlClientProvider>,
           );
           // Let the session settle (the detail page then shows the replay).
-          if (surface.name === "project detail page") await screen.findByText(m.kb.replayNotice);
+          if (surface.name === "project detail page") {
+            await screen.findByText(project.slug === "twistfit" ? m.twistfit.replayNotice : m.kb.replayNotice);
+          }
           expect(container.textContent).toContain(m.demo.badge.liveInvite.label);
           expect(container.textContent).not.toMatch(BARE[locale]);
           // Outside the demo area, no placeholder chip next to the live label.

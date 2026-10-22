@@ -1,15 +1,15 @@
 # portfolio-web
 
 **EN:** Bilingual (Vietnamese / English) portfolio website built with Next.js 16 (`output: "standalone"`).
-Projects are registry-driven (`src/content`). The Knowledge Base demo runs live only for visitors who opened an
-invite link (`/i/<token>`); everyone else sees a replay of recorded real runs. The server-side routes talk to the
+Projects are registry-driven (`src/content`). The Knowledge Base and Twistfit demos run live only for visitors who opened an
+invite link (`/i/<token>`) with that feature enabled; everyone else sees a replay (recorded runs, or placeholder samples for Twistfit). The server-side routes talk to the
 internal `portfolio-api` service (invite links, sessions, per-link usage log, admin at `/admin`), which is the only
-thing that calls the chat bot. The Twistfit and Gia pha demos are a replay and a simulation and are labelled as such.
+thing that calls the chat bot and Flux. The Gia pha demo is a simulation and is labelled as such.
 
 **VI:** Website portfolio song ngữ (Việt / Anh) dựng bằng Next.js 16. Nội dung dự án lấy từ `src/content`.
-Demo Knowledge Base chỉ chạy thật với người đã mở link mời (`/i/<mã>`); người khác xem bản phát lại các lần chạy thật đã ghi.
+Demo Knowledge Base và Twistfit chỉ chạy thật với người đã mở link mời (`/i/<mã>`) có bật tính năng đó; người khác xem bản phát lại (các lần chạy đã ghi, hoặc mẫu giữ chỗ với Twistfit).
 Các route phía máy chủ gọi dịch vụ nội bộ `portfolio-api` (link mời, phiên, nhật ký theo link, trang quản trị `/admin`);
-chỉ `portfolio-api` gọi bot chat. Demo Twistfit (phát lại) và Gia phả (mô phỏng) được gắn nhãn đúng bản chất.
+chỉ `portfolio-api` gọi bot chat và Flux. Demo Gia phả (mô phỏng) được gắn nhãn đúng bản chất.
 
 ## Environment / Biến môi trường
 

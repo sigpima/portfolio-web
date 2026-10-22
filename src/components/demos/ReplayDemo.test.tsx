@@ -348,19 +348,8 @@ describe("Gia phả simulation", () => {
 describe("demo registry", () => {
   it("has all three demo keys", () => {
     expect(Object.keys(demoComponents).sort()).toEqual(
-      ["gia-pha-simulation", "knowledge-base", "twistfit-replay"].sort(),
+      ["gia-pha-simulation", "knowledge-base", "twistfit"].sort(),
     );
-  });
-
-  it("the Twistfit demo shows the replay badge and placeholder ribbon", () => {
-    const Demo = demoComponents["twistfit-replay"];
-    render(
-      <NextIntlClientProvider locale="vi" messages={viMessages}>
-        <Demo locale="vi" />
-      </NextIntlClientProvider>,
-    );
-    expect(screen.getByText("Phát lại từ lần chạy thật")).toBeInTheDocument();
-    expect(screen.getAllByText("ảnh giữ chỗ").length).toBeGreaterThan(0);
   });
 
   it("under a page-level badge, shows no second label but keeps the placeholder qualifier", () => {

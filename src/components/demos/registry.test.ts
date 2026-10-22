@@ -2,17 +2,28 @@ import { describe, expect, it } from "vitest";
 import { projects } from "@/content/registry";
 import { replaysByDemoComponent } from "@/content/replays";
 import { KnowledgeBaseSwitch } from "./KnowledgeBaseSwitch";
+import { TwistfitSwitch } from "./TwistfitSwitch";
 import { demoComponents } from "./registry";
 import { replayDemoComponents } from "./replay-demos";
 
-/** Live demos that fall back to a replay (their switch is registered outside `replayDemoComponents`). */
-const LIVE_WITH_REPLAY: Record<string, unknown> = { "knowledge-base": KnowledgeBaseSwitch };
+/**
+ * Live demos that fall back to a replay: the Knowledge Base and Twistfit, reached through a
+ * Switch registered outside `replayDemoComponents` (the replay itself is still in `replaysByDemoComponent`).
+ */
+const LIVE_WITH_REPLAY: Record<string, unknown> = {
+  "knowledge-base": KnowledgeBaseSwitch,
+  twistfit: TwistfitSwitch,
+};
 
 describe("demo registries stay in sync", () => {
   it("every replay definition has a registered demo component, and vice versa", () => {
     const withReplay = [...Object.keys(replayDemoComponents), ...Object.keys(LIVE_WITH_REPLAY)].sort();
     expect(Object.keys(replaysByDemoComponent).sort()).toEqual(withReplay);
     for (const key of Object.keys(replaysByDemoComponent)) expect(demoComponents[key], key).toBeDefined();
+  });
+
+  it("replayDemoComponents keeps only the Gia phả simulation", () => {
+    expect(Object.keys(replayDemoComponents)).toEqual(["gia-pha-simulation"]);
   });
 
   it("every replay demo component is registered in demoComponents", () => {
@@ -34,7 +45,7 @@ describe("demo registries stay in sync", () => {
         p.demoKind === "simulation" ||
         (p.demoKind === "live" && (p.demo?.component ?? "") in LIVE_WITH_REPLAY),
     );
-    expect(withReplay.map((p) => p.slug)).toContain("knowledge-base");
+    expect(withReplay.map((p) => p.slug)).toEqual(expect.arrayContaining(["knowledge-base", "twistfit"]));
     for (const project of withReplay) {
       const key = project.demo?.component ?? "";
       expect(replaysByDemoComponent[key], project.slug).toBeDefined();

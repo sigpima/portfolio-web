@@ -5,13 +5,13 @@ import { validateProjects } from "./validate";
 describe("project registry", () => {
   it("is valid against the known demo components", () => {
     expect(
-      validateProjects(projects, ["knowledge-base", "twistfit-replay", "gia-pha-simulation"]),
+      validateProjects(projects, ["knowledge-base", "twistfit", "gia-pha-simulation"]),
     ).toEqual([]);
   });
 
   it("maps each project to its demo kind", () => {
     expect(getProject("knowledge-base")?.demoKind).toBe("live");
-    expect(getProject("twistfit")?.demoKind).toBe("replay");
+    expect(getProject("twistfit")?.demoKind).toBe("live");
     expect(getProject("gia-pha")?.demoKind).toBe("simulation");
     expect(getProject("nope")).toBeUndefined();
   });

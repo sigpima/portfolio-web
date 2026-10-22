@@ -416,7 +416,7 @@ Cần `chat` đã bật bằng khoá Gemini thật, `portfolio-api` và web đã
 3. Nếu có demo (`demoKind` khác `none`) thì đặt `demo: { component: "<khoá>" }` trong file dự án, rồi:
    - thêm component vào `src/components/demos/registry.ts` (`demoComponents["<khoá>"]`);
    - nếu là demo phát lại hay mô phỏng: viết dữ liệu mẫu ở `src/content/replays/<slug>.ts`, đăng ký ở `src/content/replays/index.ts` (`replaysByDemoComponent["<khoá>"]`),
-     và thêm một bọc component trong `src/components/demos/replay-demos.tsx` bằng cách sao chép bọc có sẵn (`TwistfitReplayDemo` hoặc `GiaPhaSimulationDemo`): component nhận `{ locale }`
+     và thêm một bọc component trong `src/components/demos/replay-demos.tsx` bằng cách sao chép bọc có sẵn (`GiaPhaSimulationDemo`): component nhận `{ locale }`
      và truyền `definition` (dữ liệu mẫu của bạn), `kind` (`"replay"` hoặc `"simulation"`) và `locale` cho `<ReplayDemo>`; đăng ký bọc đó trong `replayDemoComponents` cùng file (không cần sửa `registry.ts`).
 4. Các test có ghi tên slug hay khoá demo cụ thể (không có test nào đếm tổng số dự án):
    - `src/content/registry.test.ts`: danh sách khoá demo truyền cho `validateProjects` (thêm khoá mới của bạn vào đó); các test khác chỉ kiểm tra ba slug hiện có (`knowledge-base`, `twistfit`, `gia-pha`) vẫn có mặt và Knowledge Base đứng đầu.
@@ -433,7 +433,7 @@ grep -rn "TODO:" src/content
 
 ## 16. Quy tắc trung thực cần giữ
 
-- **Nhãn theo loại demo**: `live` = chạy thật khi người xem hỏi (với Knowledge Base: chỉ khi có link mời); `replay` = phát lại từ một lần chạy thật đã ghi;
+- **Nhãn theo loại demo**: `live` = chạy thật khi người xem hỏi (với Knowledge Base và Twistfit: chỉ khi có link mời có bật tính năng; người khác thấy bản phát lại); `replay` = phát lại từ một lần chạy thật đã ghi;
   `simulation` = mô phỏng một tính năng chưa hoàn thành. Đừng gắn nhãn cao hơn sự thật (ví dụ không gắn "chạy thật" cho thứ chỉ phát lại).
 - **Ảnh giữ chỗ** Twistfit và mẫu giữ chỗ Knowledge Base phải giữ nhãn "giữ chỗ" và chữ "(minh hoạ)" cho tới khi thay bằng dữ liệu thật (phần 12, 13).
   Test dữ liệu sẽ báo lỗi nếu cờ `placeholder` không nhất quán với ảnh và chữ.
@@ -455,6 +455,6 @@ grep -rn "TODO:" src/content
 
 ### Việc cần làm tiếp
 
-- **Plan B: Twistfit chạy thật qua link mời** (tính năng `twistfit`, trần `twistfit_max` mỗi link) **chưa làm**: hiện Twistfit vẫn là bản phát lại và `portfolio-api`
-  luôn báo `twistfit: false`, `gia_pha: false`.
+- **Twistfit chạy thật qua link mời** (tính năng `twistfit`, trần `twistfit_max` mỗi link) đã có ở web: demo chỉ chạy thật khi `portfolio-api` báo `twistfit: true` cho phiên (cần khoá Flux và danh mục ảnh, xem `api/README.md`);
+  còn lại người xem thấy bản phát lại (ảnh giữ chỗ). Việc lưu một lần chạy thật thành mẫu phát lại vẫn chưa làm.
 - **Markdown trong câu trả lời của bot**: Gemini hay trả lời bằng markdown, còn demo hiển thị chữ thuần (an toàn, không chèn HTML). Chọn một trong hai: yêu cầu backend (system prompt) trả lời bằng chữ thuần, hoặc sau này hiển thị một tập con markdown an toàn ở frontend.

@@ -38,7 +38,8 @@ describe("ProjectCard", () => {
     const link = screen.getByRole("link", { name: /Twistfit: outfit matching by personal colour/ });
     expect(link).toHaveAttribute("href", "/en/projects/twistfit");
     expect(screen.getByText("Website")).toBeInTheDocument();
-    expect(screen.getByText("Replay of a real run")).toBeInTheDocument();
+    expect(screen.getByText("Live · invite only")).toBeInTheDocument();
+    expect(screen.queryByText("Replay of a real run")).toBeNull();
     expect(
       screen.getByText("A fashion website that suggests outfits from your wardrobe and renders a try-on image with Flux."),
     ).toBeInTheDocument();
@@ -49,14 +50,16 @@ describe("ProjectCard", () => {
     expect(screen.getByRole("heading", { name: "Gia phả: a family-tree website" })).toBeInTheDocument();
   });
 
-  for (const [locale, chip, label] of [
-    ["vi", "Ảnh và dữ kiện giữ chỗ", "Phát lại từ lần chạy thật"],
-    ["en", "Placeholder images and facts", "Replay of a real run"],
+  for (const [locale, chip] of [
+    ["vi", "Ảnh và dữ kiện giữ chỗ"],
+    ["en", "Placeholder images and facts"],
   ] as const) {
-    it(`qualifies the Twistfit replay chip as placeholder in ${locale}`, () => {
+    it(`labels the Twistfit card invite-only and shows no placeholder chip on it (the replay is qualified in the demo) in ${locale}`, () => {
       renderCard("twistfit", locale);
-      expect(screen.getByText(label, { exact: true })).toBeInTheDocument();
-      expect(screen.getByText(chip, { exact: true })).toBeInTheDocument();
+      expect(
+        screen.getByText(locale === "vi" ? "Chạy thật · cần link mời" : "Live · invite only", { exact: true }),
+      ).toBeInTheDocument();
+      expect(screen.queryByText(chip, { exact: true })).toBeNull();
     });
 
     it(`shows no placeholder qualifier on Gia phả and on the live (invite-only) Knowledge Base card in ${locale}`, () => {
