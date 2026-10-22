@@ -59,6 +59,10 @@ const CODE_LABELS: Record<string, string> = {
   cancelled: "Bị huỷ khi dịch vụ tắt",
 };
 
+function clip(text: string): string {
+  return text.length > MAX_DETAIL_TEXT ? `${text.slice(0, MAX_DETAIL_TEXT)}…` : text;
+}
+
 /** How an event `detail` is shown: garments (+ model) as text, an error code labelled, else clipped JSON. */
 export function describeDetail(detail: unknown): DetailView {
   if (detail === null || detail === undefined) return { kind: "none", text: "—" };
@@ -67,7 +71,7 @@ export function describeDetail(detail: unknown): DetailView {
     if (Array.isArray(record.garments) && record.garments.length > 0) {
       const garments = `Đồ đã chọn: ${record.garments.map(String).join(", ")}`;
       const text = typeof record.model === "string" ? `${garments} · Người mẫu: ${record.model}` : garments;
-      return { kind: "text", text };
+      return { kind: "text", text: clip(text) };
     }
     if (typeof record.code === "string") {
       const label = Object.hasOwn(CODE_LABELS, record.code) ? CODE_LABELS[record.code] : record.code;
@@ -80,6 +84,5 @@ export function describeDetail(detail: unknown): DetailView {
   } catch {
     text = "—";
   }
-  if (text.length > MAX_DETAIL_TEXT) text = `${text.slice(0, MAX_DETAIL_TEXT)}…`;
-  return { kind: "text", text };
+  return { kind: "text", text: clip(text) };
 }

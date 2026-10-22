@@ -73,6 +73,18 @@ describe("describeDetail", () => {
     expect(describeDetail({ code: "stream_error" })).toEqual({ kind: "code", text: "stream_error" });
   });
 
+  it("shows an inherited-property name as a code verbatim, not as a label lookup", () => {
+    expect(describeDetail({ code: "constructor" })).toEqual({ kind: "code", text: "constructor" });
+  });
+
+  it("clips a very long garments list to the same length as other text", () => {
+    const out = describeDetail({ garments: Array.from({ length: 200 }, (_, i) => `áo ${i}`) });
+    expect(out.kind).toBe("text");
+    expect(out.text.startsWith("Đồ đã chọn: áo 0, áo 1")).toBe(true);
+    expect(out.text.length).toBeLessThanOrEqual(121);
+    expect(out.text.endsWith("…")).toBe(true);
+  });
+
   it("clips other objects as JSON text", () => {
     const out = describeDetail({ other: "x".repeat(500) });
     expect(out.kind).toBe("text");
