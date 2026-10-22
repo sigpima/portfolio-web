@@ -11,6 +11,36 @@ function flatten(obj: Record<string, unknown>, prefix = ""): string[] {
   });
 }
 
+function valueAt(obj: Record<string, unknown>, path: string): string {
+  return path.split(".").reduce<unknown>((o, p) => (o as Record<string, unknown>)[p], obj) as string;
+}
+
+/** Top-level ICU argument names of a message, e.g. `{count}` or `{seconds, plural, ...}`. */
+function placeholders(text: string): string[] {
+  const names = new Set<string>();
+  let depth = 0;
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] === "{") {
+      if (depth === 0) {
+        const match = /^\{\s*([A-Za-z_][A-Za-z0-9_]*)/.exec(text.slice(i));
+        if (match) names.add(match[1]);
+      }
+      depth++;
+    } else if (text[i] === "}") {
+      depth--;
+    }
+  }
+  return [...names].sort();
+}
+
+/** True when a text says where something runs or is kept (place, host type, region). */
+function claimsLocation(text: string): boolean {
+  return (
+    /máy chủ|server|cloud|đám mây|cục bộ|\blocal(ly)?\b|Việt Nam|Vietnam|Mỹ|châu Âu|Europe|Đức|German/i.test(text) ||
+    /\bUS\b|U\.S\.|\bEU\b/.test(text)
+  );
+}
+
 describe("messages", () => {
   it("vi.json and en.json have identical flattened key sets", () => {
     expect(flatten(vi).sort()).toEqual(flatten(en).sort());
@@ -47,13 +77,47 @@ describe("messages", () => {
     expect(flatten(viLive!).sort()).toEqual(flatten(enLive!).sort());
   });
 
-  it("keeps the twistfit honesty notes silent about where Flux runs", () => {
+  it("has the same ICU placeholders in vi and en for twistfit.live", () => {
+    const live = (messages: unknown) =>
+      (messages as { twistfit: { live: Record<string, unknown> } }).twistfit.live;
+    const viLive = live(vi);
+    const enLive = live(en);
+    for (const key of flatten(viLive)) {
+      const viText = valueAt(viLive, key);
+      const enText = valueAt(enLive, key);
+      expect(placeholders(enText), key).toEqual(placeholders(viText));
+    }
+  });
+
+  it("keeps the twistfit honesty notes silent about where Flux runs or images are kept", () => {
     for (const messages of [vi, en]) {
       const notes = Object.values(
         (messages as { twistfit: { live: { notes: Record<string, string> } } }).twistfit.live.notes,
       ).join(" ");
       expect(notes).toMatch(/Black Forest Labs/);
-      expect(notes).not.toMatch(/máy chủ|server|cloud|đám mây|cục bộ|local|Việt Nam|Vietnam|Mỹ|\bUS\b|EU|châu Âu|Europe|Đức|German/i);
+      expect(claimsLocation(notes)).toBe(false);
+    }
+  });
+
+  it("flags location claims but not ordinary English", () => {
+    for (const claim of [
+      "Flux chạy trên máy chủ riêng.",
+      "Runs on our own server.",
+      "Hosted in the cloud.",
+      "Runs locally on a local GPU.",
+      "Ảnh được xử lý tại Việt Nam.",
+      "Processed in the US.",
+      "Hosted in the EU.",
+      "Runs in Europe.",
+    ]) {
+      expect(claimsLocation(claim), claim).toBe(true);
+    }
+    for (const fine of [
+      "This lets us show the result.",
+      "We use your picks to make the image.",
+      "The result image is kept for up to an hour so you can download it, then deleted.",
+    ]) {
+      expect(claimsLocation(fine), fine).toBe(false);
     }
   });
 

@@ -137,12 +137,13 @@
         "moderated": "Flux declined this combination. Try different items or another model.",
         "timeout": "Flux took too long to respond. Please try again.",
         "generic": "Couldn't generate the image right now. Please try again.",
-        "inviteRequired": "Your invite link is no longer valid."
+        "inviteRequired": "Your invite link is no longer valid.",
+        "resultExpired": "The image has expired or is no longer available. Please make it again."
       },
       "notes": {
-        "source": "Flux generates the image from model and clothing photos provided by the site owner, so you don't need to upload anything.",
+        "source": "Flux generates the image from model and clothing photos provided by the site owner, so you don't upload anything.",
         "flux": "The model and item photos you pick are sent to Flux (Black Forest Labs).",
-        "privacy": "Only which items were picked, and when, is recorded. No images are stored."
+        "privacy": "We only record which items and model were picked, and when. The result image is kept for up to an hour so you can download it, then deleted."
       }
     }
   },

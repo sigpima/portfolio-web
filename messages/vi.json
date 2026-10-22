@@ -137,12 +137,13 @@
         "moderated": "Flux từ chối tạo ảnh với lựa chọn này. Hãy thử món đồ hoặc người mẫu khác.",
         "timeout": "Flux phản hồi quá lâu nên chưa có ảnh. Hãy thử lại.",
         "generic": "Không tạo được ảnh lúc này, hãy thử lại.",
-        "inviteRequired": "Link mời không còn hiệu lực."
+        "inviteRequired": "Link mời không còn hiệu lực.",
+        "resultExpired": "Ảnh đã hết hạn hoặc không còn nữa. Hãy tạo lại."
       },
       "notes": {
-        "source": "Ảnh do Flux tạo từ ảnh người mẫu và món đồ có sẵn của chủ trang, bạn không cần tải ảnh nào lên.",
+        "source": "Ảnh do Flux tạo từ ảnh người mẫu và món đồ có sẵn của chủ trang, bạn không tải ảnh nào lên.",
         "flux": "Ảnh người mẫu và các món đồ bạn chọn được gửi tới Flux (Black Forest Labs).",
-        "privacy": "Hệ thống chỉ ghi lại món nào được chọn và lúc nào, không lưu ảnh."
+        "privacy": "Hệ thống chỉ ghi lại món đồ, người mẫu được chọn và thời điểm. Ảnh kết quả chỉ được giữ tạm tối đa 1 giờ để bạn tải về rồi bị xoá."
       }
     }
   },

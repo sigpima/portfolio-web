@@ -7,7 +7,7 @@ import { assetUrl, fetchCatalog, pollJob, resultUrl, startRun, TwistfitError } f
 import type { CatalogEntry, JobStatus, TwistfitCatalog } from "@/lib/twistfit/types";
 
 type Step = 1 | 2 | 3;
-type ErrorKey = "busy" | "limit" | "moderated" | "timeout" | "generic" | "inviteRequired";
+type ErrorKey = "busy" | "limit" | "moderated" | "timeout" | "generic" | "inviteRequired" | "resultExpired";
 type FocusTarget = "step" | "result" | "error" | "catalogError";
 
 type CatalogState =
@@ -50,7 +50,7 @@ const PRIMARY_BUTTON =
 const SECONDARY_BUTTON =
   "inline-flex min-h-11 items-center justify-center rounded-lg border border-secondary px-4 py-2.5 text-body-md text-secondary hover:bg-secondary/10 disabled:cursor-not-allowed disabled:opacity-50";
 const CHOICE_CARD =
-  "flex cursor-pointer flex-col gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest p-2 hover:border-secondary has-checked:border-secondary has-checked:bg-secondary/10 has-disabled:cursor-not-allowed has-disabled:opacity-50 has-disabled:hover:border-outline-variant";
+  "flex cursor-pointer flex-col gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest p-2 hover:border-secondary has-checked:border-secondary has-checked:bg-secondary/10 has-[[aria-disabled=true]]:cursor-not-allowed has-[[aria-disabled=true]]:opacity-50 has-[[aria-disabled=true]]:hover:border-outline-variant";
 const THUMB = "block aspect-[3/4] h-auto w-full rounded-md bg-surface-container-high object-cover";
 
 export interface TwistfitDemoProps {
@@ -66,6 +66,8 @@ export function TwistfitDemo({ onInviteRequired }: TwistfitDemoProps) {
   const activeLocale = useLocale();
   const lang: Locale = activeLocale === "en" ? "en" : "vi";
   const headingId = useId();
+  const hintId = useId();
+  const countId = useId();
 
   const [catalogState, setCatalogState] = useState<CatalogState>({ kind: "loading" });
   const [step, setStep] = useState<Step>(1);
@@ -200,6 +202,18 @@ export function TwistfitDemo({ onInviteRequired }: TwistfitDemoProps) {
     }
   };
 
+  /** "Try again" in the error alert: the alert goes away, so focus goes to the step heading. */
+  const retryRun = () => {
+    requestFocus("step");
+    void generate();
+  };
+
+  /** The result image could not be loaded (expired, evicted or lost on restart). */
+  const resultFailed = () => {
+    setRun({ phase: "error", key: "resultExpired" });
+    requestFocus("error");
+  };
+
   const startOver = () => {
     setRun({ phase: "idle" });
     goTo(1);
@@ -280,8 +294,10 @@ export function TwistfitDemo({ onInviteRequired }: TwistfitDemoProps) {
         <div role="group" aria-labelledby={headingId} className="flex flex-col gap-3">
           {stepHeading("items")}
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <p className="text-body-md text-on-surface-variant">{t("items.hint", { max: catalog.max_items })}</p>
-            <p role="status" className="font-mono text-label-mono-sm text-secondary">
+            <p id={hintId} className="text-body-md text-on-surface-variant">
+              {t("items.hint", { max: catalog.max_items })}
+            </p>
+            <p id={countId} role="status" className="font-mono text-label-mono-sm text-secondary">
               {t("items.count", { count: selected.size, max: catalog.max_items })}
             </p>
           </div>
@@ -289,14 +305,17 @@ export function TwistfitDemo({ onInviteRequired }: TwistfitDemoProps) {
             {catalog.items.map((item) => {
               const checked = selected.has(item.id);
               const name = item.name[lang];
+              // At the limit, unchecked items stay focusable (aria-disabled) and say why.
+              const full = !checked && selected.size >= catalog.max_items;
               return (
                 <li key={item.id}>
                   <label className={CHOICE_CARD}>
-                    {/* Proxied catalog photos: a plain <img> keeps them off the image optimizer. */}
+                    {/* Proxied catalog photos: a plain <img> keeps them off the image optimizer.
+                        Decorative here: the control already carries the name. */}
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={assetUrl("items", item.id)}
-                      alt={name}
+                      alt=""
                       width={300}
                       height={400}
                       loading="lazy"
@@ -308,7 +327,8 @@ export function TwistfitDemo({ onInviteRequired }: TwistfitDemoProps) {
                         type="checkbox"
                         aria-label={name}
                         checked={checked}
-                        disabled={!checked && selected.size >= catalog.max_items}
+                        aria-disabled={full ? true : undefined}
+                        aria-describedby={full ? `${countId} ${hintId}` : undefined}
                         onChange={() => toggleItem(item.id)}
                         className="size-5 shrink-0 accent-secondary"
                       />
@@ -333,11 +353,7 @@ export function TwistfitDemo({ onInviteRequired }: TwistfitDemoProps) {
         <div className="flex flex-col gap-3">
           {stepHeading("model")}
           <p className="text-body-md text-on-surface-variant">{t("model.hint")}</p>
-          <div
-            role="radiogroup"
-            aria-labelledby={headingId}
-            className="grid grid-cols-2 gap-2.5 sm:grid-cols-3"
-          >
+          <div role="radiogroup" aria-labelledby={headingId} className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
             {catalog.models.map((entry) => {
               const name = entry.name[lang];
               return (
@@ -345,7 +361,7 @@ export function TwistfitDemo({ onInviteRequired }: TwistfitDemoProps) {
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={assetUrl("models", entry.id)}
-                    alt={name}
+                    alt=""
                     width={300}
                     height={400}
                     loading="lazy"
@@ -417,7 +433,7 @@ export function TwistfitDemo({ onInviteRequired }: TwistfitDemoProps) {
                 {t(`errors.${run.key}`)}
               </p>
               {run.key === "limit" || run.key === "inviteRequired" ? null : (
-                <button type="button" onClick={() => void generate()} className={SECONDARY_BUTTON}>
+                <button type="button" onClick={retryRun} className={SECONDARY_BUTTON}>
                   {t("retry")}
                 </button>
               )}
@@ -426,11 +442,7 @@ export function TwistfitDemo({ onInviteRequired }: TwistfitDemoProps) {
 
           {run.phase === "done" ? (
             <div className="flex flex-col gap-3">
-              <h4
-                ref={resultHeadingRef}
-                tabIndex={-1}
-                className="text-headline-md text-on-surface"
-              >
+              <h4 ref={resultHeadingRef} tabIndex={-1} className="text-headline-md text-on-surface">
                 {t("result.title")}
               </h4>
               {/* The result is served once by the proxy: a plain <img>, no optimizer. */}
@@ -443,6 +455,7 @@ export function TwistfitDemo({ onInviteRequired }: TwistfitDemoProps) {
                 })}
                 width={768}
                 height={1024}
+                onError={resultFailed}
                 className="block h-auto w-full max-w-md rounded-lg border border-outline-variant"
               />
             </div>

@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -133,7 +133,10 @@ describe("TwistfitDemo", () => {
     expect(screen.getByText(L.vi.loading)).toBeInTheDocument();
     const shirt = await screen.findByRole("checkbox", { name: "Áo sơ mi" });
     expect(currentStep()).toBe(1);
-    expect(screen.getByRole("img", { name: "Áo sơ mi" })).toHaveAttribute("src", "/api/twistfit/assets/items/ao");
+    // Thumbnails are decorative: the checkbox already carries the name.
+    const thumb = document.querySelector<HTMLImageElement>('img[src="/api/twistfit/assets/items/ao"]');
+    expect(thumb).toHaveAttribute("alt", "");
+    expect(screen.queryByRole("img", { name: "Áo sơ mi" })).not.toBeInTheDocument();
 
     await user.click(shirt);
     await user.click(screen.getByRole("checkbox", { name: "Quần jean" }));
@@ -143,7 +146,8 @@ describe("TwistfitDemo", () => {
     expect(currentStep()).toBe(2);
     const group = screen.getByRole("radiogroup");
     expect(within(group).getAllByRole("radio")).toHaveLength(2);
-    expect(screen.getByRole("img", { name: "Mai" })).toHaveAttribute("src", "/api/twistfit/assets/models/m2");
+    expect(document.querySelector('img[src="/api/twistfit/assets/models/m2"]')).toHaveAttribute("alt", "");
+    expect(screen.queryByRole("img", { name: "Mai" })).not.toBeInTheDocument();
     await user.click(screen.getByRole("radio", { name: "Lan" }));
     await user.click(button(L.vi.next));
 
@@ -185,12 +189,23 @@ describe("TwistfitDemo", () => {
     await user.click(screen.getByRole("checkbox", { name: "Váy" }));
     expect(screen.getByRole("status")).toHaveTextContent("Đã chọn 3/3");
     const hat = screen.getByRole("checkbox", { name: "Mũ" });
-    expect(hat).toBeDisabled();
+    // Still focusable, marked unavailable, and it says why.
+    expect(hat).toHaveAttribute("aria-disabled", "true");
+    expect(hat).toHaveAccessibleDescription(/Đã chọn 3\/3/);
+    hat.focus();
+    expect(hat).toHaveFocus();
     await user.click(hat);
     expect(hat).not.toBeChecked();
+    await user.keyboard(" ");
+    expect(hat).not.toBeChecked();
+    expect(screen.getByRole("status")).toHaveTextContent("Đã chọn 3/3");
 
     await user.click(screen.getByRole("checkbox", { name: "Váy" }));
-    expect(hat).toBeEnabled();
+    expect(hat).not.toHaveAttribute("aria-disabled");
+    expect(hat).not.toHaveAccessibleDescription();
+    await user.click(hat);
+    expect(hat).toBeChecked();
+    await user.click(hat);
     expect(screen.getByRole("status")).toHaveTextContent("Đã chọn 2/3");
   });
 
@@ -238,6 +253,19 @@ describe("TwistfitDemo", () => {
     expect(generate).toBeDisabled();
     expect(button(L.vi.back)).toBeDisabled();
     expect(screen.getByRole("status")).toHaveTextContent(L.vi.stages.starting);
+    await act(async () => start.resolve({ jobId: "job_1" }));
+  });
+
+  it.each(["{Enter}", " "])("starts a single run when Generate is pressed twice with %j", async (key) => {
+    controlledPoll();
+    const start = deferred<{ jobId: string }>();
+    mockStart.mockReturnValue(start.promise);
+    const { user } = renderDemo();
+    await toStep3(user);
+    button(L.vi.generate).focus();
+    await user.keyboard(key);
+    await user.keyboard(key);
+    expect(mockStart).toHaveBeenCalledTimes(1);
     await act(async () => start.resolve({ jobId: "job_1" }));
   });
 
@@ -331,6 +359,62 @@ describe("TwistfitDemo", () => {
     await user.click(within(alert).getByRole("button", { name: L.vi.retry }));
     expect(mockStart).toHaveBeenCalledTimes(2);
     await waitFor(() => expect(screen.queryByRole("alert")).not.toBeInTheDocument());
+  });
+
+  it("moves focus to the step heading when Try again starts a new run", async () => {
+    controlledPoll();
+    mockStart.mockRejectedValueOnce(new TwistfitError("busy", 429));
+    const { user } = renderDemo();
+    await toStep3(user);
+    await user.click(button(L.vi.generate));
+    const alert = await screen.findByRole("alert");
+    await user.click(within(alert).getByRole("button", { name: L.vi.retry }));
+    expect(screen.getByRole("heading", { name: L.vi.steps.generate })).toHaveFocus();
+    expect(document.activeElement).not.toBe(document.body);
+  });
+
+  it("turns a result image that fails to load into a friendly error", async () => {
+    const poll = controlledPoll();
+    const { user } = renderDemo();
+    await toStep3(user);
+    await user.click(button(L.vi.generate));
+    await poll.finish({ status: "done", stage: "downloading", elapsed_seconds: 30, result_id: "r_1" });
+    const img = await screen.findByRole("img", { name: "Người mẫu Lan mặc: Áo sơ mi, Quần jean" });
+    fireEvent.error(img);
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent(L.vi.errors.resultExpired);
+    expect(within(alert).getByText(L.vi.errors.resultExpired)).toHaveFocus();
+    expect(screen.queryByRole("link", { name: L.vi.download })).not.toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: /Người mẫu Lan/ })).not.toBeInTheDocument();
+
+    await user.click(within(alert).getByRole("button", { name: L.vi.retry }));
+    expect(mockStart).toHaveBeenCalledTimes(2);
+  });
+
+  it.each(["done", "error"] as const)("goes Back from step 3 in the %s state to step 2", async (state) => {
+    const poll = controlledPoll();
+    const { user } = renderDemo();
+    await toStep3(user);
+    await user.click(button(L.vi.generate));
+    if (state === "done") {
+      await poll.finish({ status: "done", stage: "downloading", elapsed_seconds: 30, result_id: "r_1" });
+      await screen.findByRole("link", { name: L.vi.download });
+    } else {
+      await poll.finish({ status: "error", stage: "waiting", elapsed_seconds: 5, code: "flux_failed" });
+      await screen.findByRole("alert");
+    }
+    const back = button(L.vi.back);
+    expect(back).toBeEnabled();
+    await user.click(back);
+
+    expect(currentStep()).toBe(2);
+    expect(screen.getByRole("heading", { name: L.vi.steps.model })).toHaveFocus();
+    expect(screen.getByRole("radio", { name: "Lan" })).toBeChecked();
+    await user.click(button(L.vi.next));
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: L.vi.download })).not.toBeInTheDocument();
+    expect(button(L.vi.generate)).toBeEnabled();
   });
 
   it("does not offer Try again once the link has no generations left", async () => {
