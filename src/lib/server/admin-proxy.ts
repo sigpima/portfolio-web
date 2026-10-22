@@ -15,7 +15,7 @@ const RELAYED_STATUSES = new Set([401, 404, 422, 429]);
 /** Cap on an upstream error body read (real ones are a few dozen bytes). */
 const MAX_ERROR_BODY_BYTES = 16 * 1024;
 /** Visible ASCII only (what portfolio-api issues); anything else cannot be a real session. */
-const SESSION_SHAPE = /^[\x21-\x7e]{1,512}$/;
+export const SESSION_SHAPE = /^[\x21-\x7e]{1,512}$/;
 /** Link ids are SQLite integers. */
 export const ID_SHAPE = /^\d{1,18}$/;
 
@@ -35,11 +35,11 @@ export function isJsonContentType(value: string | null): boolean {
   return value.split(";")[0].trim().toLowerCase() === "application/json";
 }
 
-/** Read the request body as text, or return null if it exceeds `limit` bytes. */
-export async function readBodyCapped(request: Request, limit: number): Promise<string | null> {
+/** Read the request body as bytes, or return null if it exceeds `limit` bytes. */
+export async function readBodyBytesCapped(request: Request, limit: number): Promise<Uint8Array | null> {
   const declared = Number(request.headers.get("content-length"));
   if (Number.isFinite(declared) && declared > limit) return null;
-  if (!request.body) return "";
+  if (!request.body) return new Uint8Array(0);
   const reader = request.body.getReader();
   const chunks: Uint8Array[] = [];
   let total = 0;
@@ -53,11 +53,17 @@ export async function readBodyCapped(request: Request, limit: number): Promise<s
     }
     chunks.push(value);
   }
-  return new TextDecoder().decode(Buffer.concat(chunks));
+  return new Uint8Array(Buffer.concat(chunks));
+}
+
+/** Read the request body as text, or return null if it exceeds `limit` bytes. */
+export async function readBodyCapped(request: Request, limit: number): Promise<string | null> {
+  const bytes = await readBodyBytesCapped(request, limit);
+  return bytes === null ? null : new TextDecoder().decode(bytes);
 }
 
 /** Read at most `limit` bytes of a response body as text; the rest is discarded. */
-async function readTextCapped(res: Response, limit: number): Promise<string> {
+export async function readTextCapped(res: Response, limit: number): Promise<string> {
   if (!res.body) return "";
   const reader = res.body.getReader();
   const chunks: Uint8Array[] = [];
