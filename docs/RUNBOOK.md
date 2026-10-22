@@ -15,7 +15,8 @@ trình duyệt -> nginx (host) -> web: container `portfolio` (Next.js, 127.0.0.1
   và mật khẩu quản trị; nó là thứ **duy nhất** gọi service `chat`. Người không có phiên hợp lệ (từ một link mời) không bao giờ làm phát sinh lời gọi Gemini.
 - Container web chỉ gắn vào mạng mặc định của stack `portfolio-api`, **không** gắn vào mạng `knowledge_base_default`: từ web không với tới được `chat:8003` để lách cổng.
   `portfolio-api` gắn vào cả hai mạng.
-- Không có link: demo Knowledge Base hiện **bản phát lại** (replay) của các lần chạy thật đã ghi (phần 12). Có link (mở `/i/<mã>`): demo chạy thật.
+- Không có link: demo Knowledge Base hiện **bản phát lại** (replay) của các lần chạy thật đã ghi (phần 12), còn Twistfit hiện bản phát lại bằng **ảnh giữ chỗ** (phần 13). Có link (mở `/i/<mã>`): demo chạy thật.
+  Twistfit chạy thật gọi Flux (Black Forest Labs, tốn tiền mỗi lượt) từ `portfolio-api`; ảnh người mẫu và món đồ nằm ở `portfolio/api/twistfit-assets/` (phần 7, mục 8).
 - Chỉ web được đưa ra internet qua nginx. **Không bao giờ** proxy `portfolio-api` (8100) hay `chat` (8003) ra ngoài.
 
 ## 1. Điều kiện cần
@@ -59,6 +60,9 @@ Web không biết địa chỉ của `chat`: địa chỉ đó chỉ cấu hình
 | `CHAT_BACKEND_URL` | không | Mặc định `http://chat:8003`. |
 | `KB_NETWORK` | không | Mạng của stack `knowledge_base`, mặc định `knowledge_base_default`. |
 | `PORTFOLIO_API_PORT` | không | Cổng trên `127.0.0.1` của host, mặc định `8100`. |
+| `FLUX_API_KEY` | không | Khoá Black Forest Labs cho Twistfit chạy thật. Trống = tắt Twistfit chạy thật (người xem thấy bản phát lại). Chỉ đặt ở `.env` của `portfolio-api`, **không bao giờ** ở web. |
+| `TWISTFIT_LIVE_ENABLED` | không | Mặc định `true`; `false` tắt Twistfit chạy thật dù đã có khoá (công tắc khẩn cấp, phần 8). |
+| `FLUX_API_BASE_URL` | không | Mặc định `https://api.bfl.ai`. Chỉ đổi khi thử với `scripts/fake_flux.py` (xem `README.md` của `portfolio/api`); nhớ trả về mặc định. |
 | `SESSION_TTL_DAYS`, `ADMIN_SESSION_TTL_MINUTES` | không | Phiên người xem (30 ngày), phiên quản trị trượt (120 phút không hoạt động) **phía `portfolio-api`**. Cookie `pf_admin` của web luôn trượt cố định 7200 giây (hằng số `ADMIN_MAX_AGE` trong mã web, không đọc biến này): giữ `ADMIN_SESSION_TTL_MINUTES=120` cho khớp (xem phần 9). |
 
 ### `chat` (repo `knowledge_base`)
@@ -214,10 +218,20 @@ Mọi mục dưới đây là **bắt buộc**.
 7. **Kiểm tra trường hợp trình duyệt chặn cookie**: tạo một link thử khác, chặn cookie cho tên miền (ví dụ Chrome: Cài đặt > Quyền riêng tư > Cookie của bên thứ nhất
    bị chặn cho trang này, hoặc Safari với "Chặn mọi cookie"), mở link: phải thấy cảnh báo "Link mời hợp lệ nhưng trình duyệt chưa lưu được phiên..." chứ không phải
    thông báo thành công. Nếu được, thử cả trong trình duyệt nhúng của Zalo/Messenger. Thu hồi link thử.
-8. Ghi các mẫu phát lại thật cho Knowledge Base (phần 12) để người không có link thấy dữ liệu thật thay vì mẫu giữ chỗ.
-9. Điền hoặc xác nhận các nội dung chưa được xác nhận (phần 16), kể cả mục về Google Gemini.
+8. **Twistfit chạy thật (chỉ khi bạn muốn bật; bỏ qua thì người xem chỉ thấy bản phát lại).** Mỗi lượt chạy gọi Flux thật và **tốn tiền**:
+   1. Cấp `FLUX_API_KEY` (khoá BFL) và điền vào `.env` của `portfolio/api` (không bao giờ vào web).
+   2. Chuẩn bị 1-6 ảnh người mẫu, 1-12 ảnh món đồ (bạn phải có quyền dùng ảnh; ảnh người thật cần sự đồng ý của họ) và `catalog.json` trong `portfolio/api/twistfit-assets/`,
+      theo `twistfit-assets/README.md` và `catalog.example.json` ở đó. Thư mục phải đọc được với uid 10001 của container (`chmod a+rx twistfit-assets && chmod a+r twistfit-assets/*`).
+   3. Tạo lại container để nạp khoá và ảnh: `cd /home/nuc/Documents/project/portfolio/api && docker compose up -d --force-recreate portfolio-api`.
+      Kiểm tra `docker compose logs portfolio-api` không có dòng warning về danh mục; `/v1/session` của một phiên hợp lệ phải báo `twistfit: true`.
+   4. Trên `/admin` tạo một link thử **có đặt "Tối đa lượt Twistfit"** (ví dụ 2), mở nó trong cửa sổ ẩn danh, đi hết 3 bước (chọn đồ, chọn người mẫu, tạo ảnh) và chạy **MỘT lượt thật**.
+      Lượt này cũng xác minh giả định về miền URL polling của BFL (xem `README.md` của `portfolio/api`); nếu sai thì lượt báo "lỗi", không có khoá nào bị lộ.
+   5. Mở nhật ký của link trên `/admin`: phải có một sự kiện `twistfit` / thành công với chi tiết `Đồ đã chọn: ... · Người mẫu: ...` (chỉ tên, không có ảnh).
+   6. Xem **chi phí** của lượt đó trên bảng điều khiển BFL và ghi lại để đặt `twistfit_max` hợp lý cho các link thật. Thu hồi link thử.
+9. Ghi các mẫu phát lại thật cho Knowledge Base (phần 12) để người không có link thấy dữ liệu thật thay vì mẫu giữ chỗ.
+10. Điền hoặc xác nhận các nội dung chưa được xác nhận (phần 16), kể cả mục về Google Gemini và nơi Flux chạy.
 
-## 8. Bật/tắt demo chat, tắt khẩn cấp
+## 8. Bật/tắt demo chat và Twistfit, tắt khẩn cấp
 
 **Tắt khẩn cấp (làm việc này TRƯỚC, nếu còn nghi ngờ thì cứ dừng):**
 
@@ -252,6 +266,20 @@ curl -s localhost:3100/api/chat/status  # qua web -> portfolio-api, cũng phải
 Nếu `localhost:8003` vẫn in `{"enabled":true}` thì công tắc chưa tới được container: dùng `docker compose --profile chat stop chat`.
 Sau khi tắt cứng bằng `stop`, chỉ kiểm tra dòng `localhost:3100/api/chat/status` (phải in `{"enabled":false}`); `localhost:8003` lúc đó từ chối kết nối, đó là đúng.
 Tắt hẳn và xoá service chat: `docker compose --profile chat down` (`docker compose down` không kèm profile sẽ để lại container `chat`).
+
+**Tắt Twistfit chạy thật (công tắc `TWISTFIT_LIVE_ENABLED`, ở `portfolio-api`).** Đây là cách chặn tiền Flux ngay: đặt `TWISTFIT_LIVE_ENABLED=false` trong `.env` của `portfolio/api` rồi tạo lại container
+(biến chỉ được đọc lúc khởi động, nên **không** dùng `restart`):
+
+```bash
+cd /home/nuc/Documents/project/portfolio/api
+# sửa .env: TWISTFIT_LIVE_ENABLED=false
+docker compose up -d --force-recreate portfolio-api
+curl -s localhost:3100/api/session     # (kèm cookie của một phiên mời) features.twistfit phải là false
+```
+
+Khi tắt, `/v1/session` báo `twistfit:false`, các tuyến Twistfit trả 503 `demo_disabled`, và người xem (kể cả người có link) thấy bản phát lại. Các tính năng khác (chat, link, nhật ký) không bị ảnh hưởng.
+Gỡ `FLUX_API_KEY` khỏi `.env` rồi tạo lại container cũng tắt được. Tạo lại container làm mất job Twistfit đang chạy (chấp nhận được). Bật lại: đặt `TWISTFIT_LIVE_ENABLED=true` (hoặc xoá dòng đó) và tạo lại container.
+Nếu nghi một link bị lạm dụng: thu hồi link trên `/admin` (có hiệu lực ngay cho lời gọi kế tiếp; job đang chạy vẫn xong vì tiền Flux đã tiêu).
 
 Lưu ý vận hành của `chat`:
 
@@ -302,9 +330,13 @@ Trang `/admin` có ghi chú này dưới nhật ký.
 
 ### Nhật ký chứa gì
 
-- **Có**: link nào, thời điểm (UTC), tính năng (`open` mở link, `chat` hỏi bot), kết quả (`success`, `error`, `blocked`) và chi tiết kỹ thuật ngắn do hệ thống đặt (ví dụ mã lỗi).
+- **Có**: link nào, thời điểm (UTC), tính năng (`open` mở link, `chat` hỏi bot, `twistfit` ghép đồ), kết quả (`success`, `error`, `blocked`) và chi tiết kỹ thuật ngắn do hệ thống đặt (ví dụ mã lỗi).
   Một `open` có thể do công cụ quét email/xem trước link giả làm trình duyệt gây ra (xem trên).
-- **Không bao giờ có**: nội dung câu hỏi hay câu trả lời, ảnh, địa chỉ IP, chuỗi trình duyệt (user agent), mã link gốc hay mã phiên (CSDL chỉ lưu băm SHA-256).
+- **Twistfit trong nhật ký**: lượt thành công hiện `Đồ đã chọn: <tên các món> · Người mẫu: <tên>` (tên tiếng Việt lấy từ `catalog.json`); lượt lỗi hay bị chặn hiện nhãn tiếng Việt của mã lỗi
+  (`flux_timeout` "Flux quá thời gian chờ", `flux_failed` "Flux báo lỗi", `flux_moderated` "Flux từ chối nội dung", `flux_unavailable` "Không gọi được Flux",
+  `twistfit_limit` "Hết lượt Twistfit của link", `concurrent_limit`/`global_concurrent_limit`/`busy` "Đang bận", `cancelled` "Bị huỷ khi dịch vụ tắt"); mã lạ hiện nguyên văn.
+  Mỗi lượt chạy đúng một sự kiện. Lượt lỗi sau khi Flux đã được gọi vẫn có thể bị BFL tính phí nhưng không tính vào `twistfit_max`.
+- **Không bao giờ có**: nội dung câu hỏi hay câu trả lời, ảnh (kể cả ảnh người mẫu, món đồ và ảnh kết quả của Twistfit), địa chỉ IP, chuỗi trình duyệt (user agent), mã link gốc hay mã phiên (CSDL chỉ lưu băm SHA-256).
 - Log tiến trình (`docker compose logs`) của web và `portfolio-api` cũng không ghi mã link, phiên, mật khẩu hay nội dung câu hỏi.
 
 ## 10. Kiểm tra nhanh (sau mỗi lần triển khai)
@@ -317,13 +349,14 @@ curl -s -o /dev/null -w '%{http_code}\n' localhost:3100/en    # 200
 curl -s -o /dev/null -w '%{http_code}\n' localhost:3100/fr    # 404 (chỉ có vi và en)
 curl -s -w ' %{http_code}\n' -X POST localhost:3100/api/chat/stream -H 'content-type: application/json' \
   -d '{"message":"x","session_id":null}'                       # {"code":"invite_required"} 401
+curl -s -w ' %{http_code}\n' localhost:3100/api/twistfit/catalog                             # {"code":"invite_required"} 401 (không cookie: không lộ danh mục, không chạm Flux)
 curl -s -i -A 'Mozilla/5.0' localhost:3100/i/khong-phai-ma-that | grep -i -E '^(HTTP|location|set-cookie)'   # 307, location .../?invite=invalid, không set-cookie
 curl -s -i localhost:3100/i/khong-phai-ma-that | grep -i -E '^(HTTP|location|set-cookie|x-robots)'          # curl là "công cụ xem trước": 200, x-robots-tag: noindex, không location/set-cookie
 curl -s -I localhost:3100/admin | grep -i -E '^(x-frame-options|content-security-policy)'                 # DENY và frame-ancestors 'none'
 curl -s localhost:3100/vi | grep -o '<link rel="canonical"[^>]*>'   # phải là https://ten-mien-cua-ban/vi
 ```
 
-Qua nginx (từ ngoài), lặp lại dòng `POST /api/chat/stream` với `https://ten-mien-cua-ban`: phải là 401.
+Qua nginx (từ ngoài), lặp lại dòng `POST /api/chat/stream` và dòng `GET /api/twistfit/catalog` với `https://ten-mien-cua-ban`: phải là 401.
 
 Kiểm tra log không chứa mã link: sau khi tạo và mở (qua nginx) một link thử, tìm mã đó trong log của cả hai service **và** trong access log lẫn error log của nginx
 trên host (không được thấy gì; các lệnh compose cần `.env`, phần 2):
@@ -387,8 +420,14 @@ Khi file có ít nhất một mẫu, mẫu giữ chỗ và nhãn "giữ chỗ" c
 
 ## 13. Thay ảnh giữ chỗ Twistfit bằng ảnh thật
 
+Twistfit có **hai** bộ ảnh khác nhau, đừng nhầm:
+
+- **Bản chạy thật** (người có link mời) dùng ảnh người mẫu và món đồ trong `portfolio/api/twistfit-assets/` (kèm `catalog.json`; phần 7, mục 8). Ảnh này nằm ngoài git và chỉ `portfolio-api` đọc.
+- **Bản phát lại** (người không có link) **vẫn dùng ảnh giữ chỗ** trong `public/replays/twistfit/` cho tới khi bạn thay bằng ảnh thật của một lần chạy. Hiện chưa có script lưu một lượt chạy thật thành mẫu phát lại; thay bằng tay:
+
 Làm theo `public/replays/twistfit/README.md` (chọn một `TryOnJob` đã `done`, đặt ảnh vào thư mục, sửa `src/content/replays/twistfit.ts`, bỏ chữ "(minh hoạ)" khi số liệu là thật).
-Khi **mọi mẫu** đã có `placeholder: false`, nhãn "ảnh giữ chỗ" ở thẻ dự án, trang chi tiết và băng trong demo tự biến mất (trạng thái này tính từ chính dữ liệu mẫu, không có cờ riêng nào phải đồng bộ).
+Khi **mọi mẫu** đã có `placeholder: false`, băng "ảnh giữ chỗ" và chữ "(minh hoạ)" trong demo phát lại (phần người không có link thấy) tự biến mất (trạng thái này tính từ chính dữ liệu mẫu, không có cờ riêng nào phải đồng bộ).
+Thẻ dự án và dòng nhãn (eyebrow) đầu trang chi tiết của Twistfit **không** mang nhãn "giữ chỗ": chúng luôn mang nhãn "Chạy thật · cần link mời" (vì demo là chạy thật khi có link); chỉ phần phát lại bên trong demo mới có nhãn giữ chỗ.
 Kiểm tra bằng `npx vitest run src/content src/components/demos`, rồi build lại image.
 
 ## 14. Kiểm tra thủ công tiêu chí thành công với Gemini thật
@@ -422,7 +461,8 @@ Cần `chat` đã bật bằng khoá Gemini thật, `portfolio-api` và web đã
    - `src/content/registry.test.ts`: danh sách khoá demo truyền cho `validateProjects` (thêm khoá mới của bạn vào đó); các test khác chỉ kiểm tra ba slug hiện có (`knowledge-base`, `twistfit`, `gia-pha`) vẫn có mặt và Knowledge Base đứng đầu.
    - `src/components/demos/ReplayDemo.test.tsx` (test "demo registry"): liệt kê đúng các khoá trong `demoComponents`; thêm khoá mới vào.
    - `src/components/demos/registry.test.ts`: tự kiểm tra khoá trong `replaysByDemoComponent` và `replayDemoComponents` (`replay-demos.tsx`) trùng nhau; đăng ký thiếu một bên là test hỏng.
-   - `src/content/replays/placeholder.test.ts` và `src/components/ProjectCard.test.tsx` ghi tên `twistfit`, `knowledge-base`, `gia-pha` để kiểm tra nhãn giữ chỗ; không cần sửa khi thêm dự án.
+   - `src/content/replays/placeholder.test.ts` ghi tên `twistfit`, `knowledge-base`, `gia-pha` để kiểm tra nhãn giữ chỗ của dữ liệu phát lại; `src/components/ProjectCard.test.tsx` kiểm tra nhãn trên thẻ
+     (Twistfit mang "Chạy thật · cần link mời" và **không** có chip giữ chỗ trên thẻ; Gia phả và Knowledge Base cũng không có). Không cần sửa khi thêm dự án.
 5. Chạy `npx vitest run && npm run build`, rồi build lại image.
 
 Liệt kê mọi giá trị còn `TODO:`:
@@ -435,7 +475,9 @@ grep -rn "TODO:" src/content
 
 - **Nhãn theo loại demo**: `live` = chạy thật khi người xem hỏi (với Knowledge Base và Twistfit: chỉ khi có link mời có bật tính năng; người khác thấy bản phát lại); `replay` = phát lại từ một lần chạy thật đã ghi;
   `simulation` = mô phỏng một tính năng chưa hoàn thành. Đừng gắn nhãn cao hơn sự thật (ví dụ không gắn "chạy thật" cho thứ chỉ phát lại).
-- **Ảnh giữ chỗ** Twistfit và mẫu giữ chỗ Knowledge Base phải giữ nhãn "giữ chỗ" và chữ "(minh hoạ)" cho tới khi thay bằng dữ liệu thật (phần 12, 13).
+- **Twistfit nay là "chạy thật · cần link mời"** (`demoKind: "live"`): thẻ và trang chi tiết mang nhãn đó, và chỉ người có link mời có `twistfit: true` mới thấy bản chạy thật (gọi Flux thật, mỗi lượt đúng một lệnh gọi). Người không có link thấy **bản phát lại**,
+  nhãn nêu rõ đó là ảnh giữ chỗ chứ không phải kết quả thật. Đừng gỡ nhãn "cần link mời" và đừng nói Twistfit chạy thật với mọi người xem.
+- **Ảnh giữ chỗ** của bản phát lại Twistfit và mẫu giữ chỗ Knowledge Base phải giữ nhãn "giữ chỗ" và chữ "(minh hoạ)" trong phần phát lại cho tới khi thay bằng dữ liệu thật (phần 12, 13).
   Test dữ liệu sẽ báo lỗi nếu cờ `placeholder` không nhất quán với ảnh và chữ.
 - **Gia phả** là mô phỏng một tính năng AI đang phát triển (chưa xây), không được trình bày như sản phẩm đã có. Việc đọc ảnh và bản quét tài liệu gia phả mới là kế hoạch.
 - **Dữ liệu Knowledge Base là giả lập**; giữ cụm "dữ liệu giả lập" / "synthetic data" trong mô tả.
@@ -445,7 +487,8 @@ grep -rn "TODO:" src/content
 
 ### Nội dung chưa được xác nhận (cần bạn điền hoặc quyết định)
 
-- **Hosting của Flux**: chưa xác nhận Flux chạy ở đâu; không viết ra nơi chạy cho tới khi bạn xác nhận.
+- **Hosting của Flux**: vẫn chưa xác nhận Flux chạy ở đâu (BFL API hay chỗ khác); không viết ra nơi chạy lên site cho tới khi bạn xác nhận. Ghi chú quyền riêng tư của Twistfit chỉ nói điều đã biết: ảnh người mẫu và món đồ của chủ trang được gửi tới dịch vụ ghép ảnh; người xem không tải gì lên.
+- **Quyền dùng ảnh Twistfit**: ảnh người mẫu và món đồ trong `twistfit-assets/` phải là ảnh bạn có quyền dùng (ảnh người thật cần sự đồng ý của họ), vì chúng được gửi tới Flux và kết quả hiện cho người có link.
 - **Google Gemini lưu câu hỏi bao lâu, có dùng để huấn luyện không**: tuỳ tài khoản Google và gói (miễn phí hay trả phí) của khoá `GEMINI_API_KEY`. Hãy kiểm tra điều khoản
   của gói bạn dùng và xác nhận; nếu gói đó cho Google giữ hay dùng dữ liệu, cân nhắc ghi thêm điều đó vào ghi chú quyền riêng tư (`kb.notes.privacy`) hoặc đổi sang gói trả phí.
 - **Liên kết repo**: cả ba dự án đang để `links: []` (có `TODO:` trong `src/content/projects/*.ts`); chỉ thêm khi bạn xác nhận repo được công khai.
@@ -455,6 +498,8 @@ grep -rn "TODO:" src/content
 
 ### Việc cần làm tiếp
 
-- **Twistfit chạy thật qua link mời** (tính năng `twistfit`, trần `twistfit_max` mỗi link) đã có ở web: demo chỉ chạy thật khi `portfolio-api` báo `twistfit: true` cho phiên (cần khoá Flux và danh mục ảnh, xem `api/README.md`);
-  còn lại người xem thấy bản phát lại (ảnh giữ chỗ). Việc lưu một lần chạy thật thành mẫu phát lại vẫn chưa làm.
+- **Script lưu một lần chạy thật của Twistfit làm mẫu phát lại** (tương tự `npm run record:kb`): chưa làm. Cho tới khi có, bản phát lại Twistfit dùng ảnh giữ chỗ và bạn thay bằng tay (phần 13).
+- **Gia phả live**: Gia phả vẫn là mô phỏng (phần 16). Chạy thật cần xây tính năng đọc ảnh/bản quét gia phả trước; chưa có kế hoạch cụ thể.
+- **Twistfit chạy thật qua link mời** (tính năng `twistfit`, trần `twistfit_max` mỗi link) đã có ở web và `portfolio-api` (phần 7 mục 8 là việc bật lần đầu). Chưa có giới hạn tần suất riêng của nginx cho `/api/twistfit/*`
+  (nằm trong `location /`): các chốt chặn là phiên mời, `twistfit_max`, 1 job đồng thời mỗi link và 2 toàn hệ thống.
 - **Markdown trong câu trả lời của bot**: Gemini hay trả lời bằng markdown, còn demo hiển thị chữ thuần (an toàn, không chèn HTML). Chọn một trong hai: yêu cầu backend (system prompt) trả lời bằng chữ thuần, hoặc sau này hiển thị một tập con markdown an toàn ở frontend.

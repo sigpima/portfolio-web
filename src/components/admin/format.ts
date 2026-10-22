@@ -46,15 +46,33 @@ const MAX_DETAIL_TEXT = 120;
 
 export type DetailView = { kind: "none" | "text" | "code"; text: string };
 
-/** How an event `detail` is shown: garments as a list, an error code as is, else clipped JSON. */
+/** Vietnamese labels of the Twistfit error/blocked codes; any other code is shown verbatim. */
+const CODE_LABELS: Record<string, string> = {
+  flux_timeout: "Flux quá thời gian chờ",
+  flux_failed: "Flux báo lỗi",
+  flux_moderated: "Flux từ chối nội dung",
+  flux_unavailable: "Không gọi được Flux",
+  twistfit_limit: "Hết lượt Twistfit của link",
+  busy: "Đang bận",
+  concurrent_limit: "Đang bận",
+  global_concurrent_limit: "Đang bận",
+  cancelled: "Bị huỷ khi dịch vụ tắt",
+};
+
+/** How an event `detail` is shown: garments (+ model) as text, an error code labelled, else clipped JSON. */
 export function describeDetail(detail: unknown): DetailView {
   if (detail === null || detail === undefined) return { kind: "none", text: "—" };
   if (typeof detail === "object" && !Array.isArray(detail)) {
     const record = detail as Record<string, unknown>;
     if (Array.isArray(record.garments) && record.garments.length > 0) {
-      return { kind: "text", text: `Đồ đã chọn: ${record.garments.map(String).join(", ")}` };
+      const garments = `Đồ đã chọn: ${record.garments.map(String).join(", ")}`;
+      const text = typeof record.model === "string" ? `${garments} · Người mẫu: ${record.model}` : garments;
+      return { kind: "text", text };
     }
-    if (typeof record.code === "string") return { kind: "code", text: record.code };
+    if (typeof record.code === "string") {
+      const label = Object.hasOwn(CODE_LABELS, record.code) ? CODE_LABELS[record.code] : record.code;
+      return { kind: "code", text: label };
+    }
   }
   let text: string;
   try {

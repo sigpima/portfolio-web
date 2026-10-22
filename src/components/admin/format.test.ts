@@ -35,6 +35,40 @@ describe("describeDetail", () => {
     });
   });
 
+  it("adds the model when it is a string", () => {
+    expect(describeDetail({ garments: ["áo thun", "quần jeans"], model: "Minh Anh" })).toEqual({
+      kind: "text",
+      text: "Đồ đã chọn: áo thun, quần jeans · Người mẫu: Minh Anh",
+    });
+  });
+
+  it("ignores a model that is not a string", () => {
+    expect(describeDetail({ garments: ["áo thun"], model: 7 })).toEqual({
+      kind: "text",
+      text: "Đồ đã chọn: áo thun",
+    });
+  });
+
+  it("does not treat an empty garments list as a selection", () => {
+    const out = describeDetail({ garments: [], model: "Minh Anh" });
+    expect(out.kind).toBe("text");
+    expect(out.text.startsWith("{")).toBe(true);
+  });
+
+  it.each([
+    ["flux_timeout", "Flux quá thời gian chờ"],
+    ["flux_failed", "Flux báo lỗi"],
+    ["flux_moderated", "Flux từ chối nội dung"],
+    ["flux_unavailable", "Không gọi được Flux"],
+    ["twistfit_limit", "Hết lượt Twistfit của link"],
+    ["busy", "Đang bận"],
+    ["concurrent_limit", "Đang bận"],
+    ["global_concurrent_limit", "Đang bận"],
+    ["cancelled", "Bị huỷ khi dịch vụ tắt"],
+  ])("labels the Twistfit code %s", (code, label) => {
+    expect(describeDetail({ code })).toEqual({ kind: "code", text: label });
+  });
+
   it("shows an error code", () => {
     expect(describeDetail({ code: "stream_error" })).toEqual({ kind: "code", text: "stream_error" });
   });
