@@ -144,6 +144,7 @@ describe("forwardTwistfit binary", () => {
       expect(res.status).toBe(200);
       expect(res.headers.get("content-type")).toBe(type.split(";")[0].trim().toLowerCase());
       expect(res.headers.get("cache-control")).toBe("private, max-age=3600");
+      expect(res.headers.get("x-content-type-options")).toBe("nosniff");
       expect(new Uint8Array(await res.arrayBuffer())).toEqual(PNG);
     },
   );
@@ -186,20 +187,32 @@ describe("forwardTwistfit errors", () => {
   });
 
   it("maps an upstream `unauthorized` (internal key mismatch) to 503 demo_disabled and warns once", async () => {
+    // Fresh module state: the one-time flag lives in admin-proxy, shared with the proxy.
+    vi.resetModules();
+    const { forwardTwistfit: freshForward } = await import("./twistfit-proxy");
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     mockFetch(async () => apiError("unauthorized", 401));
-    const first = await forwardTwistfit(req(), "/v1/twistfit/catalog");
-    const second = await forwardTwistfit(req(), "/v1/twistfit/catalog");
-    for (const res of [first, second]) {
+    for (let i = 0; i < 2; i++) {
+      const res = await freshForward(req(), "/v1/twistfit/catalog");
       expect(res.status).toBe(503);
       expect(await res.json()).toEqual({ code: "demo_disabled" });
     }
-    const errorSpy = spies.find((s) => s.getMockName() === "error") ?? spies[3];
-    expect(errorSpy.mock.calls.length).toBeLessThanOrEqual(1);
+    expect(errorSpy).toHaveBeenCalledTimes(1);
+    const message = errorSpy.mock.calls[0].map(String).join(" ");
+    expect(message).toContain("PORTFOLIO_API_KEY");
+    expect(message).not.toContain(KEY);
+    expect(message).not.toContain(SESSION);
   });
 
   it.each([
     ["unknown code on a known status", () => apiError("something_else", 429)],
     ["known code on an unknown status", () => apiError("busy", 418)],
+    ["503 invite_required (mismatched pair)", () => apiError("invite_required", 503)],
+    ["429 not_found (mismatched pair)", () => apiError("not_found", 429)],
+    ["404 busy (mismatched pair)", () => apiError("busy", 404)],
+    ["422 twistfit_limit (mismatched pair)", () => apiError("twistfit_limit", 422)],
+    ["401 demo_disabled (mismatched pair)", () => apiError("demo_disabled", 401)],
+    ["429 rate_limited (chat code, not a twistfit one)", () => apiError("rate_limited", 429)],
     ["a 500", () => apiError("internal", 500)],
     ["a 502 HTML page", () => new Response("<html>bad gateway</html>", { status: 502, headers: { "content-type": "text/html" } })],
     ["a 404 with a non-JSON body", () => new Response("nope", { status: 404 })],

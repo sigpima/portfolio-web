@@ -19,16 +19,17 @@ const MAX_JSON_BYTES = 256 * 1024;
 const IMAGE_CACHE_CONTROL = "private, max-age=3600";
 /** Image types portfolio-api serves; anything else upstream is refused (no SVG/HTML to the browser). */
 const IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
-/** Upstream error statuses and codes that are relayed; everything else becomes `demo_disabled`. */
-const RELAYED_STATUSES = new Set([401, 404, 413, 422, 429, 503]);
-const RELAYED_CODES = new Set([
-  "invite_required",
-  "not_found",
-  "too_long",
-  "invalid_request",
-  "twistfit_limit",
-  "busy",
-  "demo_disabled",
+/**
+ * Upstream error (status -> codes) pairs that are relayed, exactly those portfolio-api's
+ * twistfit router can emit; any other pair becomes 503 `demo_disabled`.
+ */
+const RELAYED_ERRORS: ReadonlyMap<number, ReadonlySet<string>> = new Map([
+  [401, new Set(["invite_required"])],
+  [404, new Set(["not_found"])],
+  [413, new Set(["too_long"])],
+  [422, new Set(["invalid_request"])],
+  [429, new Set(["busy", "twistfit_limit"])],
+  [503, new Set(["demo_disabled"])],
 ]);
 
 /** Shape of a job/result id and of an asset id (what portfolio-api issues or the catalog holds). */
@@ -71,10 +72,9 @@ async function relayError(upstream: Response): Promise<Response> {
     flagKeyMismatch();
     return jsonError("demo_disabled", 503);
   }
-  if (code === null || !RELAYED_STATUSES.has(upstream.status) || !RELAYED_CODES.has(code)) {
+  if (code === null || !RELAYED_ERRORS.get(upstream.status)?.has(code)) {
     return jsonError("demo_disabled", 503);
   }
-  if (upstream.status === 401 && code !== "invite_required") return jsonError("demo_disabled", 503);
   // Relay only the code, never other fields the upstream body may carry.
   return jsonError(code, upstream.status);
 }
@@ -146,7 +146,11 @@ export async function forwardTwistfit(
       clearTimeout(timer);
       return new Response(upstream.body, {
         status: 200,
-        headers: { "content-type": mediaType(upstream), "cache-control": IMAGE_CACHE_CONTROL },
+        headers: {
+          "content-type": mediaType(upstream),
+          "cache-control": IMAGE_CACHE_CONTROL,
+          "x-content-type-options": "nosniff",
+        },
       });
     }
 

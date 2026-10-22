@@ -76,6 +76,7 @@ describe("GET /api/twistfit/assets/[kind]/[id]", () => {
     expect(res.status).toBe(200);
     expect(res.headers.get("content-type")).toBe("image/jpeg");
     expect(res.headers.get("cache-control")).toBe("private, max-age=3600");
+    expect(res.headers.get("x-content-type-options")).toBe("nosniff");
     expect(new Uint8Array(await res.arrayBuffer())).toEqual(JPEG);
     expect(fetchMock.mock.calls[0][0]).toBe(`${API}/v1/twistfit/assets/${kind}/ao-dai_01`);
   });
