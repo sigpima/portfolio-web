@@ -51,7 +51,13 @@ const SECONDARY_BUTTON =
   "inline-flex min-h-11 items-center justify-center rounded-lg border border-secondary px-4 py-2.5 text-body-md text-secondary hover:bg-secondary/10 disabled:cursor-not-allowed disabled:opacity-50";
 const CHOICE_CARD =
   "flex cursor-pointer flex-col gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest p-2 hover:border-secondary has-checked:border-secondary has-checked:bg-secondary/10 has-[[aria-disabled=true]]:cursor-not-allowed has-[[aria-disabled=true]]:opacity-50 has-[[aria-disabled=true]]:hover:border-outline-variant";
-const THUMB = "block aspect-[3/4] h-auto w-full rounded-md bg-surface-container-high object-cover";
+/**
+ * Thumbnail box: 4:5 but never taller than 13rem, so a row of cards stays compact on wide
+ * screens; `object-contain` on a neutral surface never crops a garment or a model.
+ */
+const THUMB = "block aspect-[4/5] max-h-52 w-full rounded-md bg-surface-container-high object-contain";
+/** Choice grids: 2 columns on phones, 3 from md, 4 from lg. */
+const CHOICE_GRID = "grid grid-cols-2 gap-2.5 md:grid-cols-3 lg:grid-cols-4";
 
 export interface TwistfitDemoProps {
   /** Route locale; text and names follow the surrounding NextIntlClientProvider (same value). */
@@ -214,6 +220,11 @@ export function TwistfitDemo({ onInviteRequired }: TwistfitDemoProps) {
     requestFocus("error");
   };
 
+  const backToModel = () => {
+    setRun({ phase: "idle" });
+    goTo(2);
+  };
+
   const startOver = () => {
     setRun({ phase: "idle" });
     goTo(1);
@@ -301,7 +312,7 @@ export function TwistfitDemo({ onInviteRequired }: TwistfitDemoProps) {
               {t("items.count", { count: selected.size, max: catalog.max_items })}
             </p>
           </div>
-          <ul role="list" className="m-0 grid list-none grid-cols-2 gap-2.5 p-0 sm:grid-cols-3">
+          <ul role="list" className={`m-0 list-none p-0 ${CHOICE_GRID}`}>
             {catalog.items.map((item) => {
               const checked = selected.has(item.id);
               const name = item.name[lang];
@@ -353,7 +364,7 @@ export function TwistfitDemo({ onInviteRequired }: TwistfitDemoProps) {
         <div className="flex flex-col gap-3">
           {stepHeading("model")}
           <p className="text-body-md text-on-surface-variant">{t("model.hint")}</p>
-          <div role="radiogroup" aria-labelledby={headingId} className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+          <div role="radiogroup" aria-labelledby={headingId} className={CHOICE_GRID}>
             {catalog.models.map((entry) => {
               const name = entry.name[lang];
               return (
@@ -397,7 +408,15 @@ export function TwistfitDemo({ onInviteRequired }: TwistfitDemoProps) {
       ) : null}
 
       {catalog && step === 3 ? (
-        <section aria-labelledby={headingId} className="flex flex-col gap-3">
+        <section
+          aria-labelledby={headingId}
+          className={`flex flex-col gap-3 ${
+            // With a result, wide screens put it beside the summary and actions (DOM order kept).
+            run.phase === "done"
+              ? "lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:grid-rows-[auto_auto_auto_1fr] lg:gap-x-6 lg:[&>*]:col-start-1"
+              : ""
+          }`}
+        >
           {stepHeading("generate")}
           <dl className="m-0 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-body-md">
             <dt className="text-on-surface-variant">{t("summary.items")}</dt>
@@ -441,7 +460,7 @@ export function TwistfitDemo({ onInviteRequired }: TwistfitDemoProps) {
           ) : null}
 
           {run.phase === "done" ? (
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 lg:col-start-2! lg:row-span-4 lg:row-start-1">
               <h4 ref={resultHeadingRef} tabIndex={-1} className="text-headline-md text-on-surface">
                 {t("result.title")}
               </h4>
@@ -456,38 +475,36 @@ export function TwistfitDemo({ onInviteRequired }: TwistfitDemoProps) {
                 width={768}
                 height={1024}
                 onError={resultFailed}
-                className="block h-auto w-full max-w-md rounded-lg border border-outline-variant"
+                className="block h-auto max-h-[70vh] w-full max-w-sm rounded-lg border border-outline-variant bg-surface-container-high object-contain lg:max-w-none"
               />
             </div>
           ) : null}
 
-          <div className="flex flex-wrap justify-between gap-2">
-            <button
-              type="button"
-              disabled={running}
-              onClick={() => {
-                setRun({ phase: "idle" });
-                goTo(2);
-              }}
-              className={SECONDARY_BUTTON}
-            >
-              {t("back")}
-            </button>
-            {run.phase === "done" ? (
-              <div className="flex flex-wrap gap-2">
-                <a href={resultUrl(run.resultId)} download="twistfit.png" className={SECONDARY_BUTTON}>
-                  {t("download")}
-                </a>
-                <button type="button" onClick={startOver} className={PRIMARY_BUTTON}>
-                  {t("regenerate")}
-                </button>
-              </div>
-            ) : run.phase === "error" ? null : (
-              <button type="button" disabled={running} onClick={() => void generate()} className={PRIMARY_BUTTON}>
-                {t("generate")}
+          {run.phase === "done" ? (
+            // Primary action first; on phones it takes a full row and the other two share one.
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap lg:self-start">
+              <button type="button" onClick={startOver} className={`col-span-2 ${PRIMARY_BUTTON}`}>
+                {t("regenerate")}
               </button>
-            )}
-          </div>
+              <a href={resultUrl(run.resultId)} download="twistfit.png" className={SECONDARY_BUTTON}>
+                {t("download")}
+              </a>
+              <button type="button" onClick={backToModel} className={SECONDARY_BUTTON}>
+                {t("back")}
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-wrap justify-between gap-2">
+              <button type="button" disabled={running} onClick={backToModel} className={SECONDARY_BUTTON}>
+                {t("back")}
+              </button>
+              {run.phase === "error" ? null : (
+                <button type="button" disabled={running} onClick={() => void generate()} className={PRIMARY_BUTTON}>
+                  {t("generate")}
+                </button>
+              )}
+            </div>
+          )}
         </section>
       ) : null}
 
