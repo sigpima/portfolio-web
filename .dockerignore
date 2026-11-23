@@ -22,3 +22,7 @@ docker-compose.yml
 screenshots
 *.screenshot.png
 .playwright*
+
+# Not needed to build the image
+docker-compose.prod.yml
+.github

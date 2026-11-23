@@ -1,0 +1,87 @@
+# Bản PROD của cả hai image (web + portfolio-api), chỉ có `image:` và không có `build:`.
+# Trên server: thư mục ~/portfolio/ chỉ có 3 file: file này, update.sh và .env (đưa lên bằng scp).
+# Trong .env trên server đặt COMPOSE_FILE=docker-compose.prod.yml (xem deploy/.env.example) để `docker compose` và update.sh dùng file này.
+# Compose dev nằm ở docker-compose.yml (web) và ../api/docker-compose.yml; không dùng chúng trên server.
+#
+# Kiến trúc: trình duyệt -> nginx (host, TLS) -> web (127.0.0.1:34010) -> portfolio-api -> chat (knowledge_base).
+# portfolio-api KHÔNG publish cổng nào ra host: chỉ web gọi nó qua mạng nội bộ của project, kèm PORTFOLIO_API_KEY.
+# Web KHÔNG gắn vào mạng của knowledge_base (không với tới chat:8003 để lách cổng); chỉ portfolio-api gắn cả hai mạng.
+#
+# Điều kiện: stack `chat` của knowledge_base đã chạy trên server và tạo mạng ngoài KB_NETWORK
+# (mặc định knowledge_base_default; kiểm tra bằng `docker network ls`).
+
+name: portfolio
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  portfolio-api:
+    image: ghcr.io/sigpima/portfolio-api:${API_IMAGE_TAG:-latest}
+    restart: unless-stopped
+    # Lớn hơn --timeout-graceful-shutdown 20 của uvicorn để luồng chat kịp kết thúc gọn.
+    stop_grace_period: 30s
+    volumes:
+      - data:/data                  # SQLite: link mời, phiên, nhật ký, góp ý
+    environment:
+      PORTFOLIO_API_KEY: ${PORTFOLIO_API_KEY:?đặt PORTFOLIO_API_KEY trong .env (>= 32 ký tự ASCII nhìn thấy được, không khoảng trắng)}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?đặt ADMIN_PASSWORD trong .env (12..1024 ký tự)}
+      CHAT_BACKEND_URL: ${CHAT_BACKEND_URL:-http://chat:8003}
+      SESSION_TTL_DAYS: ${SESSION_TTL_DAYS:-30}
+      ADMIN_SESSION_TTL_MINUTES: ${ADMIN_SESSION_TTL_MINUTES:-120}
+      # Twistfit chạy thật (Flux) đang tắt: trang chỉ ghi "Demo sắp có". Không đặt FLUX_API_KEY thì tính năng tắt.
+    healthcheck:
+      # Ảnh slim không có curl nên dùng urllib của Python.
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8100/healthz', timeout=2)"
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    networks:
+      - default   # để web gọi được portfolio-api:8100
+      - kb        # để portfolio-api gọi được chat:8003
+    logging: *logging
+
+  web:
+    image: ghcr.io/sigpima/portfolio-web:${WEB_IMAGE_TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      portfolio-api:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:34010:3000"      # chỉ localhost; nginx host là cổng ra internet. Cổng ghi trong ~/.claude/standards/deploy-ghcr/ports.md
+    environment:
+      PORTFOLIO_API_URL: http://portfolio-api:8100
+      PORTFOLIO_API_KEY: ${PORTFOLIO_API_KEY:?đặt PORTFOLIO_API_KEY trong .env (cùng giá trị với portfolio-api)}
+      # Giá trị thật được nướng vào ảnh lúc build (xem .github/workflows/image.yml); đây chỉ để khớp lúc chạy.
+      SITE_URL: ${SITE_URL:-https://portfolio.sigpima.space}
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/robots.txt').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - default
+    logging: *logging
+
+networks:
+  default: {}
+  # Mạng ngoài của stack knowledge_base (do stack đó tạo).
+  kb:
+    name: ${KB_NETWORK:-knowledge_base_default}
+    external: true
+
+volumes:
+  data:

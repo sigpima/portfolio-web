@@ -2,8 +2,8 @@
 # Sao chép vào cấu hình nginx của host (ví dụ /etc/nginx/sites-available/<ten-mien>, file này
 # được include bên trong khối `http { }`), thay các giá trị TODO, rồi `nginx -t` và reload.
 #
-# 127.0.0.1:3100 là cổng service `portfolio` publish ra host (docker-compose.yml).
-# Chỉ web được đưa ra internet; portfolio-api (127.0.0.1:8100) và chat (127.0.0.1:8003)
+# 127.0.0.1:34010 là cổng service `web` publish ra host (docker-compose.prod.yml; sổ cổng: ~/.claude/standards/deploy-ghcr/ports.md).
+# Chỉ web được đưa ra internet; portfolio-api (không publish cổng nào) và chat (127.0.0.1:8003)
 # KHÔNG BAO GIỜ được proxy ra ngoài.
 #
 # Địa chỉ IP thật của người xem:
@@ -33,20 +33,22 @@ limit_req_zone $binary_remote_addr zone=chat_status:10m rate=30r/m;
 # Twistfit: mỗi POST /api/twistfit/run bị từ chối (hết lượt, bận, thân sai) vẫn ghi một dòng `blocked` vào nhật ký,
 # nên một link bị lạm dụng có thể làm ngập nhật ký; giới hạn riêng tuyến này (6 lượt/phút/IP, burst 4).
 limit_req_zone $binary_remote_addr zone=twistfit_run:10m rate=6r/m;
+# Góp ý ở mục Liên hệ: mỗi POST /api/feedback ghi một dòng vào DB, nên giới hạn thêm ở nginx.
+limit_req_zone $binary_remote_addr zone=feedback:10m rate=6r/m;
 
 server {
     listen 80;
-    server_name example.com www.example.com;   # TODO: tên miền thật
+    server_name portfolio.sigpima.space;
     return 301 https://$host$request_uri;
 }
 
 server {
     listen 443 ssl;
     http2 on;   # cần nginx >= 1.25.1; với bản cũ hơn bỏ dòng này và viết `listen 443 ssl http2;` ở trên
-    server_name example.com www.example.com;   # TODO: tên miền thật
+    server_name portfolio.sigpima.space;
 
-    ssl_certificate     /etc/letsencrypt/live/example.com/fullchain.pem;   # TODO: đường dẫn chứng chỉ TLS
-    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;     # TODO: đường dẫn khoá TLS
+    ssl_certificate     /etc/letsencrypt/live/portfolio.sigpima.space/fullchain.pem;   # certbot --nginx -d portfolio.sigpima.space
+    ssl_certificate_key /etc/letsencrypt/live/portfolio.sigpima.space/privkey.pem;
 
     # Thân yêu cầu lớn nhất của site là vài KB (câu hỏi chat, đăng nhập, tạo link).
     client_max_body_size 64k;
@@ -66,7 +68,7 @@ server {
         limit_req zone=chat_stream burst=4 nodelay;
         error_page 429 = @rate_limited;
 
-        proxy_pass http://127.0.0.1:3100;
+        proxy_pass http://127.0.0.1:34010;
         proxy_http_version 1.1;
         proxy_set_header Connection "";
         proxy_buffering off;
@@ -85,7 +87,7 @@ server {
         limit_req zone=chat_status burst=20 nodelay;
         error_page 429 = @rate_limited;
 
-        proxy_pass http://127.0.0.1:3100;
+        proxy_pass http://127.0.0.1:34010;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $remote_addr;
@@ -99,7 +101,19 @@ server {
         limit_req zone=twistfit_run burst=4 nodelay;
         error_page 429 = @rate_limited;
 
-        proxy_pass http://127.0.0.1:3100;
+        proxy_pass http://127.0.0.1:34010;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Góp ý gắn với mã mời (chỉ người có link mới gửi được); giới hạn để không ai làm ngập DB.
+    location = /api/feedback {
+        limit_req zone=feedback burst=3 nodelay;
+        error_page 429 = @rate_limited;
+
+        proxy_pass http://127.0.0.1:34010;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $remote_addr;
@@ -119,7 +133,7 @@ server {
         error_log /dev/null crit;
         limit_req zone=invite_open burst=10 nodelay;
 
-        proxy_pass http://127.0.0.1:3100;
+        proxy_pass http://127.0.0.1:34010;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $remote_addr;
@@ -144,7 +158,7 @@ server {
         allow 192.0.2.1;   # TODO: IP của bạn
         deny all;
 
-        proxy_pass http://127.0.0.1:3100;
+        proxy_pass http://127.0.0.1:34010;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $remote_addr;
@@ -157,7 +171,7 @@ server {
         limit_req zone=admin_login burst=5 nodelay;
         error_page 429 = @rate_limited;
 
-        proxy_pass http://127.0.0.1:3100;
+        proxy_pass http://127.0.0.1:34010;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $remote_addr;
@@ -168,7 +182,7 @@ server {
         allow 192.0.2.1;   # TODO: IP của bạn (giống /admin)
         deny all;
 
-        proxy_pass http://127.0.0.1:3100;
+        proxy_pass http://127.0.0.1:34010;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $remote_addr;
@@ -177,7 +191,7 @@ server {
     # ---------------------------------------------------------------------------------------
 
     location / {
-        proxy_pass http://127.0.0.1:3100;
+        proxy_pass http://127.0.0.1:34010;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $remote_addr;
