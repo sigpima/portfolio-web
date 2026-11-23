@@ -1,15 +1,15 @@
 # portfolio-web
 
 **EN:** Bilingual (Vietnamese / English) portfolio website built with Next.js 16 (`output: "standalone"`).
-Projects are registry-driven (`src/content`). The Knowledge Base and Twistfit demos run live only for visitors who opened an
-invite link (`/i/<token>`) with that feature enabled; everyone else sees a replay. Replays are labelled placeholder samples until real runs are recorded (none are yet, for either demo). The server-side routes talk to the
+Projects are registry-driven (`src/content`). The Knowledge Base demo runs live only for visitors who opened an
+invite link (`/i/<token>`) with that feature enabled; everyone else sees a replay. Twistfit and Gia pha currently show "demo coming soon" and link to their real websites (`website`, `demoSoon` in `src/content/projects`); their demo code is kept dormant. Replays are labelled placeholder samples until real runs are recorded (none are yet). The server-side routes talk to the
 internal `portfolio-api` service (invite links, sessions, per-link usage log, admin at `/admin`), which is the only
-thing that calls the chat bot and Flux. The Gia pha demo is a simulation and is labelled as such.
+thing that calls the chat bot and Flux.
 
 **VI:** Website portfolio song ngữ (Việt / Anh) dựng bằng Next.js 16. Nội dung dự án lấy từ `src/content`.
-Demo Knowledge Base và Twistfit chỉ chạy thật với người đã mở link mời (`/i/<mã>`) có bật tính năng đó; người khác xem bản phát lại. Bản phát lại là mẫu giữ chỗ (có nhãn) cho tới khi ghi được lần chạy thật (hiện chưa có lần nào, ở cả hai demo).
+Demo Knowledge Base chỉ chạy thật với người đã mở link mời (`/i/<mã>`) có bật tính năng đó; người khác xem bản phát lại. Twistfit và Gia phả hiện ghi "Demo sắp có" và dẫn tới website thật (`website`, `demoSoon` trong `src/content/projects`); code demo của hai dự án này được giữ nguyên nhưng không hiển thị. Bản phát lại là mẫu giữ chỗ (có nhãn) cho tới khi ghi được lần chạy thật (hiện chưa có lần nào).
 Các route phía máy chủ gọi dịch vụ nội bộ `portfolio-api` (link mời, phiên, nhật ký theo link, trang quản trị `/admin`);
-chỉ `portfolio-api` gọi bot chat và Flux. Demo Gia phả (mô phỏng) được gắn nhãn đúng bản chất.
+chỉ `portfolio-api` gọi bot chat và Flux.
 
 ## Environment / Biến môi trường
 

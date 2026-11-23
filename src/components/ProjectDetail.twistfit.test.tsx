@@ -1,14 +1,14 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getProject } from "@/content/registry";
+import { twistfitLive } from "@/test-utils/twistfit-live";
 import type { Locale } from "@/content/types";
 import { InviteSessionProvider } from "@/lib/invite/use-invite-session";
 import viMessages from "../../messages/vi.json";
 import enMessages from "../../messages/en.json";
 import { ProjectDetail } from "./ProjectDetail";
 
-const twistfit = getProject("twistfit")!;
+const twistfit = twistfitLive;
 const OFF = { chat: false, twistfit: false, gia_pha: false };
 const CHAT_ONLY = { chat: true, twistfit: false, gia_pha: false };
 const ON = { chat: false, twistfit: true, gia_pha: false };

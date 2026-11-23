@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { getProject } from "../registry";
+import { giaPhaSimulation, twistfitLive } from "@/test-utils/twistfit-live";
 import type { Project } from "../types";
 import { isPlaceholderDemo, placeholderQualifier, placeholderQualifierOf, replaysByDemoComponent } from "./index";
 import { knowledgeBaseReplayFor } from "./knowledge-base";
@@ -18,7 +19,7 @@ function sample(id: string, placeholder?: boolean): ReplaySample {
   };
 }
 
-const twistfit = getProject("twistfit")!;
+const twistfit = twistfitLive;
 const withComponent = (component: string): Project => ({ ...twistfit, demo: { component } });
 
 describe("isPlaceholderDemo", () => {
@@ -41,6 +42,7 @@ describe("isPlaceholderDemo", () => {
   it("reads the real replay data: Twistfit is a placeholder today, Gia phả is not", () => {
     expect(isPlaceholderDemo(twistfit)).toBe(true);
     expect(isPlaceholderDemo(getProject("gia-pha")!)).toBe(false);
+    expect(isPlaceholderDemo(giaPhaSimulation)).toBe(false);
   });
 
   it("Knowledge Base: placeholder exactly while no recorded sample exists", () => {
@@ -94,6 +96,7 @@ describe("placeholder wording variant", () => {
   it("reads the real data: Twistfit (images) keeps the images wording, Knowledge Base gets facts", () => {
     expect(placeholderQualifier(twistfit)).toBe("placeholder");
     expect(placeholderQualifier(getProject("gia-pha")!)).toBeUndefined();
+    expect(placeholderQualifier(giaPhaSimulation)).toBeUndefined();
     const kb = getProject("knowledge-base")!;
     expect(placeholderQualifier(kb)).toBe(recordedSamples.length === 0 ? "placeholderFacts" : undefined);
     expect(placeholderQualifier(kb, { ...replaysByDemoComponent, "knowledge-base": knowledgeBaseReplayFor([]) })).toBe(

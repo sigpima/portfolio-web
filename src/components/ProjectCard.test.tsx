@@ -1,14 +1,15 @@
 import { render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import { describe, expect, it } from "vitest";
-import type { Locale } from "@/content/types";
+import type { Locale, Project } from "@/content/types";
+import { twistfitLive } from "@/test-utils/twistfit-live";
 import { getProject } from "@/content/registry";
 import viMessages from "../../messages/vi.json";
 import enMessages from "../../messages/en.json";
 import { ProjectCard } from "./ProjectCard";
 
-function renderCard(slug: string, locale: Locale) {
-  const project = getProject(slug)!;
+function renderCard(slugOrProject: string | Project, locale: Locale) {
+  const project = typeof slugOrProject === "string" ? getProject(slugOrProject)! : slugOrProject;
   return render(
     <NextIntlClientProvider locale={locale} messages={locale === "vi" ? viMessages : enMessages}>
       <ProjectCard project={project} locale={locale} />
@@ -33,12 +34,13 @@ describe("ProjectCard", () => {
     expect(screen.queryByText("Live", { exact: true })).toBeNull();
   });
 
-  it("shows the English title, group and demo label", () => {
+  it("shows the English title, group and the coming-soon label, with no live or replay label", () => {
     renderCard("twistfit", "en");
     const link = screen.getByRole("link", { name: /Twistfit: outfit matching by personal colour/ });
     expect(link).toHaveAttribute("href", "/en/projects/twistfit");
     expect(screen.getByText("Website")).toBeInTheDocument();
-    expect(screen.getByText("Live · invite only")).toBeInTheDocument();
+    expect(screen.getByText("Demo coming soon")).toBeInTheDocument();
+    expect(screen.queryByText("Live · invite only")).toBeNull();
     expect(screen.queryByText("Replay of a real run")).toBeNull();
     expect(
       screen.getByText("A fashion website that suggests outfits from your wardrobe and renders a try-on image with Flux."),
@@ -55,7 +57,7 @@ describe("ProjectCard", () => {
     ["en", "Placeholder images and facts"],
   ] as const) {
     it(`labels the Twistfit card invite-only and shows no placeholder chip on it (the replay is qualified in the demo) in ${locale}`, () => {
-      renderCard("twistfit", locale);
+      renderCard(twistfitLive, locale);
       expect(
         screen.getByText(locale === "vi" ? "Chạy thật · cần link mời" : "Live · invite only", { exact: true }),
       ).toBeInTheDocument();

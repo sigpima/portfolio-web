@@ -11,9 +11,19 @@ describe("project registry", () => {
 
   it("maps each project to its demo kind", () => {
     expect(getProject("knowledge-base")?.demoKind).toBe("live");
-    expect(getProject("twistfit")?.demoKind).toBe("live");
-    expect(getProject("gia-pha")?.demoKind).toBe("simulation");
+    // Twistfit and Gia phả have no demo for now: "coming soon", with a link to the real website.
+    for (const slug of ["twistfit", "gia-pha"]) {
+      const project = getProject(slug)!;
+      expect(project.demoKind, slug).toBe("none");
+      expect(project.demo, slug).toBeUndefined();
+      expect(project.demoSoon, slug).toBe(true);
+    }
     expect(getProject("nope")).toBeUndefined();
+  });
+
+  it("links each coming-soon project to its real website", () => {
+    expect(getProject("gia-pha")?.website).toBe("https://genealogy.sigpima.space");
+    expect(getProject("twistfit")?.website).toBe("https://twistfit.org");
   });
 
   it("lists the known website projects in the website group", () => {

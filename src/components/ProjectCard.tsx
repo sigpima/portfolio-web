@@ -22,6 +22,9 @@ export function staticDemoLabelKey(kind: Exclude<DemoKind, "none">): "liveInvite
   return kind === "live" ? "liveInvite" : kind;
 }
 
+/** Chip for a project whose demo is not available yet. */
+export const SOON_CHIP_STYLE = "border-dashed border-on-surface-variant text-on-surface";
+
 export const chipClass =
   "inline-flex items-center rounded border px-2 py-0.5 font-mono text-label-mono-sm";
 
@@ -62,6 +65,10 @@ export function ProjectCard({
               {placeholder ? (
                 <span className={placeholderChipClass}>{t(`demo.badgeQualifier.${placeholder}.chip`)}</span>
               ) : null}
+            </span>
+          ) : project.demoSoon ? (
+            <span className={`${chipClass} bg-surface-container-lowest/90 ${SOON_CHIP_STYLE}`}>
+              {t("demo.soon.label")}
             </span>
           ) : null}
         </div>

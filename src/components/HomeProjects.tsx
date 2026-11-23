@@ -2,7 +2,14 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { placeholderQualifier } from "@/content/replays";
 import type { Locale, Project } from "@/content/types";
-import { DEMO_CHIP_STYLE, ProjectCard, chipClass, placeholderChipClass, staticDemoLabelKey } from "./ProjectCard";
+import {
+  DEMO_CHIP_STYLE,
+  ProjectCard,
+  SOON_CHIP_STYLE,
+  chipClass,
+  placeholderChipClass,
+  staticDemoLabelKey,
+} from "./ProjectCard";
 
 const eyebrowClass = "font-mono text-label-mono-sm uppercase text-secondary";
 const sectionTitleClass = "text-headline-lg-mobile text-on-surface md:text-headline-lg";
@@ -31,6 +38,8 @@ function FeaturedCard({ project, locale }: { project: Project; locale: Locale })
             <span className={`${chipClass} ${DEMO_CHIP_STYLE[project.demoKind]}`}>
               {t(`demo.badge.${staticDemoLabelKey(project.demoKind)}.label`)}
             </span>
+          ) : project.demoSoon ? (
+            <span className={`${chipClass} ${SOON_CHIP_STYLE}`}>{t("demo.soon.label")}</span>
           ) : null}
           {placeholder ? (
             <span className={placeholderChipClass}>{t(`demo.badgeQualifier.${placeholder}.chip`)}</span>
@@ -63,6 +72,15 @@ function FeaturedCard({ project, locale }: { project: Project; locale: Locale })
             >
               {t("home.featured.cta")}
             </Link>
+          ) : project.demoSoon && project.website ? (
+            <a
+              href={project.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-lg bg-primary px-4 py-2.5 text-body-md font-semibold text-on-primary transition-colors hover:bg-primary-fixed"
+            >
+              {t("detail.visitSite")} <span aria-hidden="true">↗</span>
+            </a>
           ) : null}
           <Link
             href={`/${locale}/projects/${project.slug}`}

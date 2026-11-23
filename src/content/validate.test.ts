@@ -71,4 +71,24 @@ describe("validateProjects", () => {
     const errors = validateProjects([make({ demo: { component: "demo-a" } })], known);
     expect(errors.some((e) => e.includes('"none" nhưng lại có demo'))).toBe(true);
   });
+
+  it("accepts demoSoon with a none demo and an https website", () => {
+    const errors = validateProjects([make({ demoSoon: true, website: "https://example.com" })], known);
+    expect(errors).toEqual([]);
+  });
+
+  it("reports demoSoon together with a demo kind", () => {
+    const errors = validateProjects(
+      [make({ demoKind: "live", demo: { component: "demo-a" }, demoSoon: true })],
+      known,
+    );
+    expect(errors.some((e) => e.includes("demoSoon"))).toBe(true);
+  });
+
+  it("reports a website that is not an https address", () => {
+    for (const website of ["http://example.com", "example.com", "javascript:alert(1)", "https://"]) {
+      const errors = validateProjects([make({ website })], known);
+      expect(errors.some((e) => e.includes("website")), website).toBe(true);
+    }
+  });
 });

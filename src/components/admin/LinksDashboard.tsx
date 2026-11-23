@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import CreateLinkForm from "./CreateLinkForm";
 import LinkEventsLog from "./LinkEventsLog";
+import LinkFeedback from "./LinkFeedback";
 import LinksTable from "./LinksTable";
 import LoginForm from "./LoginForm";
 import type { AdminLink } from "./types";
@@ -103,7 +104,7 @@ export default function LinksDashboard({ siteUrl }: LinksDashboardProps) {
           <p className="font-mono text-label-mono-sm uppercase text-secondary">Quản trị · chỉ mình bạn</p>
           <h1 className="mt-0.5 text-headline-lg-mobile text-on-surface">Link mời</h1>
           <p className="text-body-md text-outline">
-            Tạo link cho từng người, xem họ đã dùng tính năng nào. Câu hỏi của họ không được lưu.
+            Tạo link cho từng người, xem họ đã dùng tính năng nào và đọc góp ý họ gửi. Câu hỏi của họ cho bot không được lưu.
           </p>
         </div>
         <button type="button" className={ghostButton} onClick={() => void logout()} disabled={loggingOut}>
@@ -153,12 +154,19 @@ export default function LinksDashboard({ siteUrl }: LinksDashboardProps) {
         )}
         <p className="mt-4 text-label-mono-sm text-outline">
           Không ghi: nội dung câu hỏi, câu trả lời của bot, địa chỉ IP, chuỗi trình duyệt. Chỉ ghi link nào, tính năng
-          nào, lúc nào, kết quả, và danh mục đồ đã chọn ở Twistfit.
+          nào, lúc nào, kết quả, và danh mục đồ đã chọn ở Twistfit. Ngoại lệ: góp ý người có link gửi qua ô Liên hệ được
+          lưu nguyên văn ở khung Góp ý bên dưới.
         </p>
         <p className="mt-2 text-label-mono-sm text-outline">
           Lưu ý: một số công cụ xem trước link hoặc quét email có thể được tính là một lần &apos;Mở link&apos;.
         </p>
       </section>
+
+      {selected ? (
+        <section className={card}>
+          <LinkFeedback key={selected.id} link={selected} onUnauthorized={unauthorized} />
+        </section>
+      ) : null}
     </div>
   );
 }

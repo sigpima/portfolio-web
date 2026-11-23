@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { FeedbackField } from "@/components/FeedbackField";
 import { HomeProjectSections, splitHomeProjects } from "@/components/HomeProjects";
 import OrbitAvatar, { type OrbitLink } from "@/components/OrbitAvatar";
 import { chipClass, DEMO_CHIP_STYLE } from "@/components/ProjectCard";
@@ -12,7 +13,7 @@ import type { DemoKind, Locale } from "@/content/types";
 import { routing } from "@/i18n/routing";
 import { languageAlternates } from "@/lib/alternates";
 
-const BADGE_KINDS: Exclude<DemoKind, "none">[] = ["live", "replay", "simulation"];
+const BADGE_KINDS: Exclude<DemoKind, "none">[] = ["live", "replay"];
 
 const eyebrowClass = "font-mono text-label-mono-sm uppercase text-secondary";
 const sectionTitleClass = "text-headline-lg-mobile text-on-surface md:text-headline-lg";
@@ -166,6 +167,9 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               {t("home.contact.title")}
             </h2>
             <p className="text-body-lg text-on-surface-variant">{t("home.contact.lead")}</p>
+            <div className="mt-4 w-full max-w-md">
+              <FeedbackField email={site.email} />
+            </div>
           </div>
           <ul className="flex min-w-0 flex-col gap-2">
             {contacts.map((c) => (

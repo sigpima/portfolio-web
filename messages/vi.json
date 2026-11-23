@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Portfolio AI Engineer",
-    "description": "Portfolio của một AI Engineer: các dự án có demo chạy thật (khi có link mời), bản phát lại và bản mô phỏng, được ghi nhãn trung thực."
+    "description": "Portfolio của một AI Engineer: các dự án có demo chạy thật (khi có link mời) hoặc bản phát lại, được ghi nhãn trung thực."
   },
   "header": {
     "brand": "Portfolio · AI Engineer",
@@ -225,6 +225,9 @@
     "chat": {
       "you": "Bạn",
       "bot": "Bot"
+    },
+    "soon": {
+      "label": "Demo sắp có"
     }
   },
   "groups": {
@@ -243,7 +246,7 @@
     "metaTitle": "Trang chủ",
     "hero": {
       "headline": "Tôi xây hệ thống LLM và agent, cùng các sản phẩm web xung quanh chúng.",
-      "lead": "Mỗi dự án dưới đây có bài viết về bài toán, cách làm và một demo được ghi nhãn rõ: chạy thật, phát lại hay mô phỏng.",
+      "lead": "Mỗi dự án dưới đây có bài viết về bài toán, cách làm và một demo được ghi nhãn rõ: chạy thật hoặc phát lại; dự án chưa có demo ghi là sắp có và dẫn tới website thật.",
       "ctaDemo": "Thử demo nổi bật",
       "ctaProjects": "Xem tất cả dự án"
     },
@@ -273,7 +276,23 @@
       "github": "GitHub",
       "linkedin": "LinkedIn",
       "cv": "CV",
-      "pending": "chưa cập nhật"
+      "pending": "chưa cập nhật",
+      "feedback": {
+        "label": "Góp ý hoặc lời nhắn",
+        "placeholder": "Viết một dòng",
+        "submit": "Gửi",
+        "sending": "Đang gửi…",
+        "noteInvited": "Lời nhắn được lưu cùng link mời của bạn để chủ trang đọc.",
+        "noteMail": "Nút này mở ứng dụng email của bạn với lời nhắn đã điền sẵn. Trang này không gửi gì đi.",
+        "subject": "Góp ý về portfolio",
+        "sent": "Đã lưu góp ý của bạn cùng link mời. Cảm ơn bạn!",
+        "errors": {
+          "rateLimited": "Bạn đã gửi khá nhiều góp ý rồi. Hãy thử lại sau ít phút.",
+          "inviteLost": "Link mời của bạn không còn hiệu lực nên chưa lưu được. Bạn vẫn có thể gửi bằng email.",
+          "invalid": "Góp ý trống hoặc quá dài (tối đa 1000 ký tự).",
+          "failed": "Chưa lưu được lúc này. Hãy thử lại sau ít phút."
+        }
+      }
     },
     "others": {
       "eyebrow": "Thêm dự án",
@@ -305,7 +324,13 @@
     "pagerLabel": "Dự án khác",
     "prev": "Dự án trước",
     "next": "Dự án sau",
-    "toDemo": "Xem demo"
+    "toDemo": "Xem demo",
+    "soon": {
+      "title": "Demo sắp có",
+      "body": "Phần demo của dự án này đang được chuẩn bị. Trong lúc chờ, bạn có thể xem website thật.",
+      "bodyNoSite": "Phần demo của dự án này đang được chuẩn bị. Địa chỉ website sẽ được thêm vào đây."
+    },
+    "visitSite": "Truy cập website"
   },
   "notFound": {
     "metaTitle": "Không tìm thấy trang",
@@ -315,7 +340,7 @@
     "projects": "Xem các dự án"
   },
   "footer": {
-    "note": "Demo trên trang được ghi nhãn: chạy thật, phát lại hoặc mô phỏng.",
+    "note": "Demo trên trang được ghi nhãn: chạy thật hoặc phát lại; demo chưa có ghi là sắp có.",
     "navLabel": "Liên kết cuối trang"
   }
 }

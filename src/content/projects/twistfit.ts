@@ -3,7 +3,7 @@ import type { Project } from "../types";
 export const twistfit: Project = {
   slug: "twistfit",
   group: "website",
-  demoKind: "live",
+  demoKind: "none",
   featured: false,
   order: 2,
   title: {
@@ -15,8 +15,8 @@ export const twistfit: Project = {
     en: "A fashion website that suggests outfits from your wardrobe and renders a try-on image with Flux.",
   },
   summary: {
-    vi: "Twistfit là website thời trang (Next.js và FastAPI) có khảo sát màu sắc cá nhân theo mùa, tủ đồ cá nhân và tính năng phối đồ mặc thử. Người dùng tải ảnh quần áo lên tủ đồ; khi chọn dịp hoặc phong cách, hệ thống ghép một bộ phù hợp với màu cá nhân của họ rồi gọi Flux để dựng ảnh người mẫu mặc bộ đó. Demo trên trang này phát lại một lượt mẫu cho người xem; với link mời có bật tính năng này, demo chạy thật: Flux dựng ảnh từ ảnh người mẫu và món đồ có sẵn do chủ trang chuẩn bị.",
-    en: "Twistfit is a fashion website (Next.js and FastAPI) with a seasonal personal-colour quiz, a personal wardrobe and an outfit try-on feature. Users upload clothing photos to their wardrobe; when they pick an occasion or a style, the system assembles a matching outfit for their personal colours and calls Flux to render a model wearing it. The demo on this page replays a sample run for visitors; with an invite link that has it enabled it runs live, with Flux rendering from the owner's prepared model and garment photos.",
+    vi: "Twistfit là website thời trang (Next.js và FastAPI) có khảo sát màu sắc cá nhân theo mùa, tủ đồ cá nhân và tính năng phối đồ mặc thử. Người dùng tải ảnh quần áo lên tủ đồ; khi chọn dịp hoặc phong cách, hệ thống ghép một bộ phù hợp với màu cá nhân của họ rồi gọi Flux để dựng ảnh người mẫu mặc bộ đó. Demo cho tính năng mặc thử sắp có trên trang này.",
+    en: "Twistfit is a fashion website (Next.js and FastAPI) with a seasonal personal-colour quiz, a personal wardrobe and an outfit try-on feature. Users upload clothing photos to their wardrobe; when they pick an occasion or a style, the system assembles a matching outfit for their personal colours and calls Flux to render a model wearing it. A demo of the try-on feature is coming soon on this page.",
   },
   problem: {
     vi: "Chọn đồ hợp với tông màu cá nhân, hợp dịp và hợp phong cách mất nhiều thời gian, và khó hình dung bộ đồ khi mặc lên người trước khi quyết định.",
@@ -46,5 +46,6 @@ export const twistfit: Project = {
   // TODO: thêm liên kết repo khi chủ dự án xác nhận repo được công khai.
   links: [],
   cover: "/projects/twistfit.svg",
-  demo: { component: "twistfit" },
+  website: "https://twistfit.org",
+  demoSoon: true,
 };

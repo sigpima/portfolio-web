@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "AI Engineer Portfolio",
-    "description": "An AI engineer's portfolio: projects with live demos (by invitation), replays and simulations, each honestly labelled."
+    "description": "An AI engineer's portfolio: projects with live demos (by invitation) or replays, each honestly labelled."
   },
   "header": {
     "brand": "Portfolio · AI Engineer",
@@ -225,6 +225,9 @@
     "chat": {
       "you": "You",
       "bot": "Bot"
+    },
+    "soon": {
+      "label": "Demo coming soon"
     }
   },
   "groups": {
@@ -243,7 +246,7 @@
     "metaTitle": "Home",
     "hero": {
       "headline": "I build LLM and agent systems, and the web products around them.",
-      "lead": "Each project below has a write-up of the problem and the approach, plus a demo that is clearly labelled as live, a replay or a simulation.",
+      "lead": "Each project below has a write-up of the problem and the approach, plus a demo that is clearly labelled as live or a replay; a project without a demo says it is coming soon and links to the real website.",
       "ctaDemo": "Try the featured demo",
       "ctaProjects": "View all projects"
     },
@@ -273,7 +276,23 @@
       "github": "GitHub",
       "linkedin": "LinkedIn",
       "cv": "CV",
-      "pending": "not set yet"
+      "pending": "not set yet",
+      "feedback": {
+        "label": "Feedback or a message",
+        "placeholder": "Write one line",
+        "submit": "Send",
+        "sending": "Sending…",
+        "noteInvited": "Your message is saved with your invite link for the site owner to read.",
+        "noteMail": "This button opens your email app with the message filled in. This page sends nothing.",
+        "subject": "Feedback about your portfolio",
+        "sent": "Your feedback was saved with your invite link. Thank you!",
+        "errors": {
+          "rateLimited": "You have sent quite a few messages already. Please try again in a few minutes.",
+          "inviteLost": "Your invite link is no longer valid, so this was not saved. You can still send it by email.",
+          "invalid": "Your message is empty or too long (1000 characters at most).",
+          "failed": "It could not be saved right now. Please try again in a few minutes."
+        }
+      }
     },
     "others": {
       "eyebrow": "More projects",
@@ -305,7 +324,13 @@
     "pagerLabel": "More projects",
     "prev": "Previous project",
     "next": "Next project",
-    "toDemo": "Go to the demo"
+    "toDemo": "Go to the demo",
+    "soon": {
+      "title": "Demo coming soon",
+      "body": "A demo of this project is being prepared. Meanwhile, you can visit the real website.",
+      "bodyNoSite": "A demo of this project is being prepared. The website address will be added here."
+    },
+    "visitSite": "Visit the website"
   },
   "notFound": {
     "metaTitle": "Page not found",
@@ -315,7 +340,7 @@
     "projects": "Browse projects"
   },
   "footer": {
-    "note": "Demos on this site are labelled: live, replay or simulation.",
+    "note": "Demos on this site are labelled: live or replay; a missing demo is marked as coming soon.",
     "navLabel": "Footer links"
   }
 }

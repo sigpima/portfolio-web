@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { projects } from "@/content/registry";
+import { giaPhaSimulation, twistfitLive } from "@/test-utils/twistfit-live";
 import { replaysByDemoComponent } from "@/content/replays";
 import { KnowledgeBaseSwitch } from "./KnowledgeBaseSwitch";
 import { TwistfitSwitch } from "./TwistfitSwitch";
@@ -39,7 +40,9 @@ describe("demo registries stay in sync", () => {
   });
 
   it("every replay/simulation project, and every live project with a replay, points at a key in both registries", () => {
-    const withReplay = projects.filter(
+    // Twistfit and Gia phả are shown as "demo coming soon" for now; their demo code is checked
+    // through the fixtures that switch the demo back on.
+    const withReplay = [...projects, twistfitLive, giaPhaSimulation].filter(
       (p) =>
         p.demoKind === "replay" ||
         p.demoKind === "simulation" ||

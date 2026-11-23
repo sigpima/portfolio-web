@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { getProject } from "@/content/registry";
+import { twistfitLive } from "@/test-utils/twistfit-live";
 import { liveFeatureOf } from "./live-feature";
 
 describe("liveFeatureOf", () => {
   it("is twistfit for the Twistfit project and chat for the Knowledge Base", () => {
-    expect(liveFeatureOf(getProject("twistfit")!)).toBe("twistfit");
+    expect(liveFeatureOf(twistfitLive)).toBe("twistfit");
     expect(liveFeatureOf(getProject("knowledge-base")!)).toBe("chat");
   });
 

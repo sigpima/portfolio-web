@@ -20,3 +20,9 @@ export interface AdminEvent {
   outcome: string;
   detail: Record<string, unknown> | null;
 }
+
+export interface AdminFeedback {
+  id: number;
+  ts: string;
+  message: string;
+}

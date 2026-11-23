@@ -34,7 +34,12 @@ export function ProjectDetail({ project, locale }: { project: Project; locale: L
   const qualifier = placeholderQualifier(project);
   const qualifierChip = qualifier && demoKind !== "live" ? t(`demo.badgeQualifier.${qualifier}.chip`) : null;
   // Static labels never say "live" on its own: a live demo is live only with an invite.
-  const staticLabel = demoKind ? t(`demo.badge.${staticDemoLabelKey(demoKind)}.label`) : null;
+  const soon = project.demoSoon === true && !Demo;
+  const staticLabel = demoKind
+    ? t(`demo.badge.${staticDemoLabelKey(demoKind)}.label`)
+    : soon
+      ? t("demo.soon.label")
+      : null;
 
   return (
     <article className="mx-auto flex max-w-[1200px] flex-col gap-12 px-margin py-10 md:px-margin-tablet md:py-14 lg:px-margin-desktop">
@@ -64,6 +69,15 @@ export function ProjectDetail({ project, locale }: { project: Project; locale: L
             className="w-fit rounded-lg bg-primary px-4 py-2 font-mono text-label-mono-sm uppercase text-on-primary transition-colors hover:bg-primary-fixed"
           >
             {t("detail.toDemo")} <span aria-hidden="true">↓</span>
+          </a>
+        ) : soon && project.website ? (
+          <a
+            href={project.website}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-fit rounded-lg bg-primary px-4 py-2 font-mono text-label-mono-sm uppercase text-on-primary transition-colors hover:bg-primary-fixed"
+          >
+            {t("detail.visitSite")} <span aria-hidden="true">↗</span>
           </a>
         ) : null}
       </header>
@@ -107,6 +121,31 @@ export function ProjectDetail({ project, locale }: { project: Project; locale: L
         </section>
       ) : null}
 
+      {soon ? (
+        <section
+          id="demo"
+          aria-labelledby="demo-heading"
+          className="flex scroll-mt-20 flex-col gap-3 rounded-xl border border-dashed border-outline-variant bg-surface-container-low p-4 md:p-6"
+        >
+          <h2 id="demo-heading" className="font-mono text-label-mono-sm uppercase text-outline">
+            {t("detail.soon.title")}
+          </h2>
+          <p className="max-w-3xl text-body-lg text-on-surface-variant">
+            {project.website ? t("detail.soon.body") : t("detail.soon.bodyNoSite")}
+          </p>
+          {project.website ? (
+            <a
+              href={project.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-fit text-body-md text-primary underline underline-offset-4 hover:text-primary-fixed"
+            >
+              {project.website.replace(/^https:\/\//, "")} <span aria-hidden="true">↗</span>
+            </a>
+          ) : null}
+        </section>
+      ) : null}
+
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-12">
         <div className="flex min-w-0 flex-col gap-10">
           <NarrativeSection index="01" title={t("detail.problem")}>
@@ -142,8 +181,20 @@ export function ProjectDetail({ project, locale }: { project: Project; locale: L
           </section>
           <section className="flex flex-col gap-3 rounded-xl border border-outline-variant bg-surface-container-low p-5">
             <h2 className="font-mono text-label-mono-sm uppercase text-outline">{t("detail.links")}</h2>
-            {project.links.length > 0 ? (
+            {project.links.length > 0 || project.website ? (
               <ul className="flex flex-col gap-2">
+                {project.website ? (
+                  <li>
+                    <a
+                      href={project.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-body-md text-primary underline underline-offset-4 hover:text-primary-fixed"
+                    >
+                      {t("detail.visitSite")} <span aria-hidden="true">↗</span>
+                    </a>
+                  </li>
+                ) : null}
                 {project.links.map((link) => (
                   <li key={link.href}>
                     <a

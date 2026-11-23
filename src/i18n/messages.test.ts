@@ -110,16 +110,17 @@ describe("messages", () => {
     }
   });
 
-  it("describes Twistfit as a replay for visitors and live for the owner's invite link, without saying where Flux runs", () => {
-    expect(twistfit.demoKind).toBe("live");
+  it("describes Twistfit as having its demo coming soon, without claiming a demo or saying where Flux runs", () => {
+    expect(twistfit.demoKind).toBe("none");
+    expect(twistfit.demoSoon).toBe(true);
     for (const text of [twistfit.summary.vi, twistfit.summary.en]) {
       expect(text).not.toMatch(/không gọi Flux khi có người xem|does not call Flux when someone views it/i);
       expect(claimsLocation(text)).toBe(false);
     }
-    expect(twistfit.summary.vi).toMatch(/link mời/);
-    expect(twistfit.summary.en).toMatch(/invite link/);
-    expect(twistfit.summary.vi).toMatch(/phát lại/);
-    expect(twistfit.summary.en).toMatch(/replay/i);
+    expect(twistfit.summary.vi).toMatch(/sắp có/);
+    expect(twistfit.summary.en).toMatch(/coming soon/i);
+    expect(twistfit.summary.vi).not.toMatch(/phát lại|link mời|chạy thật/i);
+    expect(twistfit.summary.en).not.toMatch(/replay|invite link|runs live/i);
   });
 
   it("does not blame 'someone else' for a busy Twistfit, and says a retry costs another run", () => {
@@ -133,13 +134,6 @@ describe("messages", () => {
     expect(live(en).errors.resultExpired).toMatch(/uses another run/);
     // "Make another" goes back to step 1; the vi label matches it.
     expect(live(vi).regenerate).toBe("Tạo ảnh khác");
-  });
-
-  it("does not promise the Twistfit live run to the owner's link alone, only to links that enable it", () => {
-    expect(twistfit.summary.vi).not.toMatch(/link mời của chủ trang/);
-    expect(twistfit.summary.en).not.toMatch(/owner's invite/i);
-    expect(twistfit.summary.vi).toMatch(/bật tính năng này/);
-    expect(twistfit.summary.en).toMatch(/that has it enabled/);
   });
 
   it("flags location claims but not ordinary English", () => {

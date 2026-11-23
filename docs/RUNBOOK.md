@@ -15,9 +15,50 @@ trình duyệt -> nginx (host) -> web: container `portfolio` (Next.js, 127.0.0.1
   và mật khẩu quản trị; nó là thứ **duy nhất** gọi service `chat`. Người không có phiên hợp lệ (từ một link mời) không bao giờ làm phát sinh lời gọi Gemini.
 - Container web chỉ gắn vào mạng mặc định của stack `portfolio-api`, **không** gắn vào mạng `knowledge_base_default`: từ web không với tới được `chat:8003` để lách cổng.
   `portfolio-api` gắn vào cả hai mạng.
-- Không có link: demo Knowledge Base hiện **bản phát lại** (replay) của các lần chạy thật đã ghi (phần 12), còn Twistfit hiện bản phát lại bằng **ảnh giữ chỗ** (phần 13). Có link (mở `/i/<mã>`): demo chạy thật.
-  Twistfit chạy thật gọi Flux (Black Forest Labs, tốn tiền mỗi lượt) từ `portfolio-api`; ảnh người mẫu và món đồ nằm ở `portfolio/api/twistfit-assets/` (phần 7, mục 8).
+- Không có link: demo Knowledge Base hiện **bản phát lại** (replay) của các lần chạy thật đã ghi (phần 12). Có link (mở `/i/<mã>`): demo chạy thật.
+  **Twistfit và Gia phả hiện không có demo trên trang** (ghi "Demo sắp có" và dẫn tới website thật, xem phần 16); các đoạn dưới nói về Twistfit chạy thật chỉ có hiệu lực khi bạn bật lại demo đó. Twistfit chạy thật gọi Flux (Black Forest Labs, tốn tiền mỗi lượt) từ `portfolio-api`; ảnh người mẫu và món đồ nằm ở `portfolio/api/twistfit-assets/` (phần 7, mục 8).
 - Chỉ web được đưa ra internet qua nginx. **Không bao giờ** proxy `portfolio-api` (8100) hay `chat` (8003) ra ngoài.
+
+## 0b. Triển khai production (`portfolio.sigpima.space`)
+
+Theo chuẩn chung: push `main` -> GitHub Actions (test, rồi build) -> ghcr -> trên server chạy `./update.sh`. **Server không build, không clone repo.**
+Các phần 3-6 bên dưới mô tả chạy và build cục bộ bằng compose dev; trên server chỉ dùng phần này.
+
+| Thành phần | Repo | Image | Compose prod |
+| --- | --- | --- | --- |
+| web (Next.js) | `sigpima/portfolio-web` (thư mục `web/`) | `ghcr.io/sigpima/portfolio-web` (`SITE_URL` nướng sẵn trong workflow) | `docker-compose.prod.yml` (repo web) chứa **cả hai** service |
+| portfolio-api | `sigpima/portfolio-api` (thư mục `api/`) | `ghcr.io/sigpima/portfolio-api` | (nằm chung file ở repo web) |
+
+Mỗi lần push `main`, từng repo tự đẩy hai tag: `latest` và `sha-<7 ký tự>`. Workflow chạy test trước (web: `tsc`, `lint`, `vitest`; api: `pytest`); test đỏ thì không có image mới.
+
+**Làm một lần**
+
+1. Trên GitHub: đẩy hai repo lên (`git remote add origin ...`, `git push -u origin main`), chờ cả hai workflow `image` xanh. Package ghcr mới tạo mặc định **private**:
+   hai image không chứa bí mật nên đổi sang **public** (Package settings -> Change visibility), hoặc trên server `docker login ghcr.io` một lần bằng PAT chỉ có `read:packages`.
+2. DNS: bản ghi A `portfolio.sigpima.space` trỏ về IP server. Firewall chỉ mở 22/80/443.
+3. Server cần Docker + Compose >= 2.24 và stack `chat` của knowledge_base đang chạy. Kiểm tra tên mạng của nó: `docker network ls | grep knowledge_base`
+   (mặc định `knowledge_base_default`; khác thì đặt `KB_NETWORK` trong `.env`).
+4. Tạo thư mục `~/portfolio/` chỉ gồm 3 file, đưa lên bằng `scp` từ repo web:
+   ```bash
+   ssh server 'mkdir -p ~/portfolio'
+   scp docker-compose.prod.yml deploy/update.sh server:~/portfolio/
+   scp deploy/.env.example server:~/portfolio/.env
+   ```
+5. Trên server: sửa `~/portfolio/.env` (`chmod 600 .env`). Đặt `PORTFOLIO_API_KEY` và `ADMIN_PASSWORD` **mới** cho production (không dùng lại giá trị của máy dev; sinh khoá bằng
+   `python3 -c "import secrets;print(secrets.token_urlsafe(32))"`). Giữ dòng `COMPOSE_FILE=docker-compose.prod.yml`.
+6. `cd ~/portfolio && chmod +x update.sh && ./update.sh`. Script kéo image, khởi động và đợi cả hai service healthy; web nghe ở `127.0.0.1:34010`, `portfolio-api` không publish cổng nào.
+7. nginx trên host: dán `deploy/nginx.conf.example` (đã điền `portfolio.sigpima.space` và cổng 34010), **thay `192.0.2.1` bằng IP của bạn** ở ba khối `/admin` (nếu để nguyên, chính bạn cũng bị 403),
+   cấp chứng chỉ `sudo certbot --nginx -d portfolio.sigpima.space` (hoặc `certbot certonly` rồi trỏ đúng đường dẫn đã ghi trong file), `sudo nginx -t && sudo systemctl reload nginx`.
+8. Làm tiếp phần 7 (việc lần đầu) và phần 10 (kiểm tra). Trên server, `portfolio-api` không có cổng host, nên lệnh kiểm tra nội bộ chạy bằng
+   `docker compose exec portfolio-api python -c "import urllib.request as u;print(u.urlopen('http://127.0.0.1:8100/healthz').status)"`; phía web dùng `curl -s localhost:34010/api/session` thay cho `localhost:3100`.
+
+**Cập nhật, rollback, ghim**
+
+- Cập nhật: `cd ~/portfolio && ./update.sh` (kéo `latest` của cả hai image).
+- Rollback hoặc ghim một service: `WEB_IMAGE_TAG=sha-abc1234 ./update.sh` hoặc `API_IMAGE_TAG=sha-abc1234 ./update.sh` (tag xem ở GitHub -> Packages). Muốn ghim lâu dài thì sửa `WEB_IMAGE_TAG` / `API_IMAGE_TAG` trong `.env`.
+  Đừng dùng đối số vị trí `./update.sh sha-...`: hai image có hai mã commit khác nhau, nên chỉ biến theo từng service mới đúng.
+- Đổi tên miền: sửa `SITE_URL` trong `.github/workflows/image.yml` và build lại web (giá trị nằm trong ảnh).
+- Dữ liệu (SQLite) nằm trong volume `portfolio_data`; sao lưu theo phần 11, chạy các lệnh đó trong `~/portfolio` (service vẫn tên `portfolio-api`, volume tên `portfolio_data`). Sao lưu tự động chưa nằm trong chuẩn triển khai nên chưa có.
 
 ## 1. Điều kiện cần
 
@@ -337,6 +378,7 @@ Trang `/admin` có ghi chú này dưới nhật ký.
   (`flux_timeout` "Flux quá thời gian chờ", `flux_failed` "Flux báo lỗi", `flux_moderated` "Flux từ chối nội dung", `flux_unavailable` "Không gọi được Flux",
   `twistfit_limit` "Hết lượt Twistfit của link", `concurrent_limit`/`global_concurrent_limit`/`busy` "Đang bận", `cancelled` "Bị huỷ khi dịch vụ tắt"); mã lạ hiện nguyên văn.
   Mỗi lượt chạy đúng một sự kiện. Lượt lỗi sau khi Flux đã được gọi vẫn có thể bị BFL tính phí nhưng không tính vào `twistfit_max`.
+- **Góp ý (ngoại lệ có chủ ý)**: người có link mời gõ vào ô "Góp ý hoặc lời nhắn" ở phần Liên hệ trang chủ thì nội dung được lưu **nguyên văn** (kèm id link và thời điểm, không IP, không user agent) trong bảng `feedback` của SQLite và hiện ở khung "Góp ý" dưới nhật ký của link trên `/admin`. Mỗi link gửi tối đa 5 góp ý/10 phút, mỗi góp ý tối đa 1000 ký tự. Nhật ký chỉ ghi một dòng `Góp ý` (không kèm nội dung). Người **không** có link mời không lưu được gì: nút gửi mở ứng dụng email của họ. Thu hồi link không xoá góp ý; muốn xoá thì xoá hàng trong bảng `feedback` (xem phần sao lưu để vào SQLite). Câu trên màn hình nói rõ với người gửi rằng lời nhắn được lưu cùng link của họ.
 - **Không bao giờ có**: nội dung câu hỏi hay câu trả lời, ảnh (kể cả ảnh người mẫu, món đồ và ảnh kết quả của Twistfit), địa chỉ IP, chuỗi trình duyệt (user agent), mã link gốc hay mã phiên (CSDL chỉ lưu băm SHA-256).
 - `location = /api/twistfit/run` có `limit_req` riêng (zone `twistfit_run`, 6 lượt/phút/IP, burst 4, trả JSON 429 `rate_limited` như chat): mỗi POST `/run` bị từ chối (hết lượt, bận, thân sai) ghi một dòng `blocked`
   vào nhật ký, nên một link bị lạm dụng có thể làm ngập nhật ký. **Không** đặt giới hạn cho `/api/twistfit/jobs/` (client hỏi trạng thái mỗi 1,5 giây), `/catalog`, `/assets/` và `/results/`.
@@ -478,6 +520,7 @@ grep -rn "TODO:" src/content
 
 ## 16. Quy tắc trung thực cần giữ
 
+- **"Demo sắp có" (Twistfit, Gia phả)**: hai dự án này đặt `demoKind: "none"`, `demoSoon: true`, không có `demo`, và có `website` (Gia phả: `https://genealogy.sigpima.space`; Twistfit: `https://twistfit.org`; nếu bỏ `website` đi thì trang chỉ nói demo sắp có, không có nút dẫn đi). Không gắn nhãn chạy thật, phát lại hay mô phỏng cho hai dự án này. Code demo (Twistfit chạy thật/phát lại, mô phỏng Gia phả) vẫn còn và vẫn được test qua `src/test-utils/twistfit-live.ts`; muốn bật lại: đổi `demoKind`, thêm `demo: { component: ... }`, bỏ `demoSoon`, rồi cập nhật các test trỏ tới fixture. Các mục "Twistfit nay là..." và "Gia phả là mô phỏng..." bên dưới chỉ áp dụng sau khi bật lại.
 - **Nhãn theo loại demo**: `live` = chạy thật khi người xem hỏi (với Knowledge Base và Twistfit: chỉ khi có link mời có bật tính năng; người khác thấy bản phát lại); `replay` = phát lại từ một lần chạy thật đã ghi;
   `simulation` = mô phỏng một tính năng chưa hoàn thành. Đừng gắn nhãn cao hơn sự thật (ví dụ không gắn "chạy thật" cho thứ chỉ phát lại).
 - **Twistfit nay là "chạy thật · cần link mời"** (`demoKind: "live"`): thẻ và trang chi tiết mang nhãn đó, và chỉ người có link mời có `twistfit: true` mới thấy bản chạy thật (gọi Flux thật, mỗi lượt đúng một lệnh gọi). Người không có link thấy **bản phát lại**,

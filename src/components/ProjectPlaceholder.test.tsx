@@ -2,7 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import { afterEach, beforeEach, describe, expect, it, vi as vitest } from "vitest";
 import type { Locale } from "@/content/types";
-import { getProject } from "@/content/registry";
+import { twistfitLive } from "@/test-utils/twistfit-live";
 import { twistfitReplay } from "@/content/replays/twistfit";
 import { InviteSessionProvider } from "@/lib/invite/use-invite-session";
 import viMessages from "../../messages/vi.json";
@@ -48,7 +48,7 @@ afterEach(() => {
 describe("Twistfit placeholder state follows the replay data (not-invited view)", () => {
   for (const locale of ["vi", "en"] as const) {
     it(`placeholder samples: only the in-demo replay badge is qualified; eyebrow and facts say live-invite (${locale})`, async () => {
-      const project = getProject("twistfit")!;
+      const project = twistfitLive;
       const { container } = wrap(locale, <ProjectDetail project={project} locale={locale} />);
       const m = locale === "vi" ? viMessages : enMessages;
       const badge = await findReplayBadge(container);
@@ -67,7 +67,7 @@ describe("Twistfit placeholder state follows the replay data (not-invited view)"
       const saved = twistfitReplay.samples.map((s) => s.placeholder);
       twistfitReplay.samples.forEach((s) => (s.placeholder = false));
       try {
-        const project = getProject("twistfit")!;
+        const project = twistfitLive;
         const { container } = wrap(
           locale,
           <>

@@ -23,4 +23,8 @@ export interface Project {
   /** Public path, e.g. `/projects/knowledge-base.svg`. */
   cover: string;
   demo?: { component: string };
+  /** The project's real, public website (https). Shown as the way to try it while there is no demo. */
+  website?: string;
+  /** No demo yet: the page says "demo coming soon" and points at the website. Needs demoKind "none". */
+  demoSoon?: boolean;
 }

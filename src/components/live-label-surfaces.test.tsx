@@ -3,6 +3,7 @@ import { NextIntlClientProvider } from "next-intl";
 import type { ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { listProjects } from "@/content/registry";
+import { twistfitLive } from "@/test-utils/twistfit-live";
 import type { Locale, Project } from "@/content/types";
 import { InviteSessionProvider } from "@/lib/invite/use-invite-session";
 import viMessages from "../../messages/vi.json";
@@ -17,7 +18,8 @@ import { ProjectDetail } from "./ProjectDetail";
  * never appears on its own, and no placeholder chip sits next to the live label (the
  * replay fallback is qualified only inside the demo area).
  */
-const live = listProjects().filter((p) => p.demoKind === "live");
+// Twistfit's demo is switched off on the site ("coming soon"); its live code is still checked here.
+const live = [...listProjects().filter((p) => p.demoKind === "live"), twistfitLive];
 const MESSAGES = { vi: viMessages, en: enMessages };
 const BARE: Record<Locale, RegExp> = {
   vi: /Chạy thật(?! · cần link mời)/,

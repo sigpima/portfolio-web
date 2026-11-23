@@ -12,6 +12,7 @@ const FEATURE_LABELS: Record<string, string> = {
   chat: "Bot",
   twistfit: "Twistfit",
   gia_pha: "Gia phả",
+  feedback: "Góp ý",
 };
 
 const OUTCOME_STYLES: Record<string, { label: string; className: string; shape: string }> = {

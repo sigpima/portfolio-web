@@ -59,6 +59,13 @@ export function validateProjects(projects: Project[], knownDemos: string[]): str
       }
     });
 
+    if (project.demoSoon && project.demoKind !== "none") {
+      errors.push(`${id}: demoSoon chỉ dùng khi demoKind là "none"`);
+    }
+    if (project.website !== undefined && !/^https:\/\/\S+$/.test(project.website)) {
+      errors.push(`${id}: website phải là địa chỉ https`);
+    }
+
     if (project.demoKind === "none") {
       if (project.demo) {
         errors.push(`${id}: demoKind là "none" nhưng lại có demo`);
