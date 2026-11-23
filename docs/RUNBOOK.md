@@ -36,8 +36,8 @@ Mỗi lần push `main`, từng repo tự đẩy hai tag: `latest` và `sha-<7 k
 1. Trên GitHub: đẩy hai repo lên (`git remote add origin ...`, `git push -u origin main`), chờ cả hai workflow `image` xanh. Package ghcr mới tạo mặc định **private**:
    hai image không chứa bí mật nên đổi sang **public** (Package settings -> Change visibility), hoặc trên server `docker login ghcr.io` một lần bằng PAT chỉ có `read:packages`.
 2. DNS: bản ghi A `portfolio.sigpima.space` trỏ về IP server. Firewall chỉ mở 22/80/443.
-3. Server cần Docker + Compose >= 2.24 và stack `chat` của knowledge_base đang chạy. Kiểm tra tên mạng của nó: `docker network ls | grep knowledge_base`
-   (mặc định `knowledge_base_default`; khác thì đặt `KB_NETWORK` trong `.env`).
+3. Server cần Docker + Compose >= 2.24 và stack `chat` của knowledge_base đang chạy. Kiểm tra tên mạng của nó: `docker network ls | grep kb-net`
+   (prod của knowledge_base đặt tên cố định `kb-net`, đã là mặc định; khác thì đặt `KB_NETWORK` trong `.env`).
 4. Tạo thư mục `~/portfolio/` chỉ gồm 3 file, đưa lên bằng `scp` từ repo web:
    ```bash
    ssh server 'mkdir -p ~/portfolio'

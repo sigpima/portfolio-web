@@ -8,7 +8,7 @@
 # Web KHÔNG gắn vào mạng của knowledge_base (không với tới chat:8003 để lách cổng); chỉ portfolio-api gắn cả hai mạng.
 #
 # Điều kiện: stack `chat` của knowledge_base đã chạy trên server và tạo mạng ngoài KB_NETWORK
-# (mặc định knowledge_base_default; kiểm tra bằng `docker network ls`).
+# (mặc định kb-net, tên cố định trong docker-compose.prod.yml của knowledge_base; kiểm tra bằng `docker network ls`).
 
 name: portfolio
 
@@ -80,7 +80,7 @@ networks:
   default: {}
   # Mạng ngoài của stack knowledge_base (do stack đó tạo).
   kb:
-    name: ${KB_NETWORK:-knowledge_base_default}
+    name: ${KB_NETWORK:-kb-net}
     external: true
 
 volumes:
