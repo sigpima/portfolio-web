@@ -7,11 +7,16 @@ import viMessages from "../../../messages/vi.json";
 import enMessages from "../../../messages/en.json";
 import { PolicyDocDialog } from "./PolicyDocDialog";
 
-function renderDialog(citation: { slug: string; section: string }, locale: Locale = "vi", onClose = vi.fn()) {
+function renderDialog(
+  citation: { slug: string; section: string },
+  locale: Locale = "vi",
+  onClose = vi.fn(),
+  onBack?: () => void,
+) {
   const messages = locale === "vi" ? viMessages : enMessages;
   render(
     <NextIntlClientProvider locale={locale} messages={messages}>
-      <PolicyDocDialog citation={citation} closeLabel={messages.kb.policy.close} onClose={onClose} />
+      <PolicyDocDialog citation={citation} closeLabel={messages.kb.policy.close} onClose={onClose} onBack={onBack} />
     </NextIntlClientProvider>,
   );
   return onClose;
@@ -79,5 +84,28 @@ describe("PolicyDocDialog", () => {
     const body = within(dialog).getByRole("heading", { name: "Giữ lại bảo hành" }).closest("[lang]");
     expect(body).toHaveAttribute("lang", "vi");
     expect(within(dialog).getByText(enMessages.kb.policy.synthetic).closest("[lang='vi']")).toBeNull();
+  });
+
+  it("offers a back button only when it was opened from a list, and going back closes the document first", async () => {
+    const calls: string[] = [];
+    const onClose = vi.fn(() => calls.push("close"));
+    const onBack = vi.fn(() => calls.push("back"));
+    renderDialog(WARRANTY, "vi", onClose, onBack);
+    await loaded();
+    await userEvent.click(screen.getByRole("button", { name: viMessages.kb.policy.back }));
+    expect(onBack).toHaveBeenCalledTimes(1);
+    expect(calls).toEqual(["close", "back"]);
+  });
+
+  it("has no back button without onBack", async () => {
+    renderDialog(WARRANTY);
+    await loaded();
+    expect(screen.queryByRole("button", { name: viMessages.kb.policy.back })).toBeNull();
+  });
+
+  it("labels the back button in English on the English site", async () => {
+    renderDialog(WARRANTY, "en", vi.fn(), vi.fn());
+    await loaded("en");
+    expect(screen.getByRole("button", { name: enMessages.kb.policy.back })).toBeInTheDocument();
   });
 });

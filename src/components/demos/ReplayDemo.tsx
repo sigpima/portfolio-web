@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useCallback, useId, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { FlowPlayer, type FlowDataLabels } from "@/components/flow/FlowPlayer";
 import { Markdown } from "@/components/Markdown";
@@ -169,7 +169,9 @@ export function ReplayDemo({ definition, kind, locale: _locale, footnote }: Repl
   const tPolicy = useTranslations("kb.policy");
   const [sampleId, setSampleId] = useState(definition.samples[0]?.id);
   /** The policy document opened from a citation or a source, if any. */
-  const [cited, setCited] = useState<Citation | null>(null);
+  const [cited, setCited] = useState<{ citation: Citation; back?: () => void } | null>(null);
+  /** Stable, so the citation chips in an answer are not rebuilt (and lose focus) on every render. */
+  const openCitation = useCallback((citation: Citation) => setCited({ citation }), []);
   const sample = definition.samples.find((s) => s.id === sampleId) ?? definition.samples[0];
   const reducedMotion = useSyncExternalStore(subscribeReducedMotion, prefersReducedMotion, () => false);
   const { flow, status, showResult, play } = useReplay(sample, locale, { reducedMotion });
@@ -286,7 +288,7 @@ export function ReplayDemo({ definition, kind, locale: _locale, footnote }: Repl
           label={t("flowLabel")}
           statusLabels={statusLabels}
           dataLabels={dataLabels}
-          onOpenSource={(source) => setCited({ slug: source.slug, section: source.section })}
+          onOpenSource={(source, back) => setCited({ citation: { slug: source.slug, section: source.section }, back })}
         />
       </div>
 
@@ -305,7 +307,7 @@ export function ReplayDemo({ definition, kind, locale: _locale, footnote }: Repl
             className="w-full max-w-[92%] self-start rounded-xl border border-primary-container/50 bg-primary-container/20 px-3.5 py-2.5 text-body-md text-on-surface sm:max-w-[82%]"
           >
             <span className="sr-only">{t("chat.bot")}: </span>
-            <Markdown onCite={setCited} isCiteable={isPolicyCitation}>
+            <Markdown onCite={openCitation} isCiteable={isPolicyCitation}>
               {sample.result.text[locale]}
             </Markdown>
           </div>
@@ -316,7 +318,12 @@ export function ReplayDemo({ definition, kind, locale: _locale, footnote }: Repl
 
       {footnote ? <div className="text-body-md text-on-surface-variant">{footnote}</div> : null}
       {cited ? (
-        <PolicyDocDialog citation={cited} closeLabel={tPolicy("close")} onClose={() => setCited(null)} />
+        <PolicyDocDialog
+          citation={cited.citation}
+          closeLabel={tPolicy("close")}
+          onClose={() => setCited(null)}
+          onBack={cited.back}
+        />
       ) : null}
     </div>
   );

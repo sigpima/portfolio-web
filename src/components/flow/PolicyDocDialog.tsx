@@ -16,13 +16,15 @@ export interface PolicyDocDialogProps {
   citation: Citation;
   closeLabel: string;
   onClose: () => void;
+  /** Set when the document was opened from a list: shows a back button that closes this and runs it. */
+  onBack?: () => void;
 }
 
 /**
  * The policy document a citation points at, in a modal: the whole document with the cited section
  * highlighted and scrolled into view. The documents are Vietnamese whatever the site language.
  */
-export function PolicyDocDialog({ citation, closeLabel, onClose }: PolicyDocDialogProps) {
+export function PolicyDocDialog({ citation, closeLabel, onClose, onBack }: PolicyDocDialogProps) {
   const t = useTranslations("kb.policy");
   const [state, setState] = useState<State>({ status: "loading" });
   const citedRef = useRef<HTMLElement>(null);
@@ -55,6 +57,15 @@ export function PolicyDocDialog({ citation, closeLabel, onClose }: PolicyDocDial
       subtitle={doc ? `${t(`docType.${doc.docType}`)} · ${doc.slug}` : undefined}
       closeLabel={closeLabel}
       onClose={onClose}
+      onBack={
+        onBack
+          ? () => {
+              onClose();
+              onBack();
+            }
+          : undefined
+      }
+      backLabel={onBack ? t("back") : undefined}
       size="lg"
     >
       {state.status === "loading" ? <p className="text-body-md text-on-surface-variant">{t("loading")}</p> : null}

@@ -74,7 +74,9 @@ export function KnowledgeBaseDemo({ onInviteRequired }: KnowledgeBaseDemoProps) 
   const [input, setInput] = useState("");
   const [inputError, setInputError] = useState<InputErrorKey | null>(null);
   /** The policy document opened from a citation or a source, if any. */
-  const [cited, setCited] = useState<Citation | null>(null);
+  const [cited, setCited] = useState<{ citation: Citation; back?: () => void } | null>(null);
+  /** Stable, so the citation chips in an answer are not rebuilt (and lose focus) on every render. */
+  const openCitation = useCallback((citation: Citation) => setCited({ citation }), []);
   const [running, setRunning] = useState(false);
   const [sessionFull, setSessionFull] = useState(false);
   /** Text of the single polite live region: a completed answer or a localized error. */
@@ -275,7 +277,7 @@ export function KnowledgeBaseDemo({ onInviteRequired }: KnowledgeBaseDemoProps) 
           label={t("flowLabel")}
           statusLabels={statusLabels}
           dataLabels={dataLabels}
-          onOpenSource={(source) => setCited({ slug: source.slug, section: source.section })}
+          onOpenSource={(source, back) => setCited({ citation: { slug: source.slug, section: source.section }, back })}
         />
       </div>
 
@@ -315,7 +317,7 @@ export function KnowledgeBaseDemo({ onInviteRequired }: KnowledgeBaseDemoProps) 
                       className="w-full max-w-[92%] self-start rounded-xl border border-primary-container/50 bg-primary-container/20 px-3.5 py-2.5 text-body-md text-on-surface sm:max-w-[82%]"
                     >
                       <span className="sr-only">{t("bot")}: </span>
-                      <Markdown onCite={setCited} isCiteable={isPolicyCitation}>
+                      <Markdown onCite={openCitation} isCiteable={isPolicyCitation}>
                         {turn.answer}
                       </Markdown>
                     </div>
@@ -402,7 +404,12 @@ export function KnowledgeBaseDemo({ onInviteRequired }: KnowledgeBaseDemoProps) 
           <p>{t("notes.privacy")}</p>
         </div>
       </section>
-      {cited ? <PolicyDocDialog citation={cited} closeLabel={t("policy.close")} onClose={() => setCited(null)} /> : null}
+      {cited ? <PolicyDocDialog
+          citation={cited.citation}
+          closeLabel={t("policy.close")}
+          onClose={() => setCited(null)}
+          onBack={cited.back}
+        /> : null}
     </div>
   );
 }

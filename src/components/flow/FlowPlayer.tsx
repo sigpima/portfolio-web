@@ -21,8 +21,8 @@ export interface FlowPlayerProps {
   statusLabels: Record<NodeStatus, string>;
   /** Without it, nodes that carry `data` are plain boxes: nothing opens. */
   dataLabels?: FlowDataLabels;
-  /** Opens a policy source listed in a node's popup (the popup closes first). */
-  onOpenSource?: (source: FlowSource) => void;
+  /** Opens a policy source listed in a node's popup (the popup closes first); `reopen` brings that popup back. */
+  onOpenSource?: (source: FlowSource, reopen: () => void) => void;
 }
 
 /** Colour of the vertical link that leads into the next row, from the row above it. */
@@ -319,8 +319,9 @@ export function FlowPlayer({ state, label, statusLabels, dataLabels, onOpenSourc
           onOpenSource={
             onOpenSource
               ? (source) => {
+                  const nodeId = openId;
                   setOpenId(null);
-                  onOpenSource(source);
+                  onOpenSource(source, () => setOpenId(nodeId));
                 }
               : undefined
           }

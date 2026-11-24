@@ -368,6 +368,24 @@ describe("KnowledgeBaseDemo", () => {
       expect(answerText()!.querySelectorAll('[data-role="citation"]')).toHaveLength(2);
     });
 
+    it("goes back from a document to the list of sources it was opened from", async () => {
+      const user = await ask();
+      await user.click(within(node("db-1")).getByRole("button"));
+      await user.click(within(screen.getByRole("dialog")).getAllByRole("button", { name: /›/ })[0]);
+      await screen.findByText(viMessages.kb.policy.synthetic);
+      await user.click(screen.getByRole("button", { name: viMessages.kb.policy.back }));
+      const list = screen.getByRole("dialog", { name: viMessages.kb.inspect.policyResultTitle });
+      expect(within(list).getAllByRole("button", { name: /›/ })).toHaveLength(2);
+      expect(screen.queryByText(viMessages.kb.policy.synthetic)).toBeNull();
+    });
+
+    it("has no back button on a document opened from a citation in the answer", async () => {
+      const user = await ask();
+      await user.click(screen.getByRole("button", { name: "chinh-sach-bao-hanh › Giữ lại bảo hành" }));
+      await screen.findByText(viMessages.kb.policy.synthetic);
+      expect(screen.queryByRole("button", { name: viMessages.kb.policy.back })).toBeNull();
+    });
+
     it("opens the document from a source listed in the Nguồn popup", async () => {
       const user = await ask();
       await user.click(within(node("db-1")).getByRole("button"));

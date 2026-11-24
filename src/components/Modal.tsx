@@ -9,6 +9,9 @@ export interface ModalProps {
   subtitle?: string;
   closeLabel: string;
   onClose: () => void;
+  /** With a label, a back button sits next to the close button (a modal opened from another one). */
+  onBack?: () => void;
+  backLabel?: string;
   /** `lg` for reading text, `md` (default) for short data. */
   size?: "md" | "lg";
   children: ReactNode;
@@ -20,7 +23,7 @@ const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]:not([tabi
  * A modal over a dimmed, blurred page. Closes with Escape, the close button or a click on the
  * backdrop; focus stays inside while open and returns to whatever opened it.
  */
-export function Modal({ title, subtitle, closeLabel, onClose, size = "md", children }: ModalProps) {
+export function Modal({ title, subtitle, closeLabel, onClose, onBack, backLabel, size = "md", children }: ModalProps) {
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -95,14 +98,26 @@ export function Modal({ title, subtitle, closeLabel, onClose, size = "md", child
               {title}
             </h3>
           </div>
-          <button
-            ref={closeRef}
-            type="button"
-            onClick={onClose}
-            className="shrink-0 rounded-lg border border-outline-variant px-3 py-1.5 text-body-md text-on-surface hover:border-secondary hover:text-secondary"
-          >
-            {closeLabel}
-          </button>
+          <div className="flex shrink-0 flex-wrap justify-end gap-2">
+            {onBack && backLabel ? (
+              <button
+                type="button"
+                onClick={onBack}
+                className="rounded-lg border border-outline-variant px-3 py-1.5 text-body-md text-on-surface hover:border-secondary hover:text-secondary"
+              >
+                <span aria-hidden="true">← </span>
+                {backLabel}
+              </button>
+            ) : null}
+            <button
+              ref={closeRef}
+              type="button"
+              onClick={onClose}
+              className="rounded-lg border border-outline-variant px-3 py-1.5 text-body-md text-on-surface hover:border-secondary hover:text-secondary"
+            >
+              {closeLabel}
+            </button>
+          </div>
         </div>
         <div className="overflow-auto bg-surface-container-lowest p-4">
           {children}

@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import type { FlowState, NodeStatus } from "@/lib/flow/model";
@@ -239,8 +239,21 @@ describe("FlowPlayer policy sources", () => {
     await user.click(screen.getByRole("button", { name: /Nguồn/ }));
     await user.click(within(screen.getByRole("dialog")).getAllByRole("button", { name: /›/ })[1]);
     expect(onOpenSource).toHaveBeenCalledTimes(1);
-    expect(onOpenSource).toHaveBeenCalledWith(SOURCES[1]);
+    expect(onOpenSource).toHaveBeenCalledWith(SOURCES[1], expect.any(Function));
     expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("hands over a function that reopens the same popup, to go back to the list of sources", async () => {
+    const user = userEvent.setup();
+    const onOpenSource = vi.fn();
+    player(onOpenSource);
+    await user.click(screen.getByRole("button", { name: /Nguồn/ }));
+    await user.click(within(screen.getByRole("dialog")).getAllByRole("button", { name: /›/ })[0]);
+    expect(screen.queryByRole("dialog")).toBeNull();
+    const reopen = onOpenSource.mock.calls[0][1] as () => void;
+    act(() => reopen());
+    const dialog = screen.getByRole("dialog", { name: "Các đoạn chính sách tìm được" });
+    expect(within(dialog).getAllByRole("button", { name: /›/ })).toHaveLength(2);
   });
 
   it("shows no source buttons without a handler, only the JSON", async () => {
