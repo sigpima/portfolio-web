@@ -300,6 +300,36 @@ describe("reduceChatFlow with search_policies", () => {
     expect(node(state, "db-1").status).toBe("error");
   });
 
+  it("keeps the Sources popup when the search found nothing (empty preview, row_count 0)", () => {
+    const state = run([call(1, "search_policies"), policyResult(1, { row_count: 0, preview: "" })]);
+    const db = node(state, "db-1");
+    expect(db.status).toBe("done");
+    expect(db.data).toEqual({
+      title: "Policy data",
+      hint: "Sources",
+      sources: [],
+      value: { ok: true, row_count: 0, passages: [] },
+    });
+  });
+
+  it("drops a last line the chat service cut at 800 characters instead of showing a wrong score", () => {
+    const line = (i: number) => `tai-lieu-${i} › Tài liệu ${i} › ${"Mục ".repeat(18).trim()} ${i} · 0.7${i}`;
+    const full = Array.from({ length: 9 }, (_, i) => line(i)).join("\n");
+    const preview = full.slice(0, 800); // what events.py sends
+    expect(preview.length).toBe(800);
+    const sources = node(run([call(1, "search_policies"), policyResult(1, { row_count: 9, preview })]), "db-1").data!.sources!;
+    expect(sources.length).toBeGreaterThan(0);
+    expect(sources.length).toBeLessThan(9);
+    // Every kept line is a whole line of the original, with its own score.
+    sources.forEach((src, i) => expect(src.score).toBe(Number(`0.7${i}`)));
+  });
+
+  it("keeps all lines of a preview that is not cut", () => {
+    const preview = POLICY_PREVIEW;
+    expect(preview.length).toBeLessThan(800);
+    expect(node(run([call(1, "search_policies"), policyResult(1, { preview })]), "db-1").data!.sources).toHaveLength(2);
+  });
+
   it("keeps the generic result shape when a policy preview does not parse", () => {
     const state = run([call(1, "search_policies"), policyResult(1, { preview: "???" })]);
     const data = node(state, "db-1").data!;

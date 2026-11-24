@@ -107,11 +107,21 @@ export function parsePolicyPreview(preview: string): FlowSource[] | null {
   return sources;
 }
 
+/** The chat service cuts every preview at this many characters (knowledge_base `events.py`). */
+const PREVIEW_MAX_CHARS = 800;
+
 /** The data of a policy search result: the passages when they parse, an error text when it failed. */
 function policyData(event: Extract<ChatEvent, { type: "tool_result" }>, labels: FlowLabels): FlowNodeData | null {
   const base = { title: labels.policyResultData, hint: labels.policyResultHint };
   if (!event.ok) return { ...base, value: { ok: false, error: event.preview } };
-  const sources = parsePolicyPreview(event.preview);
+  // A search that found nothing sends an empty preview: still a policy result, with no passages.
+  if (event.preview.trim() === "") {
+    return { ...base, sources: [], value: { ok: true, row_count: event.row_count ?? 0, passages: [] } };
+  }
+  // A cut preview ends mid-line, and a score cut at "0.7" would still parse: drop that last line.
+  const text =
+    event.preview.length >= PREVIEW_MAX_CHARS ? event.preview.split("\n").slice(0, -1).join("\n") : event.preview;
+  const sources = parsePolicyPreview(text);
   if (sources === null) return null;
   return { ...base, sources, value: { ok: true, row_count: event.row_count, passages: sources } };
 }
