@@ -147,6 +147,29 @@ describe("ReplayDemo", () => {
     expect(plain.container.querySelector('[data-role="bot"]')).not.toHaveAttribute("lang");
   });
 
+  it("opens the cited policy document from a citation in the replayed answer", async () => {
+    const cited: ReplayDefinition = {
+      id: "cited",
+      samples: [
+        {
+          ...imageSample("q", undefined),
+          input: { kind: "question", text: { vi: "Giữ lại bảo hành?", en: "Retention?" } },
+          result: {
+            kind: "text",
+            text: { vi: "Trả sau 12 tháng [chinh-sach-bao-hanh › Giữ lại bảo hành].", en: "Paid after 12 months [chinh-sach-bao-hanh › Giữ lại bảo hành]." },
+          },
+        },
+      ],
+    };
+    const { container } = renderDemo(cited);
+    fireEvent.click(screen.getByRole("button", { name: "Chạy" }));
+    act(() => vi.advanceTimersByTime(300));
+    fireEvent.click(within(container).getByRole("button", { name: "chinh-sach-bao-hanh › Giữ lại bảo hành" }));
+    vi.useRealTimers();
+    expect(await screen.findByText(viMessages.kb.policy.synthetic)).toBeInTheDocument();
+    expect(document.querySelectorAll('[data-role="cited-section"]')).toHaveLength(1);
+  });
+
   it("plays the flow, then shows the result and a Replay button", () => {
     const { container } = renderDemo();
     fireEvent.click(screen.getByRole("button", { name: "Chạy" }));

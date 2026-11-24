@@ -4,6 +4,9 @@ import { useId, useMemo, useState, useSyncExternalStore, type ReactNode } from "
 import { useLocale, useTranslations } from "next-intl";
 import { FlowPlayer, type FlowDataLabels } from "@/components/flow/FlowPlayer";
 import { Markdown } from "@/components/Markdown";
+import { PolicyDocDialog } from "@/components/flow/PolicyDocDialog";
+import type { Citation } from "@/lib/citations";
+import { isPolicyCitation } from "@/lib/policies";
 import { placeholderVariantOf } from "@/content/replays/placeholder";
 import type { ReplayDefinition, ReplaySample } from "@/content/replays/types";
 import type { Locale, Localized } from "@/content/types";
@@ -163,7 +166,10 @@ export function ReplayDemo({ definition, kind, locale: _locale, footnote }: Repl
   const locale = useLocale() as Locale;
   const inputHeadingId = useId();
   const resultHeadingId = useId();
+  const tPolicy = useTranslations("kb.policy");
   const [sampleId, setSampleId] = useState(definition.samples[0]?.id);
+  /** The policy document opened from a citation or a source, if any. */
+  const [cited, setCited] = useState<Citation | null>(null);
   const sample = definition.samples.find((s) => s.id === sampleId) ?? definition.samples[0];
   const reducedMotion = useSyncExternalStore(subscribeReducedMotion, prefersReducedMotion, () => false);
   const { flow, status, showResult, play } = useReplay(sample, locale, { reducedMotion });
@@ -275,7 +281,13 @@ export function ReplayDemo({ definition, kind, locale: _locale, footnote }: Repl
             {status === "done" ? t("replay") : t("play")}
           </button>
         </div>
-        <FlowPlayer state={flow} label={t("flowLabel")} statusLabels={statusLabels} dataLabels={dataLabels} />
+        <FlowPlayer
+          state={flow}
+          label={t("flowLabel")}
+          statusLabels={statusLabels}
+          dataLabels={dataLabels}
+          onOpenSource={(source) => setCited({ slug: source.slug, section: source.section })}
+        />
       </div>
 
       <section aria-labelledby={resultHeadingId} className="flex flex-col gap-2">
@@ -293,7 +305,9 @@ export function ReplayDemo({ definition, kind, locale: _locale, footnote }: Repl
             className="w-full max-w-[92%] self-start rounded-xl border border-primary-container/50 bg-primary-container/20 px-3.5 py-2.5 text-body-md text-on-surface sm:max-w-[82%]"
           >
             <span className="sr-only">{t("chat.bot")}: </span>
-            <Markdown>{sample.result.text[locale]}</Markdown>
+            <Markdown onCite={setCited} isCiteable={isPolicyCitation}>
+              {sample.result.text[locale]}
+            </Markdown>
           </div>
         ) : (
           <PeopleResult people={sample.result.people} />
@@ -301,6 +315,9 @@ export function ReplayDemo({ definition, kind, locale: _locale, footnote }: Repl
       </section>
 
       {footnote ? <div className="text-body-md text-on-surface-variant">{footnote}</div> : null}
+      {cited ? (
+        <PolicyDocDialog citation={cited} closeLabel={tPolicy("close")} onClose={() => setCited(null)} />
+      ) : null}
     </div>
   );
 }

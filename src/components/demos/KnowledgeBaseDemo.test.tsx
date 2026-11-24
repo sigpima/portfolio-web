@@ -323,6 +323,63 @@ describe("KnowledgeBaseDemo", () => {
     expect(live().textContent).toContain("chinh-sach-bao-hanh › Giữ lại bảo hành");
   });
 
+  describe("policy questions", () => {
+    const PREVIEW =
+      "chinh-sach-bao-hanh › Chính sách bảo hành công trình sơn › Giữ lại bảo hành · 0.78\nxu-ly-be-mat › Xử lý bề mặt › Chà nhám · 0.70";
+    const policyAnswer =
+      "Khoản giữ lại trả sau 12 tháng [chinh-sach-bao-hanh › Giữ lại bảo hành]. Xem thêm [tai-lieu-la › Mục X].";
+    const policyEvents = (): ChatEvent[] => [
+      { type: "start", session_id: "s-1" },
+      { type: "tool_call", call_id: 1, tool: "search_policies", args: { query: "giữ lại" } },
+      { type: "tool_result", call_id: 1, tool: "search_policies", ok: true, duration_ms: 90, row_count: 2, sql: null, preview: PREVIEW },
+      { type: "answer", text: policyAnswer },
+      { type: "done", duration_ms: 900 },
+    ];
+    const ask = async () => {
+      mockStream.mockImplementation(streamOf(policyEvents()));
+      const { user } = await renderDemo();
+      await user.type(await readyInput(), "hi{Enter}");
+      await waitFor(() => expect(node("answer")).toHaveAttribute("data-status", "done"));
+      return user;
+    };
+
+    it("labels the third node Milvus, and the chip of its popup Nguồn", async () => {
+      await ask();
+      expect(node("db-1")).toHaveTextContent(viMessages.kb.nodes.policyStore.label);
+      expect(within(node("db-1")).getByRole("button")).toHaveTextContent(`{ } ${viMessages.kb.inspect.policyResultHint}`);
+    });
+
+    it("opens the cited document from a citation chip, highlights the section, and gives focus back on Escape", async () => {
+      const user = await ask();
+      const chip = screen.getByRole("button", { name: "chinh-sach-bao-hanh › Giữ lại bảo hành" });
+      await user.click(chip);
+      await screen.findByText(viMessages.kb.policy.synthetic);
+      const cited = document.querySelectorAll('[data-role="cited-section"]');
+      expect(cited).toHaveLength(1);
+      expect(cited[0]).toHaveTextContent("Giữ lại bảo hành");
+      await user.keyboard("{Escape}");
+      expect(screen.queryByRole("dialog")).toBeNull();
+      expect(chip).toHaveFocus();
+    });
+
+    it("keeps a citation of an unknown document as plain text", async () => {
+      await ask();
+      expect(screen.queryByRole("button", { name: /tai-lieu-la/ })).toBeNull();
+      expect(answerText()!.querySelectorAll('[data-role="citation"]')).toHaveLength(2);
+    });
+
+    it("opens the document from a source listed in the Nguồn popup", async () => {
+      const user = await ask();
+      await user.click(within(node("db-1")).getByRole("button"));
+      const sources = within(screen.getByRole("dialog")).getAllByRole("button", { name: /›/ });
+      expect(sources).toHaveLength(2);
+      await user.click(sources[1]);
+      await screen.findByText(viMessages.kb.policy.synthetic);
+      expect(screen.getByRole("dialog", { name: "Quy trình xử lý bề mặt trước khi sơn và bả" })).toBeInTheDocument();
+      expect(document.querySelectorAll('[data-role="cited-section"]')).toHaveLength(1);
+    });
+  });
+
   it("does not call streamChat for an empty or whitespace-only question", async () => {
     const { user } = await renderDemo();
     const input = await readyInput();

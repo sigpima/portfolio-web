@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useId, useState, type CSSProperties } from "react";
-import type { FlowNode, FlowRow, FlowState, NodeStatus } from "@/lib/flow/model";
+import type { FlowNode, FlowRow, FlowSource, FlowState, NodeStatus } from "@/lib/flow/model";
 import { FlowDataDialog } from "./FlowDataDialog";
 
 export interface FlowDataLabels {
@@ -19,6 +19,8 @@ export interface FlowPlayerProps {
   statusLabels: Record<NodeStatus, string>;
   /** Without it, nodes that carry `data` are plain boxes: nothing opens. */
   dataLabels?: FlowDataLabels;
+  /** Opens a policy source listed in a node's popup (the popup closes first). */
+  onOpenSource?: (source: FlowSource) => void;
 }
 
 /** Colour of the vertical link that leads into the next row, from the row above it. */
@@ -277,7 +279,7 @@ function FlowRowView({
   );
 }
 
-export function FlowPlayer({ state, label, statusLabels, dataLabels }: FlowPlayerProps) {
+export function FlowPlayer({ state, label, statusLabels, dataLabels, onOpenSource }: FlowPlayerProps) {
   const [openId, setOpenId] = useState<string | null>(null);
   const openNode =
     openId === null ? undefined : state.rows.flatMap((row) => row.nodes).find((node) => node.id === openId);
@@ -310,6 +312,15 @@ export function FlowPlayer({ state, label, statusLabels, dataLabels }: FlowPlaye
           value={openNode.data.value}
           closeLabel={dataLabels.close}
           onClose={() => setOpenId(null)}
+          sources={openNode.data.sources}
+          onOpenSource={
+            onOpenSource
+              ? (source) => {
+                  setOpenId(null);
+                  onOpenSource(source);
+                }
+              : undefined
+          }
         />
       ) : null}
     </section>

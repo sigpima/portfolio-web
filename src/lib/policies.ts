@@ -1,4 +1,5 @@
 import type { Citation } from "@/lib/citations";
+import { POLICY_SLUGS } from "@/content/policies/slugs";
 
 /** One synthetic policy document of knowledge_base, split at its ## / ### headings. */
 export interface PolicyDoc {
@@ -13,6 +14,9 @@ export interface PolicyDoc {
 export interface PolicyIndex {
   docs: PolicyDoc[];
 }
+
+/** Whether a citation names a document of the bundle (the only ones a chip can open). */
+export const isPolicyCitation = (citation: Citation): boolean => POLICY_SLUGS.includes(citation.slug);
 
 let cached: Promise<PolicyIndex> | undefined;
 

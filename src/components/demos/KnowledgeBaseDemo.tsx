@@ -4,6 +4,9 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState, type FormEven
 import { useLocale, useTranslations } from "next-intl";
 import { FlowPlayer, type FlowDataLabels } from "@/components/flow/FlowPlayer";
 import { Markdown } from "@/components/Markdown";
+import { PolicyDocDialog } from "@/components/flow/PolicyDocDialog";
+import type { Citation } from "@/lib/citations";
+import { isPolicyCitation } from "@/lib/policies";
 import type { Locale } from "@/content/types";
 import { ChatHttpError, fetchChatStatus, streamChat } from "@/lib/chat/client";
 import { initialChatFlow, reduceChatFlow, type FlowLabels } from "@/lib/flow/chat-flow";
@@ -70,6 +73,8 @@ export function KnowledgeBaseDemo({ onInviteRequired }: KnowledgeBaseDemoProps) 
   const [turns, setTurns] = useState<Turn[]>([]);
   const [input, setInput] = useState("");
   const [inputError, setInputError] = useState<InputErrorKey | null>(null);
+  /** The policy document opened from a citation or a source, if any. */
+  const [cited, setCited] = useState<Citation | null>(null);
   const [running, setRunning] = useState(false);
   const [sessionFull, setSessionFull] = useState(false);
   /** Text of the single polite live region: a completed answer or a localized error. */
@@ -265,7 +270,13 @@ export function KnowledgeBaseDemo({ onInviteRequired }: KnowledgeBaseDemoProps) 
             {t(`runStatus.${runStatus}`)}
           </span>
         </div>
-        <FlowPlayer state={flow} label={t("flowLabel")} statusLabels={statusLabels} dataLabels={dataLabels} />
+        <FlowPlayer
+          state={flow}
+          label={t("flowLabel")}
+          statusLabels={statusLabels}
+          dataLabels={dataLabels}
+          onOpenSource={(source) => setCited({ slug: source.slug, section: source.section })}
+        />
       </div>
 
       <section
@@ -304,7 +315,9 @@ export function KnowledgeBaseDemo({ onInviteRequired }: KnowledgeBaseDemoProps) 
                       className="w-full max-w-[92%] self-start rounded-xl border border-primary-container/50 bg-primary-container/20 px-3.5 py-2.5 text-body-md text-on-surface sm:max-w-[82%]"
                     >
                       <span className="sr-only">{t("bot")}: </span>
-                      <Markdown>{turn.answer}</Markdown>
+                      <Markdown onCite={setCited} isCiteable={isPolicyCitation}>
+                        {turn.answer}
+                      </Markdown>
                     </div>
                   ) : null}
                   {turn.error ? (
@@ -389,6 +402,7 @@ export function KnowledgeBaseDemo({ onInviteRequired }: KnowledgeBaseDemoProps) 
           <p>{t("notes.privacy")}</p>
         </div>
       </section>
+      {cited ? <PolicyDocDialog citation={cited} closeLabel={t("policy.close")} onClose={() => setCited(null)} /> : null}
     </div>
   );
 }

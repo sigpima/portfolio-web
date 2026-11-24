@@ -1,6 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { FlowState, NodeStatus } from "@/lib/flow/model";
 import { FlowPlayer, type FlowDataLabels } from "./FlowPlayer";
 
@@ -178,5 +178,73 @@ describe("FlowPlayer node data", () => {
     };
     rerender(<FlowPlayer state={reset} label="Luồng" statusLabels={statusLabels} dataLabels={dataLabels} />);
     expect(screen.queryByRole("dialog")).toBeNull();
+  });
+});
+
+describe("FlowPlayer policy sources", () => {
+  const SOURCES = [
+    { slug: "chinh-sach-bao-hanh", section: "Chính sách bảo hành công trình sơn › Giữ lại bảo hành", score: 0.78 },
+    { slug: "xu-ly-be-mat", section: "Xử lý bề mặt › Chà nhám", score: 0.7 },
+  ];
+  const withSources: FlowState = {
+    rows: [
+      {
+        id: "call-1",
+        nodes: [
+          {
+            id: "db-1",
+            label: "Milvus",
+            status: "done",
+            data: {
+              title: "Các đoạn chính sách tìm được",
+              hint: "Nguồn",
+              sources: SOURCES,
+              value: { ok: true, row_count: 2, passages: SOURCES },
+            },
+          },
+        ],
+      },
+    ],
+  };
+  const player = (onOpenSource?: (s: (typeof SOURCES)[number]) => void) =>
+    render(
+      <FlowPlayer
+        state={withSources}
+        label="Luồng"
+        statusLabels={statusLabels}
+        dataLabels={dataLabels}
+        onOpenSource={onOpenSource}
+      />,
+    );
+
+  it("lists each source as a button in the popup, with its score, when a handler is given", async () => {
+    const user = userEvent.setup();
+    player(vi.fn());
+    await user.click(screen.getByRole("button", { name: /Nguồn/ }));
+    const dialog = screen.getByRole("dialog");
+    const buttons = within(dialog).getAllByRole("button", { name: /›/ });
+    expect(buttons).toHaveLength(2);
+    expect(buttons[0]).toHaveTextContent("chinh-sach-bao-hanh › Chính sách bảo hành công trình sơn › Giữ lại bảo hành · 0.78");
+    expect(buttons[1]).toHaveTextContent("xu-ly-be-mat › Xử lý bề mặt › Chà nhám · 0.70");
+  });
+
+  it("closes the popup and reports the source that was clicked", async () => {
+    const user = userEvent.setup();
+    const onOpenSource = vi.fn();
+    player(onOpenSource);
+    await user.click(screen.getByRole("button", { name: /Nguồn/ }));
+    await user.click(within(screen.getByRole("dialog")).getAllByRole("button", { name: /›/ })[1]);
+    expect(onOpenSource).toHaveBeenCalledTimes(1);
+    expect(onOpenSource).toHaveBeenCalledWith(SOURCES[1]);
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("shows no source buttons without a handler, only the JSON", async () => {
+    const user = userEvent.setup();
+    player();
+    await user.click(screen.getByRole("button", { name: /Nguồn/ }));
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getAllByRole("button")).toHaveLength(1); // the close button
+    expect(dialog).toHaveTextContent('"passages"');
   });
 });
