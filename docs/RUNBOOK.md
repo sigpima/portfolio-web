@@ -470,6 +470,17 @@ Người xem không có link thấy bản phát lại. Cho tới khi bạn ghi m
 
 Khi file có ít nhất một mẫu, mẫu giữ chỗ và nhãn "giữ chỗ" của Knowledge Base **tự biến mất** (không có cờ nào phải sửa tay).
 
+### Tài liệu chính sách đóng gói trong web (trích dẫn bấm được)
+
+Câu trả lời của bot trích nguồn dạng `[slug › mục]`; trên trang, mỗi trích dẫn là một thẻ, bấm vào mở popup đúng tài liệu với mục được trích tô nổi (cả trong demo thật lẫn bản phát lại),
+và danh sách nguồn trong popup của ô Milvus cũng bấm được. Nội dung tài liệu là **bản sao** của `knowledge_base/data/policies/*.md` (giả lập, 12 tài liệu), nằm ở
+`src/content/policies/policies.generated.json` (tải lười, ~70 KB) và `src/content/policies/slugs.ts`; hai file này **sinh tự động, đừng sửa tay**.
+
+- Khi tài liệu chính sách ở `knowledge_base` đổi: chạy `npm run sync:policies` (mặc định đọc `../../knowledge_base/data/policies`, hoặc truyền thư mục khác làm đối số), xem `git diff`, `npx vitest run`, rồi commit.
+  Script dừng với mã 1 nếu một file thiếu `slug`/`title`/`doc_type` hoặc trùng `slug`.
+- Trích dẫn chỉ bấm được khi `slug` có trong bản đóng gói; slug lạ hiện thẻ chữ thường (không bịa nguồn). Trích dẫn đúng `slug` nhưng không khớp tên mục thì mở tài liệu mà không tô mục nào.
+- Tài liệu luôn bằng tiếng Việt (đánh dấu `lang="vi"` trên trang tiếng Anh) và popup ghi rõ đó là tài liệu giả lập.
+
 ## 13. Thay ảnh giữ chỗ Twistfit bằng ảnh thật
 
 Twistfit có **hai** bộ ảnh khác nhau, đừng nhầm:
