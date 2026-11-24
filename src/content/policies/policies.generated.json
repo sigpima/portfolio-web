@@ -1,0 +1,345 @@
+{
+  "docs": [
+    {
+      "slug": "chinh-sach-bao-hanh",
+      "title": "Chính sách bảo hành công trình sơn",
+      "docType": "warranty",
+      "intro": "Tài liệu giả lập cho bản demo; công ty, sản phẩm đều là bịa.\n\nTài liệu này là quy định nội bộ của Sơn Việt Demo Co. về thời hạn bảo hành, gia hạn, khoản giữ lại và ngày bắt đầu bảo hành. Tài liệu trả lời hai câu hỏi thường gặp: công trình được bảo hành bao lâu, và vì sao hai báo giá ghi thời hạn khác nhau. Lỗi nào được bảo hành nằm ở tài liệu loại trừ bảo hành.",
+      "sections": [
+        {
+          "heading": "Nguyên tắc: báo giá ghi riêng thì ưu tiên",
+          "level": 2,
+          "body": "Thời hạn bảo hành thực tế là thời hạn ghi trong phần bảo hành của báo giá đã ký; mức tiêu chuẩn ở mục sau chỉ dùng để lập báo giá.\n\n1. Nếu báo giá ghi một thời hạn riêng, cao hay thấp hơn mức tiêu chuẩn, thì thời hạn trong báo giá được ưu tiên. Mỗi báo giá chỉ ghi một thời hạn chung cho cả công trình.\n2. Nếu báo giá không có phần bảo hành thì mức tiêu chuẩn không tự động áp dụng; hai bên phải thỏa thuận bằng văn bản trước khi ký.\n3. Nếu báo giá gộp nhiều nhóm có thời hạn tiêu chuẩn khác nhau (ví dụ sơn nước nội thất 12 tháng, chống thấm 36 tháng) mà không nêu thời hạn chung, cả công trình dùng thời hạn tiêu chuẩn dài nhất trong các nhóm đó.\n\nLý do: báo giá là văn bản hai bên đã ký, còn bảng tiêu chuẩn là quy định nội bộ mà chủ đầu tư có thể chưa đọc; khi mâu thuẫn, văn bản đã ký phải thắng. Với báo giá gộp, thời hạn chung không được thấp hơn mức tiêu chuẩn của nhóm nào, kẻo nhóm dài nhất bị bảo hành thiếu. Thời hạn dài hơn thường đi kèm giá cao hơn vì chi phí bảo hành tính sẵn vào giá, nên khi so sánh hai báo giá cần xem cả thời hạn bảo hành chứ không chỉ đơn giá."
+        },
+        {
+          "heading": "Thời hạn tiêu chuẩn theo nhóm hạng mục",
+          "level": 2,
+          "body": "Thời hạn tiêu chuẩn phụ thuộc nhóm hạng mục và hệ vật liệu (trung cấp hoặc cao cấp).\n\n1. Sơn trang trí nội thất (sơn nước nội thất, sơn trần thạch cao, bả matit, sơn lót chống kiềm): 12 tháng với hệ trung cấp, 18 tháng với hệ cao cấp.\n2. Sơn ngoại thất (sơn nước ngoại thất, sơn hiệu ứng đá trang trí), sơn dầu cửa sắt lan can và sơn chống nóng mái tôn: 24 tháng.\n3. Chống thấm (sân thượng, nhà vệ sinh, tường ngoài) và sơn epoxy sàn tầng hầm: 36 tháng với hệ cao cấp, 24 tháng với hệ trung cấp.\n\nLý do: thời hạn bảo hành phản ánh thời gian cần để lỗi thi công lộ ra. Lỗi nội thất như bong tróc, phồng rộp thường xuất hiện trong năm đầu nên 12 đến 18 tháng là đủ. Ngoại thất chịu hai mùa nắng mưa nên cần 24 tháng. Chống thấm có lỗi chỉ lộ ra sau vài mùa mưa nên hệ cao cấp được 36 tháng; hệ trung cấp gốc xi măng polymer tạo màng cứng, kém co giãn hơn hệ PU đàn hồi, nên chỉ 24 tháng."
+        },
+        {
+          "heading": "Gia hạn bảo hành",
+          "level": 2,
+          "body": "Phần bảo hành của báo giá có hai trường `extend_percent` và `extend_period` để bán thêm gia hạn.\n\nĐây là quy ước của bản demo, vì mô tả cột trong dữ liệu không nói rõ: `extend_percent` là tỉ lệ phần trăm trên giá trị hợp đồng mà chủ đầu tư trả thêm để mua thêm `extend_period` tháng bảo hành. Giá trị 0 nghĩa là không bán gia hạn.\n\n1. `extend_percent` nhận 0, 5 hoặc 10; `extend_period` nhận 0, 3 hoặc 6 tháng.\n2. Ví dụ: hợp đồng 1.000.000.000 VND, `extend_percent` bằng 5, `extend_period` bằng 6 thì chủ đầu tư trả thêm 50.000.000 VND để được bảo hành thêm 6 tháng sau thời hạn chính.\n3. Nếu một trong hai giá trị bằng 0 thì không có gia hạn và không phát sinh khoản trả thêm.\n\nLý do: chi phí bảo hành trong cơ cấu chi phí chỉ khoảng 1 đến 2% tổng vật tư, vật tư phụ và nhân công cho thời hạn chính. Gia hạn là cam kết thêm rủi ro nên bên mua trả thêm."
+        },
+        {
+          "heading": "Giữ lại bảo hành",
+          "level": 2,
+          "body": "Chúng ta giữ lại 5% giá trị hợp đồng làm khoản bảo hành, hoàn trả khi hết thời hạn bảo hành chính.\n\n1. Khoản 5% không phải đợt thanh toán riêng; nó được trừ khỏi các đợt thanh toán và hoàn trả ở cuối.\n2. Khoản này giữ đến hết thời hạn chính ghi trong báo giá, không kéo dài theo phần gia hạn đã mua.\n3. Nếu lỗi thuộc diện bảo hành không được khắc phục đúng hạn, chủ đầu tư có quyền dùng khoản này thuê bên khác sửa.\n\nLý do: khoản giữ lại bảo đảm chúng ta vẫn có động lực quay lại sửa lỗi sau khi đã nhận gần hết tiền. Phần gia hạn không kéo dài việc giữ tiền vì chủ đầu tư đã trả thêm cho phần đó."
+        },
+        {
+          "heading": "Bảo hành bắt đầu từ khi nào",
+          "level": 2,
+          "body": "Thời hạn bảo hành tính từ ngày ký biên bản nghiệm thu bàn giao hoàn công, không tính từ ngày ký hợp đồng hay ngày xong từng hạng mục.\n\n1. Ngày ghi trên biên bản là ngày bắt đầu; ngày kết thúc là ngày đó cộng số tháng ghi trong báo giá.\n2. Nghiệm thu giai đoạn 1 và giai đoạn 2 chỉ là mốc thanh toán và kiểm soát chất lượng, không làm bảo hành bắt đầu chạy.\n\nLý do: trước bàn giao, công trình còn trong tay chúng ta nên mọi lỗi đều phải sửa không điều kiện; bảo hành chỉ có nghĩa sau khi chủ đầu tư nhận công trình để sử dụng."
+        }
+      ]
+    },
+    {
+      "slug": "dieu-kien-thi-cong-va-an-toan",
+      "title": "Điều kiện thi công và an toàn lao động",
+      "docType": "technical",
+      "intro": "Tài liệu giả lập cho bản demo; công ty, sản phẩm đều là bịa.\n\nTài liệu này là quy định nội bộ của Sơn Việt Demo Co. về điều kiện môi trường được phép thi công, an toàn khi làm việc trên cao, bảo vệ tài sản của khách và xử lý chất thải sơn. Quy định áp dụng cho mọi hạng mục. Khi có xung đột giữa tiến độ và quy định này, quy định này được ưu tiên, và chỉ huy trưởng công trình có quyền dừng thi công mà không cần xin phép.",
+      "sections": [
+        {
+          "heading": "Thời tiết",
+          "level": 2,
+          "body": "1. Không sơn ngoại thất khi đang mưa hoặc khi độ ẩm không khí trên 85%. Đo bằng ẩm kế đặt ở khu vực làm việc.\n2. Không sơn khi dự báo mưa trong những giờ đầu sau khi sơn, vì lớp sơn mới chưa khô sẽ bị nước rửa trôi.\n3. Tránh thi công dưới nắng gắt trực tiếp trên bề mặt nóng; ưu tiên sáng sớm và chiều muộn. Riêng sơn chống nóng mái tôn có giới hạn nhiệt độ nền riêng trong tài liệu kim loại.\n4. Khi bị gián đoạn vì thời tiết, chỉ huy trưởng ghi lại ngày giờ và lý do vào nhật ký công trình, và tiến độ được điều chỉnh tương ứng.\n\nLý do: sơn gốc nước tạo màng bằng cách bay hơi nước. Khi không khí quá ẩm, nước không bay đi được, màng khô chậm, dễ chảy, loang và bám bụi. Mưa khi sơn còn ướt làm trôi sơn và để lại vệt. Việc dừng thi công do thời tiết là khoản chậm hợp lý, không tính là lỗi nhà thầu, nên cần ghi nhật ký để khách hiểu vì sao tiến độ lùi."
+        },
+        {
+          "heading": "Giàn giáo và làm việc trên cao",
+          "level": 2,
+          "body": "1. Mọi công việc ở độ cao từ 2 m trở lên bắt buộc đeo dây an toàn, móc vào điểm neo chắc chắn.\n2. Giàn giáo phải được kiểm tra đầu mỗi ca làm việc: chân đế, giằng chéo, sàn thao tác, lan can và chốt khóa. Người kiểm tra ký xác nhận vào sổ.\n3. Giàn giáo nghi ngờ lỏng, lệch hoặc sau mưa gió lớn phải được dừng sử dụng cho đến khi kiểm tra lại.\n4. Không làm việc trên cao một mình, không leo trèo bằng cách bám vào thiết bị không chắc, không ném đồ từ trên xuống.\n5. Mỗi thợ làm trên cao phải được hướng dẫn cách đeo và móc dây an toàn trước ca làm đầu tiên.\n\nLý do: ngã từ độ cao chỉ khoảng 2 m đã đủ gây chấn thương nặng, nên ngưỡng bắt buộc đặt ở mức thấp. Giàn giáo là vật tạm, chịu gió, rung và va chạm hằng ngày, nên trạng thái hôm qua không bảo đảm cho hôm nay; kiểm tra đầu mỗi ca là cách rẻ nhất để phát hiện chốt lỏng trước khi có người đứng lên."
+        },
+        {
+          "heading": "Bảo vệ đồ đạc và khu vực xung quanh",
+          "level": 2,
+          "body": "1. Trước khi thi công trong nhà, di dời hoặc gom đồ đạc vào giữa phòng và phủ bạt hoặc màng che; che kín sàn, cửa, công tắc, ổ điện, thiết bị vệ sinh.\n2. Dán băng keo giấy ở mép khung cửa, chân tường và điểm tiếp giáp giữa hai màu sơn; tháo băng khi sơn se mặt, không chờ khô hẳn.\n3. Ngoại thất: che chắn cây xanh, xe, kính và khu vực người đi lại bên dưới; rào và đặt biển cảnh báo dưới chân giàn giáo.\n4. Chụp ảnh hiện trạng trước khi bắt đầu để làm căn cứ khi có tranh cãi về hư hỏng.\n5. Phối hợp với ban quản lý tòa nhà về giờ làm việc, đặc biệt khi thi công chung cư, khách sạn và bệnh viện.\n\nLý do: sơn dính lên đồ đạc hay kính rất khó xử lý, và chi phí bồi thường thường vượt lợi nhuận của cả hạng mục. Che chắn kỹ tốn thêm vật tư phụ như băng keo giấy và bạt che phủ, nhưng các khoản này đã có trong báo giá. Ảnh hiện trạng bảo vệ cả khách lẫn công ty."
+        },
+        {
+          "heading": "Chất thải sơn",
+          "level": 2,
+          "body": "1. Không đổ sơn thừa, nước rửa dụng cụ xuống cống, sông hoặc đất. Để sơn thừa đóng rắn hoặc thấm vào vật liệu hút ẩm (mùn cưa, cát) rồi gom vào khu chứa chất thải riêng.\n2. Thùng sơn rỗng phải để khô, đóng nắp và giao cho đơn vị thu gom; không dùng lại thùng để đựng nước uống hay thực phẩm.\n3. Dung môi và giẻ lau thấm dung môi được để trong thùng kín có nắp, tránh xa nguồn lửa, vì có nguy cơ cháy.\n4. Giữ sơn thừa còn dùng được để dặm cho khách, ghi rõ lô và màu.\n5. Cuối mỗi ca, dọn sạch khu vực làm việc, mang rác ra khỏi công trình.\n\nLý do: sơn, dung môi và nước rửa chứa hóa chất có hại cho nước ngầm và đất, và việc xả bừa bãi bị xử phạt. Giẻ thấm dung môi tự nóng lên có thể bắt lửa nếu vo thành cục để trong góc. Giữ sơn dặm đúng lô giúp lần sửa chữa sau không bị lệch màu."
+        }
+      ]
+    },
+    {
+      "slug": "dinh-muc-hao-hut-va-so-lop",
+      "title": "Định mức hao hụt vật tư và số lớp thi công",
+      "docType": "technical",
+      "intro": "Tài liệu giả lập cho bản demo; công ty, sản phẩm đều là bịa.\n\nTài liệu này giải thích cách bộ phận dự toán của Sơn Việt Demo Co. quy đổi diện tích thi công thành số thùng vật tư. Ba đại lượng cùng quyết định lượng sơn: số lớp, độ phủ của sản phẩm và tỉ lệ hao hụt. Hiểu ba đại lượng này giúp giải thích vì sao hai báo giá cho cùng một công trình lại có số thùng khác nhau.",
+      "sections": [
+        {
+          "heading": "Hao hụt thi công",
+          "level": 2,
+          "body": "Hao hụt là phần vật tư tiêu hao nhưng không nằm trên bề mặt hoàn thiện: sơn dính dụng cụ, rơi vãi, bay hơi, còn dư đáy thùng, và sơn thấm vào nền xốp. Quy định của chúng ta nằm trong khoảng từ 3% đến 12% tùy phương pháp thi công:\n\n1. Thi công bằng lăn hoặc cọ: hao hụt từ 3% đến 6%. Sơn gần như toàn bộ lên bề mặt, chỉ mất ở dụng cụ và đáy thùng.\n2. Thi công bằng phun: hao hụt từ 8% đến 12%. Một phần hạt sơn bay theo gió hoặc bám vào vật xung quanh thay vì lên tường.\n3. Nền thô, nhám hoặc xốp (tường tô chưa bả, bê tông lộ, gạch thô) hút nhiều sơn hơn nên được cộng thêm phần hao hụt. Mức cộng thêm do chỉ huy trưởng quyết định sau khi xem nền, và tổng hao hụt không vượt 12%.\n4. Chênh lệch giữa lăn và phun là lý do chính khiến báo giá phun thường ghi số thùng cao hơn báo giá lăn dù cùng diện tích và cùng sản phẩm.\n\nLý do không dùng một tỉ lệ chung: nếu lấy mức trung bình, công trình lăn sẽ bị tính thừa vật tư còn công trình phun sẽ bị thiếu, phải mua bổ sung giữa chừng, khi thùng bổ sung có thể lệch lô màu."
+        },
+        {
+          "heading": "Số lớp theo hạng mục",
+          "level": 2,
+          "body": "Số lớp thi công cố định theo hạng mục và được nhân vào lượng vật tư:\n\n1. Sơn nước ngoại thất, sơn nước nội thất và sơn trần thạch cao: sơn phủ 2 lớp.\n2. Sơn lót chống kiềm: 1 lớp.\n3. Bả matit hoàn thiện: 2 lớp.\n4. Chống thấm sân thượng, nhà vệ sinh và tường ngoài: 2 lớp.\n5. Sơn epoxy sàn tầng hầm: 2 lớp.\n6. Sơn dầu cửa sắt lan can, sơn hiệu ứng đá trang trí và sơn chống nóng mái tôn: theo định mức hạng mục trong báo giá, mặc định 2 lớp.\n\nLý do: số lớp phản ánh chức năng của vật liệu. Sơn lót chỉ cần một lớp vì nhiệm vụ của nó là phong tỏa kiềm và tăng bám; lớp phủ cần hai lớp để đủ độ dày và che nền; chống thấm cần hai lớp vuông góc để không còn lỗ kim. Giảm số lớp để hạ giá là cách làm khiến chất lượng giảm mà bảo hành vẫn phải chịu, nên chúng ta không cho phép."
+        },
+        {
+          "heading": "Quy đổi ra thùng",
+          "level": 2,
+          "body": "Công thức quy đổi:\n\n1. Lượng vật tư (lít) = diện tích (m²) × số lớp ÷ độ phủ (m² trên lít cho một lớp).\n2. Lượng cần mua = lượng vật tư × (1 + tỉ lệ hao hụt).\n3. Số thùng = lượng cần mua ÷ dung tích một thùng, và luôn làm tròn lên.\n\nVí dụ: sơn nước ngoại thất 500 m², 2 lớp, độ phủ 10 m² mỗi lít, thi công bằng lăn với hao hụt 5%. Lượng vật tư là 500 × 2 ÷ 10 = 100 lít; cộng hao hụt thành 105 lít; thùng 18 lít cho 105 ÷ 18 ≈ 5,83, làm tròn lên thành 6 thùng.\n\nLý do làm tròn lên: không thể mua một phần thùng, và thiếu vài lít ở giai đoạn cuối buộc phải đặt thêm thùng, mất thời gian chờ và có nguy cơ lệch lô màu. Số thùng dư được giữ lại làm sơn dặm cho khách. Chính vì làm tròn lên nên chi phí vật tư không tăng đều theo diện tích mà tăng theo bậc thang: tăng diện tích thêm vài mét vuông có thể kéo theo cả một thùng, và hai công trình có diện tích gần nhau vẫn có thể chênh nhau một thùng.\n\nĐộ phủ và dung tích thùng lấy từ thông số sản phẩm trong danh mục: độ phủ tùy dòng, còn dung tích thùng có loại nhỏ vài lít, có loại hàng chục lít, nên khi so sánh đơn giá giữa các báo giá, cần so cả số thùng và giá thùng, không chỉ giá trên mét vuông."
+        }
+      ]
+    },
+    {
+      "slug": "dinh-muc-nhan-cong-va-to-doi",
+      "title": "Định mức nhân công và cơ cấu tổ đội",
+      "docType": "technical",
+      "intro": "Tài liệu giả lập cho bản demo; công ty, sản phẩm đều là bịa.\n\nTài liệu này giải thích cách Sơn Việt Demo Co. tính chi phí nhân công trong báo giá và dự toán: mỗi bước thi công tốn bao nhiêu ngày công trên một mét vuông, hạng mục khó được nhân hệ số thế nào, và cách quy đổi nhân công khi dùng thợ đội nhà hoặc thợ thuê ngoài. Đây là tài liệu nên đọc đầu tiên khi cần giải thích vì sao phần nhân công của hai báo giá chênh nhau.",
+      "sections": [
+        {
+          "heading": "Ngày công trên m²",
+          "level": 2,
+          "body": "1. Mỗi bước thi công có một định mức ngày công trên mét vuông, nằm trong khoảng từ 0,015 đến 0,04 ngày công/m² cho mỗi bước.\n2. Định mức của từng bước nằm trong khoảng trên tùy cường độ công việc thực tế của bước đó; tài liệu này không quy định riêng mức cho từng loại bước.\n3. Số ngày công của một hạng mục bằng tổng định mức của các bước trong quy trình, nhân diện tích, rồi nhân hệ số ở các mục bên dưới.\n4. Một ngày công là công của một thợ trong một ngày làm việc; đơn giá ngày công phụ thuộc cấp thợ (thợ chính, thợ phụ).\n\nLý do: tính theo từng bước thay vì tính một con số chung cho cả hạng mục giúp dự toán khớp với thực tế. Hạng mục có nhiều bước chuẩn bị (sàn cũ, tường cũ) tự động tốn nhiều công hơn hạng mục mới sạch, và khi đối chiếu hai báo giá ta có thể chỉ ra chính xác bước nào chênh."
+        },
+        {
+          "heading": "Hệ số theo hạng mục",
+          "level": 2,
+          "body": "Một số hạng mục khó hơn sơn tường thông thường nên được nhân hệ số hạng mục lên tổng ngày công:\n\n1. Chống thấm sân thượng: hệ số 1,2.\n2. Chống thấm nhà vệ sinh: hệ số 1,4.\n3. Sơn dầu cửa sắt lan can và các hạng mục sơn kim loại: hệ số 1,3.\n4. Sơn hiệu ứng đá trang trí: hệ số 1,5.\n5. Các hạng mục còn lại như sơn nước, bả, lót chống kiềm: hệ số 1,0.\n\nLý do: nhà vệ sinh diện tích nhỏ, nhiều góc, chân ống và phải chống thấm cuốn tường nên mỗi mét vuông tốn công hơn sân thượng rộng và phẳng. Kim loại có nhiều chi tiết nhỏ (nan, cạnh, mối hàn) nên sơn chậm hơn. Hiệu ứng đá đòi hỏi thao tác tạo vân bằng tay nên cao nhất, 1,5."
+        },
+        {
+          "heading": "Hệ số nhân công",
+          "level": 2,
+          "body": "Ngoài hệ số hạng mục, ngày công cơ sở còn nhân thêm hệ số nhân công, nằm trong khoảng từ 1,05 đến 1,25. Hệ số này không phải thợ làm nhiều hơn mà là phần chi phí quản lý và vận chuyển trong ngày công:\n\n1. Đội trưởng, giám sát và an toàn lao động không trực tiếp sơn nhưng được chia vào ngày công.\n2. Thời gian đi lại, bốc dỡ dụng cụ, dọn dẹp cuối ca nằm trong ngày công, không báo thêm riêng.\n3. Hệ số nhân công nằm trong khoảng 1,05 đến 1,25 tùy công trình; công trình càng xa hoặc càng bất tiện thì hệ số càng cao.\n\nLý do: nếu không gộp chi phí quản lý vào ngày công, mỗi báo giá sẽ phải liệt kê hàng chục khoản nhỏ khó kiểm soát. Gộp thành hệ số giúp báo giá gọn và minh bạch ở mức độ phù hợp. Khi so sánh nhân công giữa hai báo giá, hãy xem cả hệ số hạng mục lẫn hệ số nhân công; hệ số 1,25 so với 1,05 đã tạo chênh khoảng 19% dù khối lượng thợ như nhau."
+        },
+        {
+          "heading": "Đội nhà và thuê ngoài",
+          "level": 2,
+          "body": "Sơn Việt Demo Co. dùng hai nguồn thợ: thợ đội nhà (lương và bảo hiểm do công ty trả) và thợ thuê ngoài theo ngày công. Chi phí nhân công được tính theo hai chế độ:\n\n1. Chế độ `has_kn`: phần công do thợ đội nhà làm được tính theo đơn giá đội nhà; phần công còn lại do thợ thuê ngoài tính theo đơn giá thuê ngoài tương ứng.\n2. Chế độ `all_out`: quy đổi toàn bộ công theo đơn giá của thợ chính thuê ngoài, như thể mọi công đều thuê ngoài hết. Chế độ này cho một mốc so sánh đồng nhất giữa các công trình.\n3. Hai chế độ chỉ khác nhau cách quy đổi đơn giá; tổng số ngày công không đổi.\n\nLý do: đội nhà có đơn giá khác thuê ngoài vì khác chi phí cố định, nên cùng số ngày công mà tổng tiền khác nhau. Nếu so trực tiếp giữa công trình dùng nhiều thợ đội nhà và công trình thuê ngoài hoàn toàn, chênh lệch sẽ phản ánh cơ cấu tổ đội chứ không phải hiệu quả thi công. Chế độ `all_out` loại bỏ yếu tố đó để so sánh công bằng, còn `has_kn` phản ánh chi phí thực tế của công ty."
+        }
+      ]
+    },
+    {
+      "slug": "loai-tru-bao-hanh",
+      "title": "Lỗi được bảo hành và lỗi loại trừ",
+      "docType": "warranty",
+      "intro": "Tài liệu giả lập cho bản demo; công ty, sản phẩm đều là bịa.\n\nTài liệu này là quy định nội bộ của Sơn Việt Demo Co. về việc lỗi nào được bảo hành, lỗi nào không, và khi nào một hư hỏng được xem là hao mòn tự nhiên. Nguyên tắc chung là một câu hỏi: nguyên nhân gốc nằm ở công việc của chúng ta hay ở thứ khác. Chúng ta chịu trách nhiệm với những gì mình làm, không chịu trách nhiệm về kết cấu tòa nhà, nguồn nước từ nơi khác hay cách sử dụng sau bàn giao. Thời hạn bảo hành nằm ở tài liệu chính sách bảo hành.",
+      "sections": [
+        {
+          "heading": "Lỗi được bảo hành",
+          "level": 2,
+          "body": "Trong thời hạn bảo hành, các lỗi sau được xử lý miễn phí khi nguyên nhân là do thi công:\n\n1. Bong tróc: lớp sơn hoặc lớp bả tách khỏi nền thành mảng, thường do nền chưa sạch, chưa khô hoặc bỏ qua bước sơn lót.\n2. Phồng rộp: lớp sơn nổi bọng tròn, thường do hơi ẩm bị nhốt dưới màng sơn vì thi công khi nền còn ẩm.\n3. Vết nứt chân chim: nứt nhỏ như sợi tóc, bề rộng không quá 0,3 mm, trên mặt bả hoặc mặt sơn, do bả quá dày hoặc không chờ khô giữa các lớp.\n4. Chống thấm bị thấm trở lại ở vùng đã được nghiệm thu bằng thử ngâm nước 48 giờ, khi nguyên nhân là màng chống thấm bị lỗi hoặc thiếu lớp.\n5. Loang màu, chảy sơn, lộ vết cọ hoặc rulo do tay nghề, nếu chưa được ghi nhận lúc nghiệm thu.\n\nCách xác định nguyên nhân: đối chiếu nhật ký công trình, số đo độ ẩm nền (không quá 16% và đủ 28 ngày với nền mới), ảnh trước khi sơn và biên bản nghiệm thu. Nếu hồ sơ cho thấy nền đạt yêu cầu lúc thi công mà lỗi vẫn xuất hiện thì lỗi thuộc về chúng ta.\n\nLý do: các lỗi này là dấu hiệu điển hình của việc làm sai quy trình nên chúng ta phải chịu. Quy tắc dựa trên hồ sơ thay vì cảm tính để hai bên có cùng một căn cứ. Lỗi bong tróc và phồng rộp thường lộ ra trong năm đầu, nên bảo hành tiêu chuẩn ngắn nhất cũng không dưới 12 tháng."
+        },
+        {
+          "heading": "Lỗi không được bảo hành",
+          "level": 2,
+          "body": "Các trường hợp sau nằm ngoài bảo hành, kể cả khi vẫn còn trong thời hạn:\n\n1. Hư hỏng do va đập hoặc tác động cơ học: xô đồ đạc làm trầy, đóng đinh, khoan tường, kéo lê vật nặng trên sàn.\n2. Kết cấu bị nứt hoặc lún: vết nứt rộng hơn 0,3 mm hoặc tường chuyển vị. Đây là chuyển động của kết cấu, không phải lỗi lớp sơn.\n3. Nền thấm do nguồn nước từ nơi khác: ống nước âm tường rò rỉ, nước từ căn hộ hay tầng bên cạnh thấm sang. Màng chống thấm của chúng ta chỉ bảo vệ vùng đã thi công.\n4. Tự ý sửa chữa: chủ đầu tư hoặc bên thứ ba tự sơn đè, đục, khoan, bả vá hoặc dùng hóa chất lên vùng đang bảo hành mà không báo trước.\n5. Phai màu do bụi và khí hậu sau tháng thứ 12 với màu ngoại thất. Sau thời điểm này, phai màu ngoài trời được xem là hao mòn, không phải lỗi sản phẩm.\n6. Hư hỏng do thiên tai, hỏa hoạn, ngập lụt hoặc dùng sai công năng so với báo giá.\n\nLý do: những nguyên nhân này nằm ngoài tầm kiểm soát và ngoài phạm vi công việc đã báo giá; nhận bảo hành chúng là sửa thứ không phải do mình làm. Riêng điểm 4 có lý do kỹ thuật: khi vùng bảo hành đã bị người khác can thiệp, không thể biết lỗi đến từ lớp sơn gốc hay từ việc sửa sau đó. Chủ đầu tư nên báo trước khi sửa."
+        },
+        {
+          "heading": "Hao mòn tự nhiên",
+          "level": 2,
+          "body": "Hao mòn tự nhiên là sự xuống cấp bình thường theo thời gian của lớp sơn khi sử dụng đúng cách. Hao mòn không được bảo hành vì nó không phải lỗi.\n\n1. Màu ngoại thất dần nhạt và bám bụi do nắng, mưa, khói bụi và khí hậu. Sau tháng thứ 12, mức phai này không được bảo hành. Trong 12 tháng đầu, phai màu bất thường, ví dụ loang từng mảng, vẫn được xem xét như lỗi vật liệu hoặc thi công.\n2. Lớp sơn nội thất ngả vàng nhẹ ở nơi nhiều khói bếp, khói nhang hoặc ánh sáng mạnh, và có vết bẩn ở vị trí tay chạm như quanh công tắc và tay nắm cửa.\n3. Mòn nhẹ bề mặt sàn epoxy ở lối xe đi lại nhiều, và bụi phấn nhẹ trên sơn ngoại thất lâu năm, lau sạch được.\n\nLý do: không có lớp sơn nào giữ nguyên mãi. Tia cực tím và mưa làm hỏng dần liên kết trong màng sơn, đây là hiện tượng vật lý chứ không phải chất lượng kém. Mốc sau tháng thứ 12 tách lỗi sớm do vật liệu hoặc thi công khỏi sự xuống cấp theo thời gian. Phần hao mòn có thể xử lý bằng sơn lại có tính phí theo báo giá riêng."
+        }
+      ]
+    },
+    {
+      "slug": "quy-trinh-nghiem-thu",
+      "title": "Quy trình nghiệm thu và liên hệ với đợt thanh toán",
+      "docType": "warranty",
+      "intro": "Tài liệu giả lập cho bản demo; công ty, sản phẩm đều là bịa.\n\nTài liệu này là quy định nội bộ của Sơn Việt Demo Co. về cách nghiệm thu công trình theo ba mốc thi công, hồ sơ phải lập và cách các mốc gắn với đợt thanh toán trong báo giá. Quy tắc chung cho cả ba mốc: nghiệm thu trong vòng 3 ngày làm việc kể từ khi bên thi công báo hoàn thành mốc đó; mốc nào chưa đạt thì khắc phục rồi nghiệm thu lại, không bước sang mốc sau.",
+      "sections": [
+        {
+          "heading": "Nghiệm thu giai đoạn 1",
+          "level": 2,
+          "body": "Giai đoạn 1 gồm chuẩn bị bề mặt và lớp thi công đầu tiên: vệ sinh, xử lý bề mặt, rồi sơn lót, bả matit lớp 1, chống thấm lớp 1 hoặc sơn lót chống gỉ, tùy hạng mục.\n\n1. Kiểm tra bề mặt sạch, khuyết tật đã xử lý, vết nứt trên 0,3 mm đã có biên bản và phương án riêng.\n2. Xem nhật ký công trình: số đo độ ẩm nền (không quá 16%) và ngày tuổi của nền mới (đủ 28 ngày).\n3. Với kim loại, kiểm tra gỉ đã khử sạch và lớp lót chống gỉ phủ kín, không sót mép.\n\nLý do: giai đoạn 1 quyết định phần lớn độ bền về sau nhưng bị các lớp sau che mất, nên đây là lúc duy nhất kiểm tra nền trực tiếp. Sửa ở mốc này chỉ tốn vài công, sau khi sơn xong phải làm lại cả hệ."
+        },
+        {
+          "heading": "Nghiệm thu giai đoạn 2",
+          "level": 2,
+          "body": "Giai đoạn 2 là lúc mọi lớp theo quy trình của hạng mục đã xong, kể cả lớp phủ cuối: sơn phủ lớp 2, bả matit lớp 2, chống thấm lớp 2 hoặc sơn phủ kim loại.\n\n1. Kiểm tra số lớp đúng báo giá, độ phủ đều, không lộ nền, không chảy sơn, không sót góc.\n2. Chống thấm chỉ được nghiệm thu sau khi thử ngâm nước 48 giờ đạt, theo đúng quy trình thi công chống thấm; nếu có vết ẩm hoặc mực nước tụt thì xử lý và thử lại từ đầu.\n3. Không cán vữa bảo vệ hay ốp lát lên màng chống thấm khi chưa có chữ ký nghiệm thu.\n4. Ghi các điểm chưa đạt vào biên bản kèm ảnh và hạn khắc phục.\n\nLý do: lỗ kim hay khe nứt nhỏ của màng chống thấm chỉ lộ ra khi có nước, và hai ngày ngâm đủ để nước tìm ra khuyết điểm mà thử vài giờ không thấy. Nếu bỏ bước này, lỗi chỉ lộ khi trần tầng dưới ố vàng, lúc đó đã ốp lát che và việc sửa tốn gấp nhiều lần."
+        },
+        {
+          "heading": "Nghiệm thu bàn giao hoàn công",
+          "level": 2,
+          "body": "Đây là mốc cuối, khi chủ đầu tư nhận công trình để sử dụng.\n\n1. Vệ sinh công trình, tháo che chắn, thu dọn vật tư thừa và chất thải sơn.\n2. Hai bên kiểm tra tổng thể, đối chiếu biên bản các giai đoạn trước và xác nhận các điểm chưa đạt đã khắc phục.\n3. Bàn giao sơn dặm (thùng sơn còn dư) kèm tên sản phẩm và mã màu.\n4. Ký biên bản nghiệm thu bàn giao hoàn công. Ngày ký là ngày bảo hành bắt đầu.\n\nLý do: đây là điểm chuyển giao trách nhiệm. Trước ngày này mọi lỗi đều do bên thi công sửa; sau ngày này, lỗi được phân loại theo chính sách bảo hành và loại trừ bảo hành, nên ngày ký phải rõ ràng. Sơn dặm kèm mã màu giúp dặm vết xước nhỏ mà không lệch màu."
+        },
+        {
+          "heading": "Biên bản và hồ sơ",
+          "level": 2,
+          "body": "Mỗi mốc nghiệm thu có một biên bản riêng, lập hai bản, mỗi bên giữ một bản.\n\n1. Nội dung tối thiểu: hạng mục đã nghiệm thu, ngày giờ, người tham dự, kết quả kiểm tra, điểm chưa đạt và hạn khắc phục, chữ ký hai bên.\n2. Hồ sơ kèm theo: ảnh trước và sau thi công, số đo độ ẩm nền, kết quả thử ngâm nước, nhật ký công trình.\n3. Biên bản bàn giao hoàn công được lưu cùng báo giá đã ký; hồ sơ lưu đến hết thời hạn bảo hành, cộng phần gia hạn nếu có.\n\nLý do: khi có khiếu nại, đội xử lý phải đối chiếu số đo, ảnh và biên bản đã ký để biết lỗi do thi công hay nguyên nhân khác."
+        },
+        {
+          "heading": "Liên hệ với đợt thanh toán",
+          "level": 2,
+          "body": "Báo giá có 2, 3 hoặc 4 đợt thanh toán, mỗi đợt gắn với một mốc theo thứ tự cố định:\n\n1. Đặt cọc ký hợp đồng: đợt đầu, thanh toán khi ký hợp đồng, trước khi thi công.\n2. Nghiệm thu giai đoạn 1: thanh toán khi biên bản giai đoạn 1 được ký.\n3. Nghiệm thu giai đoạn 2: thanh toán khi biên bản giai đoạn 2 được ký.\n4. Nghiệm thu bàn giao hoàn công: thanh toán khi biên bản bàn giao hoàn công được ký.\n\nBáo giá chỉ có 2 hoặc 3 đợt thì dùng các mốc đầu theo thứ tự trên, đợt cuối của báo giá lấy phần còn lại; các mốc nghiệm thu còn lại vẫn phải thực hiện. Khoản giữ lại 5% theo chính sách bảo hành được trừ khỏi các đợt này và hoàn trả khi hết thời hạn bảo hành chính.\n\nLý do: gắn tiền với nghiệm thu giúp chủ đầu tư chỉ trả cho phần việc đã được xác nhận, còn bên thi công có dòng tiền mua vật tư cho giai đoạn sau. Mốc nghiệm thu vẫn bắt buộc khi không có đợt tiền đi kèm vì nó có chức năng chặn lỗi."
+        }
+      ]
+    },
+    {
+      "slug": "quy-trinh-xu-ly-khieu-nai-bao-hanh",
+      "title": "Quy trình xử lý khiếu nại bảo hành",
+      "docType": "warranty",
+      "intro": "Tài liệu giả lập cho bản demo; công ty, sản phẩm đều là bịa.\n\nTài liệu này là quy định nội bộ của Sơn Việt Demo Co. về cách xử lý khi chủ đầu tư báo lỗi trong thời hạn bảo hành. Quy trình có bốn bước và ba thời hạn cố định: phản hồi trong 48 giờ, khảo sát trong 5 ngày làm việc, khắc phục trong 15 ngày làm việc. Thời hạn bảo hành nằm ở tài liệu chính sách bảo hành; lỗi nào được hoặc không được bảo hành nằm ở tài liệu loại trừ bảo hành.",
+      "sections": [
+        {
+          "heading": "Tiếp nhận",
+          "level": 2,
+          "body": "1. Chủ đầu tư báo lỗi tới đầu mối bảo hành ghi trong biên bản bàn giao, nên kèm mã báo giá, vị trí hạng mục, ngày phát hiện và vài ảnh chụp.\n2. Người tiếp nhận ghi khiếu nại vào sổ theo dõi kèm giờ nhận, ngay cả khi tin báo còn thiếu thông tin.\n3. Trong 48 giờ kể từ khi nhận, bên thi công phải phản hồi chủ đầu tư: xác nhận đã nhận, hỏi thêm thông tin nếu thiếu và hẹn ngày giờ khảo sát. Phản hồi ở bước này chưa kết luận lỗi có được bảo hành hay không.\n4. Đối chiếu ngày báo lỗi với ngày ký biên bản bàn giao hoàn công và thời hạn trong báo giá, cộng phần gia hạn nếu đã mua, để biết khiếu nại còn trong thời hạn.\n\nLý do: 48 giờ là ngắn vì điều làm chủ đầu tư bực nhất là không biết mình có được nghe hay không; với lỗi thấm, mỗi trận mưa thiệt hại lại tăng. Phản hồi chưa kết luận vì chưa ai đủ dữ kiện trước khi nhìn tận nơi. Con số 48 giờ ở đây là thời hạn phản hồi, không liên quan tới thời gian thử ngâm nước khi nghiệm thu chống thấm."
+        },
+        {
+          "heading": "Khảo sát hiện trường",
+          "level": 2,
+          "body": "1. Khảo sát được thực hiện trong 5 ngày làm việc kể từ khi tiếp nhận.\n2. Người khảo sát chụp ảnh vị trí lỗi, đo độ ẩm tại điểm lỗi và điểm đối chứng, đo bề rộng vết nứt (ngưỡng 0,3 mm phân biệt nứt chân chim và nứt kết cấu), kiểm tra nguồn nước gần đó nếu là lỗi thấm.\n3. Đối chiếu hồ sơ nghiệm thu: nhật ký công trình, số đo độ ẩm lúc thi công, ảnh trước khi sơn, kết quả thử ngâm nước.\n4. Lập biên bản khảo sát nêu nguyên nhân, xếp lỗi vào nhóm được bảo hành hoặc loại trừ, và chủ đầu tư ký xác nhận đã xem kết luận.\n\nLý do: khảo sát tận nơi là cách duy nhất để phân biệt lỗi thi công với lỗi do kết cấu hoặc nguồn nước khác, vì cùng một vết phồng rộp có thể đến từ nền ẩm lúc thi công hoặc từ ống nước rò sau bàn giao. 5 ngày làm việc đủ để sắp xếp người và thiết bị đo mà không để lỗi kéo dài."
+        },
+        {
+          "heading": "Khắc phục",
+          "level": 2,
+          "body": "1. Khi hai bên thống nhất nguyên nhân và lỗi thuộc diện bảo hành, bên thi công khắc phục miễn phí trong 15 ngày làm việc kể từ ngày thống nhất.\n2. Xử lý nguyên nhân gốc trước, rồi thi công lại theo đúng quy trình kỹ thuật của hạng mục; không sơn đè lên chỗ bong hay phồng mà chưa cạo sạch và xử lý nền.\n3. Với chống thấm, vùng làm lại phải thử ngâm nước 48 giờ đạt trước khi hoàn trả bề mặt, như khi nghiệm thu ban đầu.\n4. Nghiệm thu lại bằng biên bản hai bên ký. Phần đã sửa vẫn nằm trong thời hạn bảo hành ban đầu, không bắt đầu thời hạn mới.\n5. Ngày dừng thi công vì mưa được ghi nhật ký và không tính vào hạn 15 ngày làm việc. Quá hạn mà không có lý do này, chủ đầu tư có quyền dùng khoản giữ lại bảo hành để thuê bên khác sửa.\n\nLý do: hạn tính từ lúc thống nhất nguyên nhân vì trước đó chưa biết phải sửa gì. 15 ngày làm việc đủ cho một đợt thi công lại, kể cả thời gian khô giữa các lớp. Xử lý nguyên nhân gốc trước vì nếu chỉ sơn lại, lỗi sẽ xuất hiện lần nữa. Phần sửa không có thời hạn riêng vì cùng một công trình."
+        },
+        {
+          "heading": "Từ chối bảo hành",
+          "level": 2,
+          "body": "Khi lỗi thuộc diện loại trừ hoặc khiếu nại ngoài thời hạn, bên thi công từ chối bảo hành.\n\n1. Việc từ chối phải có văn bản gửi chủ đầu tư, nêu lý do cụ thể: điều khoản loại trừ nào, căn cứ số liệu nào trong biên bản khảo sát.\n2. Văn bản đính kèm biên bản khảo sát và ảnh để chủ đầu tư tự kiểm tra kết luận.\n3. Nếu chủ đầu tư có thêm chứng cứ, ví dụ ảnh chụp ngay sau bàn giao, hai bên xem xét lại một lần.\n4. Với lỗi loại trừ, bên thi công có thể báo giá riêng để sửa có tính phí; đó là hợp đồng mới, không thuộc bảo hành.\n\nLý do: từ chối bằng lời dễ bị coi là né tránh và chủ đầu tư không có gì để dựa vào khi làm việc với bên thứ ba như ban quản lý tòa nhà. Văn bản nêu lý do buộc chúng ta chỉ từ chối khi có căn cứ thật. Xem xét lại một lần vì biên bản có thể thiếu chi tiết mà chủ đầu tư nắm rõ hơn."
+        }
+      ]
+    },
+    {
+      "slug": "thi-cong-chong-tham",
+      "title": "Quy trình thi công chống thấm",
+      "docType": "technical",
+      "intro": "Tài liệu giả lập cho bản demo; công ty, sản phẩm đều là bịa.\n\nTài liệu này là quy định nội bộ của Sơn Việt Demo Co. cho ba hạng mục chống thấm sân thượng, chống thấm nhà vệ sinh và chống thấm tường ngoài. Quy trình gồm bốn bước theo đúng thứ tự: Vệ sinh bề mặt, Xử lý bề mặt, Chống thấm lớp 1, Chống thấm lớp 2. Chống thấm là hạng mục mà lỗi chỉ lộ ra sau khi công trình đã bàn giao, thường là sau vài mùa mưa, khi sửa chữa tốn kém hơn nhiều lần so với làm đúng từ đầu.",
+      "sections": [
+        {
+          "heading": "Chuẩn bị nền",
+          "level": 2,
+          "body": "1. Thực hiện Vệ sinh bề mặt và Xử lý bề mặt theo tài liệu xử lý bề mặt: loại bỏ bụi, váng xi măng, dầu mỡ và phần vữa yếu.\n2. Bo tròn các góc giữa sàn và tường, trám kín chân ống, cổ ống thoát, khe nứt và các chỗ rỗ bằng vữa không co ngót.\n3. Độ ẩm nền phải đạt yêu cầu ở tài liệu xử lý bề mặt. Với nhà vệ sinh, chỉ thi công sau khi đã tắt nước và để nền khô.\n4. Tạo độ dốc về phía thoát nước; không thi công khi còn đọng nước.\n\nLý do: màng chống thấm bám vào nền chứ không tự tạo thành khối. Nếu nền còn váng, bụi hoặc ẩm, màng sẽ bong từng mảng. Góc vuông là điểm tập trung ứng suất, nơi màng mỏng đi và rách đầu tiên; bo tròn giúp màng phủ liên tục. Nước đọng quá lâu thì dù màng tốt đến đâu cũng chịu áp lực thường xuyên."
+        },
+        {
+          "heading": "Chống thấm lớp 1",
+          "level": 2,
+          "body": "1. Khuấy đều vật liệu, pha theo tỉ lệ ghi trên thùng, chỉ pha lượng dùng hết trong thời gian cho phép.\n2. Quét hoặc lăn lớp 1 đều tay, phủ kín cả chân ống, góc và mối nối.\n3. Cuốn lớp chống thấm lên chân tường tối thiểu 20 cm so với mặt sàn hoàn thiện. Nhà vệ sinh có khu vực vòi sen nên cuốn cao hơn.\n4. Để lớp 1 khô se, đạt độ khô mà ngón tay chạm không dính, trước khi làm lớp 2.\n\nLý do: nước không chỉ đi xuống qua sàn mà còn thấm ngang vào chân tường nhờ lực mao dẫn. Nếu màng dừng ngay tại mép sàn, nước sẽ leo lên chân tường và gây ẩm mốc, bong sơn tường bên cạnh. Mức cuốn 20 cm là mức tối thiểu để vượt quá vùng nước bắn và đọng khi lau sàn."
+        },
+        {
+          "heading": "Chống thấm lớp 2",
+          "level": 2,
+          "body": "1. Lớp 2 được thi công vuông góc với hướng của lớp 1; ví dụ lớp 1 quét theo chiều ngang thì lớp 2 quét theo chiều dọc.\n2. Khoảng cách giữa hai lớp tối thiểu 6 giờ, và không quá lâu đến mức lớp 1 bám bụi; nếu chờ quá lâu phải vệ sinh nhẹ lại trước khi làm lớp 2.\n3. Lớp 2 cũng cuốn lên chân tường ít nhất 20 cm, trùng với lớp 1.\n4. Không đi lại trên màng khi chưa khô; chỉ huy trưởng kiểm tra bằng mắt và ghi ảnh trước khi thử ngâm nước. Đây là kiểm tra nội bộ, chưa phải nghiệm thu: chống thấm chỉ được nghiệm thu sau khi thử ngâm nước 48 giờ đạt.\n\nLý do: thi công vuông góc làm các lỗ kim và vệt do lớp 1 để lại được lớp 2 che kín theo hướng khác, nên khả năng hai lỗ trùng nhau gần như bằng không. Khoảng chờ 6 giờ cho phép lớp 1 khô đủ để lớp 2 không kéo nó trôi, nhưng vẫn còn đủ độ bám dính giữa hai lớp."
+        },
+        {
+          "heading": "Thử ngâm nước",
+          "level": 2,
+          "body": "1. Sau khi lớp 2 khô theo hướng dẫn của nhà sản xuất, bịt kín cửa thoát nước và ngâm nước với mực cao khoảng 3 đến 5 cm.\n2. Thời gian thử là 48 giờ. Đánh dấu mực nước bằng băng keo, ghi giờ bắt đầu và giờ kết thúc.\n3. Quan sát trần tầng dưới, chân tường và vị trí ống; nếu có vết ẩm hoặc mực nước tụt bất thường, phải xử lý lại rồi thử lại từ đầu.\n4. Chỉ sau khi đạt mới được cán vữa bảo vệ hoặc ốp lát lên trên.\n\nLý do: thử ngâm nước là cách duy nhất để biết màng có kín thật hay không trước khi lớp ốp lát che mất nó. Hai ngày đủ để nước tìm ra khe nứt nhỏ mà thử vài giờ không thấy. Phát hiện rò khi chưa ốp lát chỉ tốn vài công, còn sau khi ốp lát phải đục lên làm lại."
+        },
+        {
+          "heading": "Vì sao hệ đàn hồi (PU) đắt hơn",
+          "level": 2,
+          "body": "Báo giá của chúng ta có hai nhóm vật liệu chống thấm: hệ gốc xi măng polymer (như AnTâm Seal) và hệ PU đàn hồi (như AnTâm Seal PU). Giá một thùng của hệ PU gần gấp đôi hệ xi măng polymer.\n\n1. Hệ xi măng polymer tạo màng cứng, giá thấp, chấp nhận nền khô se nhưng vẫn phải đạt độ ẩm nền không quá 16%, phù hợp nơi nền ổn định như nhà vệ sinh.\n2. Hệ PU tạo màng đàn hồi, co giãn theo nền khi bê tông giãn nở do nắng nóng và mưa, nên ít nứt khi nền có chuyển động nhỏ. Vì vậy hệ này được dùng ở sân thượng và nơi chịu nắng mưa trực tiếp.\n3. Nhựa PU là polymer tổng hợp, chi phí nguyên liệu cao hơn xi măng, và đòi hỏi nền khô kỹ hơn nên công chuẩn bị nhiều hơn.\n\nVì thế, hệ PU đắt hơn ở giá vật tư nhưng bền hơn khi nền chuyển động. Nếu khách chọn hệ rẻ cho nơi nền hay nứt, chúng ta phải ghi rõ rủi ro vào báo giá."
+        }
+      ]
+    },
+    {
+      "slug": "thi-cong-epoxy-va-hieu-ung-da",
+      "title": "Quy trình thi công sơn epoxy sàn và sơn hiệu ứng đá",
+      "docType": "technical",
+      "intro": "Tài liệu giả lập cho bản demo; công ty, sản phẩm đều là bịa.\n\nTài liệu này quy định cách Sơn Việt Demo Co. thi công hai hạng mục đòi hỏi tay nghề cao nhất: sơn epoxy sàn tầng hầm và sơn hiệu ứng đá trang trí. Cả hai đều dùng vật liệu đắt, thi công khó làm lại, và sai sót thấy rõ bằng mắt thường ngay sau khi hoàn thành. Vì vậy các quy tắc dưới đây chặt hơn so với sơn nước thông thường.",
+      "sections": [
+        {
+          "heading": "Điều kiện nền epoxy",
+          "level": 2,
+          "body": "1. Nền bê tông phải đủ tuổi tối thiểu 28 ngày kể từ lúc đổ, và độ ẩm nền đạt yêu cầu ở tài liệu xử lý bề mặt.\n2. Mài nhám toàn bộ diện tích sàn bằng máy mài, không mài từng phần. Sau đó hút bụi bằng máy hút công nghiệp, rồi lau lại.\n3. Trám các vết nứt, lỗ rỗ và khe co giãn trước khi mài; vết nứt có bề rộng trên 0,3 mm phải theo quy trình xử lý riêng.\n4. Kiểm tra dầu mỡ trên sàn, nhất là ở tầng hầm gửi xe; tẩy sạch bằng chất tẩy phù hợp, mài lại chỗ ngấm dầu.\n5. Sơn epoxy thi công 2 lớp theo định mức hạng mục, bắt đầu bằng lớp lót epoxy hoặc lớp phủ đầu thấm sâu vào nền.\n\nLý do: bê tông mới còn hơi nước đi từ dưới lên; hơi nước này đẩy lớp epoxy phồng rộp vì epoxy là màng kín, không cho hơi thoát qua. Đợi đủ 28 ngày là để nền khô và vữa ổn định. Mài nhám toàn bộ vì lớp váng xi măng mịn trên mặt bê tông yếu và bóng, epoxy bám vào lớp váng đó sẽ bong nguyên mảng khi xe chạy qua. Mài từng phần sẽ để lại vùng bám yếu, nơi lớp sơn bong đầu tiên."
+        },
+        {
+          "heading": "Trộn hai thành phần",
+          "level": 2,
+          "body": "1. Epoxy gồm thành phần A (nhựa) và thành phần B (chất đóng rắn); chỉ trộn theo đúng tỉ lệ ghi trên thùng, cân hoặc đong bằng dụng cụ chia vạch, không ước lượng bằng mắt.\n2. Khuấy bằng máy khuấy tốc độ thấp trong thời gian quy định, vét kỹ thành và đáy thùng, rồi đổ sang thùng sạch khuấy thêm lần nữa.\n3. Thời gian sử dụng sau trộn (pot-life) của epoxy là 40 phút. Chỉ trộn lượng có thể thi công hết trong 40 phút; phần dư sau thời hạn này bỏ đi, không pha thêm dung môi để cứu.\n4. Thi công liên tục, không dừng giữa chừng trong một mảng sàn, để tránh vệt nối.\n5. Đội thi công phải bố trí người trộn riêng và người lăn riêng để vật liệu luôn tới kịp.\n\nLý do: phản ứng đóng rắn bắt đầu ngay khi trộn A và B, tỏa nhiệt và đặc dần. Quá 40 phút sơn đã đặc, khó lăn đều, bám kém và có thể không đóng rắn hoàn toàn. Sai tỉ lệ dù ít cũng khiến màng mềm dính hoặc giòn nứt, không sửa được ngoài việc mài bỏ làm lại. Vì vậy trộn đúng tỉ lệ và trong thời hạn quan trọng hơn tốc độ."
+        },
+        {
+          "heading": "Hiệu ứng đá",
+          "level": 2,
+          "body": "1. Hạng mục Sơn hiệu ứng đá trang trí dùng dòng như Hoàng Sơn Stone, thi công theo từng mảng, mỗi mảng liền một nhịp để vân đá không đứt.\n2. Làm mẫu một mảng nhỏ trên tường để chủ đầu tư duyệt vân và màu trước khi thi công diện tích lớn.\n3. Tạo vân bằng dụng cụ chuyên dụng, giữ thao tác đồng đều giữa các thợ. Một mảng tường nên do một thợ làm xuyên suốt.\n4. Sơn bảo vệ phủ ngoài cùng được lăn sau khi lớp tạo vân khô, nhằm chống bám bẩn.\n\nLý do: vân đá là hiệu ứng thị giác nên không thể sửa chữa cục bộ; chỗ nào khác tay thợ là hiện ra như một vết loang. Duyệt mẫu trước tránh việc làm xong cả mặt tiền mới phát hiện màu hoặc vân khác kỳ vọng của khách."
+        },
+        {
+          "heading": "Vì sao nhân công cao",
+          "level": 2,
+          "body": "Trong định mức của chúng ta, hiệu ứng đá có hệ số hạng mục 1,5, tức tốn công gấp khoảng 1,5 lần sơn thường trên cùng diện tích, dù đơn giá nhân công một ngày công không đổi. Lý do:\n\n1. Mỗi mét vuông phải qua nhiều thao tác tạo vân bằng tay thay vì lăn một nhịp như sơn nước.\n2. Thợ phải làm chậm và đều tay, và phải chờ từng lớp khô nên không làm đan xen được nhiều mảng như sơn thường.\n3. Tỉ lệ làm lại cao hơn vì lỗi thẩm mỹ khó che, và thợ phải đủ tay nghề, thường là thợ chính chứ không phải thợ phụ.\n\nVì vậy, khi so sánh hai báo giá hiệu ứng đá, nhân công chênh nhau không có nghĩa một bên báo cao bất hợp lý; phần lớn chênh lệch đến từ tay nghề thợ và số thao tác. Với epoxy, nhân công không phải yếu tố chính của chênh lệch; giá thùng vật liệu và việc mài toàn bộ nền mới là phần đáng kể."
+        }
+      ]
+    },
+    {
+      "slug": "thi-cong-kim-loai-va-chong-nong",
+      "title": "Quy trình sơn kim loại và sơn chống nóng mái tôn",
+      "docType": "technical",
+      "intro": "Tài liệu giả lập cho bản demo; công ty, sản phẩm đều là bịa.\n\nTài liệu này áp dụng cho hai hạng mục của Sơn Việt Demo Co. trên nền kim loại: sơn dầu cửa sắt lan can và sơn chống nóng mái tôn. Quy trình nhóm kim loại gồm bốn bước theo thứ tự: Vệ sinh bề mặt, Chà nhám, Sơn lót chống gỉ, Sơn phủ. Kim loại khác tường ở chỗ nó gỉ, giãn nở theo nhiệt và không hút nước, nên các quy tắc dưới đây khác với sơn nước.",
+      "sections": [
+        {
+          "heading": "Chà nhám và khử gỉ",
+          "level": 2,
+          "body": "1. Sau Vệ sinh bề mặt (tẩy dầu mỡ, rửa bụi), dùng bàn chải sắt, giấy nhám hoặc máy mài để loại bỏ hoàn toàn gỉ sét và sơn cũ bong.\n2. Chà nhám cả những chỗ không gỉ để tạo độ nhám cho lớp lót bám; chà đến khi bề mặt đồng đều, lộ kim loại sáng ở vùng gỉ.\n3. Hút hoặc lau sạch bụi gỉ. Không để mồ hôi hoặc dầu tay bám lại trên kim loại trần.\n4. Với mái tôn cũ, kiểm tra các vị trí đinh vít, mối nối và chỗ thủng; xử lý trước khi sơn.\n\nLý do: gỉ là lớp xốp, giữ ẩm và tiếp tục ăn sâu vào kim loại. Nếu sơn lên gỉ còn sót, gỉ tiếp tục phát triển bên dưới, đẩy lớp sơn phồng và bong ra chỉ sau vài tháng. Kim loại bóng cũng bám sơn kém, nên cần chà nhám để tạo bám cơ học."
+        },
+        {
+          "heading": "Sơn lót chống gỉ",
+          "level": 2,
+          "body": "1. Sơn lót chống gỉ thi công 1 lớp, phủ kín cả mép, cạnh, mối hàn và đầu bu lông.\n2. Lớp lót phải được sơn trong vòng 24 giờ sau khi chà nhám xong. Nếu để quá 24 giờ, đặc biệt khi trời ẩm, phải chà nhám lại bề mặt.\n3. Chỉ sơn lót khi kim loại khô ráo, không có sương hoặc nước đọng. Không sơn lúc nền còn nóng do nắng gắt.\n4. Dùng lót chống gỉ cùng hệ với sơn phủ, để hai lớp tương thích.\n\nLý do: kim loại sạch vừa chà nhám phản ứng với oxy và hơi ẩm trong không khí và bắt đầu gỉ lại trong vài giờ, nhanh nhất ở vùng ven biển hoặc ngày nồm. Giới hạn 24 giờ là mức trần chấp nhận được; quá mức đó lớp gỉ mỏng đã hình thành dưới lớp lót mà mắt thường không thấy. Một lớp lót là đủ vì chức năng của nó là bám và chống gỉ, còn độ dày màng và màu do lớp phủ đảm nhiệm."
+        },
+        {
+          "heading": "Sơn phủ",
+          "level": 2,
+          "body": "1. Bước Sơn phủ được ghi một dòng trong quy trình nhưng thi công 2 lớp theo định mức hạng mục; lớp thứ hai chỉ làm khi lớp thứ nhất đã khô theo thời gian ghi trên thùng.\n2. Dùng cọ hoặc rulo lông ngắn, kéo sơn mỏng và đều; chú ý các cạnh, góc và mối hàn vì đây là nơi sơn mỏng nhất và gỉ lên đầu tiên.\n3. Với sơn dầu như dòng Đại Phát Alkyd, sơn chậm khô hơn sơn nước, nên che bụi và tránh để côn trùng bám vào khi sơn còn ướt.\n4. Hạng mục cửa sắt, lan can có nhiều chi tiết nhỏ nên hệ số hạng mục của nó (1,3) cao hơn sơn tường, xem tài liệu định mức nhân công.\n\nLý do: cạnh và góc là nơi sức căng bề mặt kéo sơn mỏng đi, màng mỏng thì chống gỉ kém. Hai lớp mỏng vừa tạo màng đủ dày vừa ít chảy hơn một lớp dày."
+        },
+        {
+          "heading": "Sơn chống nóng mái tôn",
+          "level": 2,
+          "body": "1. Sơn chống nóng mái tôn dùng dòng như Vietcoat Cool; lớp sơn phản xạ bớt nhiệt mặt trời nên làm mát không gian bên dưới.\n2. Chỉ thi công khi nhiệt độ bề mặt tôn không quá 45 °C. Đo bằng nhiệt kế hồng ngoại hoặc đặt tay thử; nếu tôn nóng bỏng tay thì dừng. Thông thường nên làm vào sáng sớm hoặc chiều muộn.\n3. Không thi công khi trời sắp mưa; mái tôn dốc và trơn nên cần dây an toàn và lối đi riêng, xem tài liệu điều kiện thi công và an toàn.\n4. Làm theo thứ tự đã nêu ở trên: khử gỉ, Sơn lót chống gỉ, rồi Sơn phủ chống nóng 2 lớp.\n\nLý do: trên tôn quá nóng, dung môi và nước trong sơn bay hơi quá nhanh, màng sơn đóng vỏ bên ngoài nhưng còn ướt bên trong, sau đó nứt, rộp bọng và không bám. Giới hạn 45 °C giữ cho sơn khô đều. Ngoài ra, mái tôn nóng còn trơn và nguy hiểm cho thợ, nên quy định này vừa bảo vệ chất lượng vừa bảo vệ con người."
+        }
+      ]
+    },
+    {
+      "slug": "thi-cong-son-nuoc-va-ba-matit",
+      "title": "Quy trình thi công sơn nước và bả matit",
+      "docType": "technical",
+      "intro": "Tài liệu giả lập cho bản demo; công ty, sản phẩm đều là bịa.\n\nTài liệu này quy định trình tự và số lớp khi Sơn Việt Demo Co. thi công các hạng mục sơn nước ngoại thất, sơn nước nội thất, bả matit hoàn thiện, sơn lót chống kiềm và sơn trần thạch cao. Phần chuẩn bị bề mặt đã nằm ở tài liệu xử lý bề mặt; ở đây chỉ nói về các lớp vật liệu. Khi một công trình có đủ các lớp, trình tự thường làm là: Sơn lót, Bả matit lớp 1, Bả matit lớp 2, Sơn phủ lớp 1, Sơn phủ lớp 2; hạng mục chỉ gồm một phần của chuỗi này thì bỏ các lớp không có trong hợp đồng. Mỗi lớp chỉ được làm khi lớp trước đã khô đủ thời gian quy định.",
+      "sections": [
+        {
+          "heading": "Sơn lót chống kiềm",
+          "level": 2,
+          "body": "1. Mỗi mặt tường được sơn lót chống kiềm đúng 1 lớp, lăn đều, không để chảy hoặc đọng thành vệt dày.\n2. Dùng sản phẩm lót tương ứng với dòng sơn phủ đã ký trong hợp đồng, ví dụ Vietcoat Primer cho dòng Vietcoat Weather ngoại thất; không trộn lẫn dòng của hãng này cho hãng khác nếu chưa có xác nhận của bộ phận kỹ thuật.\n3. Với tường mới tô, lớp lót phải làm sau khi nền đạt điều kiện độ ẩm và tuổi vữa trong tài liệu xử lý bề mặt.\n\nLý do: vữa xi măng luôn chứa kiềm, và kiềm sẽ phá lớp sơn phủ từ bên dưới, gây ố, phấn hóa và đổi màu. Lớp lót chống kiềm tạo một màng ngăn giữa vữa và sơn phủ, đồng thời làm nền hút sơn đều để màu lên đồng nhất. Một lớp là đủ vì chức năng của nó là phong tỏa và tăng bám, không phải tạo màu; lót dày hơn không bảo vệ tốt hơn mà chỉ tốn vật tư."
+        },
+        {
+          "heading": "Bả matit 2 lớp",
+          "level": 2,
+          "body": "1. Bả matit làm 2 lớp, mỗi lớp mỏng và kéo bằng bàn bả theo hướng vuông góc với lớp trước.\n2. Lớp 1 để san phẳng các chỗ lõm lớn; lớp 2 để hoàn thiện bề mặt mịn. Chà nhám nhẹ sau lớp 2 trước khi sơn.\n3. Không bả một lớp dày thay cho hai lớp mỏng, kể cả khi tiến độ gấp.\n\nLý do: lớp bả dày co ngót không đều khi khô, dẫn đến nứt chân chim và bong mảng. Hai lớp mỏng khô nhanh hơn, ít co hơn và cho bề mặt phẳng hơn vì lớp thứ hai bù các vết do lớp thứ nhất để lại. Đơn giá báo cho khách đã tính theo hai lớp, nên làm ít hơn là sai cam kết hợp đồng."
+        },
+        {
+          "heading": "Sơn phủ 2 lớp",
+          "level": 2,
+          "body": "1. Sơn phủ thi công 2 lớp: lớp 1 lăn hoặc phun đều, lớp 2 làm theo hướng khác (lớp trước lăn ngang thì lớp sau lăn dọc).\n2. Pha sơn theo tỉ lệ nước hướng dẫn trên thùng. Không pha loãng thêm để tiết kiệm vật tư hoặc để sơn dễ lăn hơn.\n3. Với sơn trần thạch cao, lăn nhẹ tay và chỉ sơn khi mối nối đã được xử lý phẳng, vì ánh sáng chiếu xiên sẽ làm lộ mọi khuyết điểm trên trần.\n4. Kiểm tra màu và độ phủ của lớp 1 trước khi sơn lớp 2; nếu còn lộ nền, báo chỉ huy trưởng công trình.\n\nLý do: một lớp sơn không đủ độ dày màng khô để che nền, chống thấm nước mưa hay chịu rửa. Lớp thứ hai cũng sửa các chỗ sót của lớp thứ nhất. Pha loãng quá mức làm màng sơn mỏng và nhanh phai, là nguyên nhân thường gặp của khiếu nại trong năm đầu."
+        },
+        {
+          "heading": "Thời gian khô",
+          "level": 2,
+          "body": "Thời gian khô tối thiểu giữa các lớp, tính ở điều kiện thông thường:\n\n1. Giữa hai lớp sơn phủ: tối thiểu 4 giờ.\n2. Sau lớp bả, trước khi chà nhám hoặc sơn phủ: tối thiểu 6 giờ.\n3. Sau lớp sơn lót chống kiềm, trước khi bả hoặc sơn phủ: tối thiểu 2 giờ.\n4. Trời nồm, mưa phùn hoặc phòng kín không thông gió: kéo dài thời gian chờ, không rút ngắn. Người thi công kiểm tra bằng tay: bề mặt phải khô ráo, không dính.\n\nLý do: nếu sơn lớp sau khi lớp trước còn ẩm, nước bị nhốt giữa hai lớp và tạo bọng phồng hoặc vệt đục. Bột bả khô chậm hơn sơn vì lớp bả dày hơn và hút nước nhiều, nên cần 6 giờ so với 4 giờ của sơn phủ. Lớp lót mỏng và khô nhanh nên chỉ cần 2 giờ. Đây là mức tối thiểu; chỉ huy trưởng được phép kéo dài nhưng không được rút ngắn.\n\nKhi lập tiến độ báo giá, bộ phận dự toán tính thời gian chờ này vào thời gian thi công, vì vậy một hạng mục sơn nước đủ quy trình thường cần nhiều ngày hơn so với số công thuần túy."
+        }
+      ]
+    },
+    {
+      "slug": "xu-ly-be-mat",
+      "title": "Quy trình xử lý bề mặt trước khi sơn và bả",
+      "docType": "technical",
+      "intro": "Tài liệu giả lập cho bản demo; công ty, sản phẩm đều là bịa.\n\nTài liệu này là quy định nội bộ của Sơn Việt Demo Co. về bốn bước chuẩn bị bề mặt: Vệ sinh bề mặt, Xử lý khuyết tật bề mặt, Xử lý bề mặt (dùng cho nhóm chống thấm) và Chà nhám. Bốn bước này không dùng sản phẩm sơn và không có số lớp, nên trong bảng báo giá chúng chỉ tính nhân công. Tuy vậy, phần lớn lỗi bong tróc, phồng rộp và ố vàng mà đội bảo hành gặp đều bắt nguồn từ việc làm cẩu thả ở chính các bước này. Vì vậy chúng ta không rút ngắn chúng dù khách hàng hay chủ đầu tư thúc tiến độ.",
+      "sections": [
+        {
+          "heading": "Vệ sinh bề mặt",
+          "level": 2,
+          "body": "1. Quét sạch bụi, vữa vụn và mạng nhện bằng chổi mềm, sau đó dùng khăn ẩm hoặc máy hút bụi lau lại toàn bộ mặt cần sơn.\n2. Cạo bỏ lớp sơn cũ đã phồng, bong hoặc phấn hóa cho đến khi chạm vào lớp còn bám chắc. Không sơn chồng lên lớp cũ đang bong.\n3. Rửa sạch rêu mốc bằng dung dịch tẩy mốc pha theo hướng dẫn trên bao bì, xả lại bằng nước sạch, để nền khô hoàn toàn.\n4. Tẩy dầu mỡ ở những khu vực bếp, nhà xưởng và sàn tầng hầm bằng chất tẩy phù hợp rồi xả sạch.\n\nLý do: sơn và bột bả chỉ bám vào bề mặt rắn chắc và sạch. Lớp bụi mỏng như phấn sẽ nằm giữa nền và lớp sơn, làm lớp sơn chỉ bám vào bụi chứ không bám vào nền. Vài tháng sau, bụi bong ra và kéo cả mảng sơn đi cùng. Mốc nếu không diệt tận gốc sẽ mọc xuyên qua lớp sơn mới, nên chỉ lăn sơn đè lên mốc là lãng phí vật tư lẫn nhân công."
+        },
+        {
+          "heading": "Xử lý khuyết tật",
+          "level": 2,
+          "body": "Bước Xử lý khuyết tật bề mặt áp dụng cho nhóm sơn nước và bả; với nhóm chống thấm, bước tương ứng có tên Xử lý bề mặt và làm theo tài liệu chống thấm.\n\n1. Đục bỏ vữa rỗ, vữa phồng, chỗ rộp, rồi trám lại bằng vữa hoặc bột trám phù hợp. Để trám khô hẳn mới được bả hoặc sơn.\n2. Vết nứt có bề rộng không quá 0,3 mm là vết nứt chân chim, được xử lý bằng cách mở rộng nhẹ, trám đầy rồi dán lưới hoặc băng gia cường trước khi bả.\n3. Vết nứt rộng hơn 0,3 mm phải xử lý riêng: chỉ huy trưởng công trình lập biên bản, chụp ảnh, xác định nguyên nhân (lún, co ngót, kết cấu) và chỉ cho thi công sau khi có phương án xử lý đi kèm. Chi phí xử lý nằm ngoài báo giá sơn thông thường.\n4. Lỗ chờ, đầu thép thò, chân bu lông phải được cắt, chống gỉ và trám phẳng.\n\nLý do: ngưỡng 0,3 mm đo được bằng thước nhỏ ngay tại hiện trường. Vết nứt nhỏ hơn mức này thường chỉ là co ngót bề mặt nên lưới gia cường đủ giữ lớp bả không nứt lại. Vết nứt lớn hơn cho thấy tường còn chuyển động; nếu chỉ trám và sơn, vết nứt sẽ hiện lại sau mùa mưa đầu tiên và khách hàng sẽ cho rằng đội sơn làm sai, trong khi nguyên nhân nằm ở kết cấu. Vì thế quy định buộc phải có biên bản và phương án riêng."
+        },
+        {
+          "heading": "Chà nhám",
+          "level": 2,
+          "body": "1. Dùng giấy nhám mịn chà phẳng các mối trám, mép bả và những chỗ sơn cũ còn sót. Chà theo vòng tròn nhẹ, không ấn mạnh để tránh làm lõm bề mặt.\n2. Sau khi chà, quét hoặc hút bụi lần nữa. Bụi nhám còn lại trên tường phải được xử lý như bụi ở mục Vệ sinh bề mặt.\n3. Với sàn bê tông cần phủ epoxy, chà nhám bằng máy mài toàn bộ diện tích; chi tiết xem tài liệu epoxy.\n\nLý do: bề mặt quá nhẵn bóng làm sơn không có chỗ để bám cơ học, còn bề mặt gồ ghề sẽ lộ vệt dưới ánh sáng chiếu xiên. Chà nhám vừa tạo độ nhám vừa san phẳng nên là bước quyết định chất lượng nhìn thấy được của lớp phủ cuối cùng."
+        },
+        {
+          "heading": "Kiểm tra độ ẩm",
+          "level": 2,
+          "body": "1. Trước khi sơn hoặc bả, đo độ ẩm nền bằng máy đo cầm tay tại ít nhất ba điểm trên mỗi phòng hoặc mỗi mặt đứng, ưu tiên các góc, chân tường và vị trí gần nhà vệ sinh.\n2. Chỉ được sơn hoặc bả khi độ ẩm nền không quá 16%. Nếu bất kỳ điểm đo nào vượt 16%, dừng thi công, tìm nguồn ẩm và chờ nền khô lại.\n3. Nền bê tông hoặc vữa mới phải đủ 28 ngày kể từ lúc đổ hoặc tô mới được sơn, vì vữa còn đang thủy hóa và kiềm cao.\n4. Ghi số đo vào nhật ký công trình kèm giờ, vị trí và người đo.\n\nLý do: hơi nước trong nền sẽ thoát ra ngoài qua lớp sơn, tạo bọng phồng hoặc đẩy lớp sơn bong ra. Kiềm từ vữa chưa đủ tuổi phản ứng với sơn gốc nước gây phấn trắng và loang màu, nên cả hai điều kiện, độ ẩm không quá 16% và đủ 28 ngày, phải thỏa cùng lúc. Ghi nhật ký là để khi có tranh chấp bảo hành, hai bên có số liệu thay vì tranh cãi cảm tính."
+        }
+      ]
+    }
+  ]
+}

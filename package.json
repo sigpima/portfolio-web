@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "record:kb": "tsx scripts/record-kb-replay.ts"
+    "record:kb": "tsx scripts/record-kb-replay.ts",
+    "sync:policies": "tsx scripts/sync-policies.ts"
   },
   "dependencies": {
     "next": "16.3.4",
