@@ -71,7 +71,8 @@ describe("replay data integrity", () => {
         ...(sample.input.kind === "images" ? sample.input.items : []),
         ...(sample.result.kind === "images" ? sample.result.items : []),
       ];
-      const details = sample.steps.flatMap((s) => (s.detail ? [s.detail] : []));
+      // Every localized text a step shows: the text block, the duration chip, the popup heading.
+      const details = sample.steps.flatMap((s) => [s.detail, s.meta, s.data?.title].filter((d) => d !== undefined));
 
       it(`${def.id}/${sample.id}: placeholder flag is consistent with its images and facts`, () => {
         const answers = sample.result.kind === "text" ? [sample.result.text] : [];

@@ -10,9 +10,10 @@ const labels: FlowLabels = {
   database: { label: "Database" },
   answer: { label: "Answer" },
   extraCall: (n) => `Call ${n}`,
-  rowCount: (n) => `${n} dòng`,
   callData: "Call data",
+  callHint: "Arguments",
   resultData: "Result data",
+  resultHint: "Result",
 };
 
 function run(events: FlowEvent[], from: FlowState = initialChatFlow(labels)): FlowState {
@@ -67,31 +68,35 @@ describe("reduceChatFlow", () => {
     expect(node(state, "model-1").status).toBe("active");
   });
 
-  it("tool_call finishes model-1 with a readable summary and the full call as data, activates tool-1", () => {
+  it("tool_call finishes model-1 with the full call as data (no summary text), activates tool-1", () => {
     const state = run([{ type: "submit" }, call(1, "run_sql", { query: "x", limit: 3 })]);
     const model = node(state, "model-1");
     expect(model.status).toBe("done");
-    expect(model.detail).toBe("run_sql(query: x, limit: 3)");
-    expect(model.data).toEqual({ title: "Call data", value: { tool: "run_sql", args: { query: "x", limit: 3 } } });
+    expect(model.detail).toBeUndefined();
+    expect(model.data).toEqual({
+      title: "Call data",
+      hint: "Arguments",
+      value: { tool: "run_sql", args: { query: "x", limit: 3 } },
+    });
     expect(node(state, "tool-1").status).toBe("active");
   });
 
-  it("truncates a very long call summary but keeps every argument in the data", () => {
+  it("keeps every argument in the data, however long", () => {
     const args = { q: "x".repeat(300) };
-    const model = node(run([call(1, "run_sql", args)]), "model-1");
-    expect(Array.from(model.detail ?? "").length).toBeLessThanOrEqual(90);
-    expect(model.detail?.endsWith("…")).toBe(true);
-    expect(model.data?.value).toEqual({ tool: "run_sql", args });
+    expect(node(run([call(1, "run_sql", args)]), "model-1").data?.value).toEqual({ tool: "run_sql", args });
   });
 
   it("successful tool_result completes tool and db and activates answer", () => {
     const state = run([{ type: "submit" }, call(1), result(1)]);
     expect(node(state, "tool-1").status).toBe("done");
-    expect(node(state, "tool-1").detail).toContain("42");
+    // The duration is a chip inside the MCP tool node, not a text block under it.
+    expect(node(state, "tool-1").meta).toBe("42 ms");
+    expect(node(state, "tool-1").detail).toBeUndefined();
     expect(node(state, "db-1").status).toBe("done");
-    expect(node(state, "db-1").detail).toBe(labels.rowCount(7));
+    expect(node(state, "db-1").detail).toBeUndefined();
     expect(node(state, "db-1").data).toEqual({
       title: "Result data",
+      hint: "Result",
       value: { ok: true, row_count: 7, sql: "SELECT 1", preview: "a | b" },
     });
     expect(node(state, "answer").status).toBe("active");
@@ -104,10 +109,9 @@ describe("reduceChatFlow", () => {
     expect((cut.data?.value as { preview: unknown }).preview).toBe('[{"id":1,"na');
   });
 
-  it("omits sql from the data and falls back to the preview line when row_count is absent", () => {
+  it("omits sql from the data when it is absent", () => {
     const db = node(run([call(1), result(1, { sql: null, row_count: null })]), "db-1");
     expect(db.data?.value).toEqual({ ok: true, row_count: null, preview: "a | b" });
-    expect(db.detail).toBe("a | b");
   });
 
   it("failed tool_result marks tool and db as error", () => {
@@ -222,9 +226,9 @@ describe("applyPatch", () => {
       type: "set",
       nodeId: "model-1",
       status: "done",
-      data: { title: "T", value: { a: 1 } },
+      data: { title: "T", hint: "H", value: { a: 1 } },
     });
     const later = applyPatch(withData, { type: "set", nodeId: "model-1", status: "done" });
-    expect(node(later, "model-1").data).toEqual({ title: "T", value: { a: 1 } });
+    expect(node(later, "model-1").data).toEqual({ title: "T", hint: "H", value: { a: 1 } });
   });
 });

@@ -70,22 +70,21 @@ describe("buildReplaySample", () => {
 
   it("carries localized details (vi and en) and replays to the live diagram's final state", () => {
     const sample = buildReplaySample(happy, options);
-    const db = sample.steps.filter((s) => s.nodeId === "db-1" && s.detail).at(-1)!;
-    expect(db.detail!.vi).toBe("1 dòng");
-    expect(db.detail!.en).toBe("1 row");
+    const db = sample.steps.filter((s) => s.nodeId === "db-1" && s.data).at(-1)!;
+    expect(db.data!.hint).toEqual({ vi: viMessages.kb.inspect.resultHint, en: enMessages.kb.inspect.resultHint });
     expect(db.data!.title.vi).toBe(viMessages.kb.inspect.resultTitle);
     expect(db.data!.title.en).toBe(enMessages.kb.inspect.resultTitle);
     expect(JSON.stringify(db.data!.value)).toContain("BG-2026-031");
-    const model = sample.steps.find((s) => s.nodeId === "model-1" && s.detail)!;
-    const summary = "find_quotations(order_by: issue_date_desc, limit: 1)";
-    expect(model.detail).toEqual({ vi: summary, en: summary });
+    const model = sample.steps.find((s) => s.nodeId === "model-1" && s.data)!;
+    expect(model.detail).toBeUndefined();
     expect(model.data).toEqual({
       title: { vi: viMessages.kb.inspect.callTitle, en: enMessages.kb.inspect.callTitle },
+      hint: { vi: viMessages.kb.inspect.callHint, en: enMessages.kb.inspect.callHint },
       value: { tool: "find_quotations", args: { order_by: "issue_date_desc", limit: 1 } },
     });
     const final = replayFlowAt(sample, "en", sample.steps.length);
     const nodeById = (id: string) => final.rows.flatMap((r) => r.nodes).find((n) => n.id === id);
-    expect(nodeById("tool-1")?.detail).toBe("64 ms");
+    expect(nodeById("tool-1")?.meta).toBe("64 ms");
     // The data survives the replay, localized title and shared value.
     expect(nodeById("db-1")?.data?.title).toBe(enMessages.kb.inspect.resultTitle);
     expect(nodeById("model-1")?.data?.value).toEqual({

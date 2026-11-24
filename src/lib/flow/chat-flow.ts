@@ -16,19 +16,17 @@ export interface FlowLabels {
   answer: NodeLabel;
   /** Title of the row of tool call `n`; shown only once there is more than one call. */
   extraCall: (n: number) => string;
-  rowCount: (n: number) => string;
-  /** Popup headings for the structured details. */
+  /** Popup headings, and the short chip names on the nodes that open them. */
   callData: string;
+  callHint: string;
   resultData: string;
+  resultHint: string;
 }
 
 /** Row ids: the question first, one row per tool call, the answer last. */
 export const START_ROW = "start";
 export const END_ROW = "end";
 export const callRowId = (n: number) => `call-${n}`;
-
-/** Longest one-line summary shown inside a node. The full value is one click away. */
-const SUMMARY_MAX_CHARS = 90;
 
 function makeNode(id: string, text: NodeLabel): FlowNode {
   return { id, label: text.label, sublabel: text.sublabel, status: "idle" };
@@ -80,19 +78,6 @@ function statusOf(state: FlowState, nodeId: string): FlowNode["status"] | undefi
   return undefined;
 }
 
-function truncate(text: string, max: number): string {
-  const chars = Array.from(text);
-  return chars.length > max ? `${chars.slice(0, max - 1).join("")}…` : text;
-}
-
-/** `tool(key: value, ...)`: readable at a glance, without braces or quotes. */
-export function callSummary(tool: string, args: Record<string, unknown>): string {
-  const parts = Object.entries(args ?? {}).map(
-    ([key, value]) => `${key}: ${typeof value === "string" ? value : JSON.stringify(value)}`,
-  );
-  return truncate(`${tool}(${parts.join(", ")})`, SUMMARY_MAX_CHARS);
-}
-
 /** The preview as a value: parsed when it is JSON (it may be cut off, then it stays text). */
 function parsePreview(preview: string): unknown {
   const text = preview.trim();
@@ -104,12 +89,6 @@ function parsePreview(preview: string): unknown {
     }
   }
   return preview;
-}
-
-function resultSummary(event: Extract<ChatEvent, { type: "tool_result" }>, labels: FlowLabels): string | undefined {
-  if (event.ok && event.row_count !== null) return labels.rowCount(event.row_count);
-  const firstLine = event.preview.split("\n", 1)[0]?.trim() ?? "";
-  return firstLine === "" ? undefined : truncate(firstLine, SUMMARY_MAX_CHARS);
 }
 
 function resultValue(event: Extract<ChatEvent, { type: "tool_result" }>): Record<string, unknown> {
@@ -140,8 +119,7 @@ export function reduceChatFlow(state: FlowState, event: FlowEvent, labels: FlowL
           type: "set",
           nodeId: `model-${n}`,
           status: "done",
-          detail: callSummary(event.tool, event.args),
-          data: { title: labels.callData, value: { tool: event.tool, args: event.args } },
+          data: { title: labels.callData, hint: labels.callHint, value: { tool: event.tool, args: event.args } },
         },
         { type: "set", nodeId: `tool-${n}`, status: "active" },
         { type: "set", nodeId: "answer", status: "idle" },
@@ -153,13 +131,12 @@ export function reduceChatFlow(state: FlowState, event: FlowEvent, labels: FlowL
       if (!Number.isInteger(n) || n < 1) return state;
       const status = event.ok ? "done" : "error";
       return patchAll(ensureCallRow(state, n, labels), [
-        { type: "set", nodeId: `tool-${n}`, status, detail: `${event.duration_ms} ms` },
+        { type: "set", nodeId: `tool-${n}`, status, meta: `${event.duration_ms} ms` },
         {
           type: "set",
           nodeId: `db-${n}`,
           status,
-          detail: resultSummary(event, labels),
-          data: { title: labels.resultData, value: resultValue(event) },
+          data: { title: labels.resultData, hint: labels.resultHint, value: resultValue(event) },
         },
         { type: "set", nodeId: "answer", status: "active" },
       ]);

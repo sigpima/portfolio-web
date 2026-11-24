@@ -25,8 +25,10 @@ export interface ReplaySample {
     nodeId: string;
     status: NodeStatus;
     detail?: Localized;
-    /** Structured detail opened as JSON on click; `value` is the same in every language. */
-    data?: { title: Localized; value: unknown };
+    /** Short text shown as a chip inside the node (a duration). */
+    meta?: Localized;
+    /** Structured detail opened as JSON on click; `hint` names its chip; `value` is the same in every language. */
+    data?: { title: Localized; hint: Localized; value: unknown };
   }[];
   result:
     | { kind: "images"; items: { src: string; alt: Localized }[] }

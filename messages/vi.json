@@ -46,7 +46,6 @@
         "sublabel": "câu trả lời"
       }
     },
-    "rowCount": "{count} dòng",
     "extraCall": "Lần gọi tool {n}",
     "statusLabels": {
       "idle": "Chờ",
@@ -96,7 +95,8 @@
       "resultTitle": "Kết quả Postgres trả về",
       "open": "Xem chi tiết (JSON)",
       "close": "Đóng",
-      "hint": "Bấm để xem JSON"
+      "callHint": "Tham số",
+      "resultHint": "Kết quả"
     }
   },
   "twistfit": {
@@ -238,8 +238,7 @@
     },
     "inspect": {
       "open": "Xem chi tiết (JSON)",
-      "close": "Đóng",
-      "hint": "Bấm để xem JSON"
+      "close": "Đóng"
     }
   },
   "groups": {

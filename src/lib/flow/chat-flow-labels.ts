@@ -4,7 +4,7 @@ import type { FlowLabels } from "./chat-flow";
 /** A translator scoped to the `kb` messages namespace (next-intl's `t` fits). */
 export type KbTranslate = (key: string, values?: Record<string, number>) => string;
 
-/** Node labels of the chat diagram, from `kb.nodes.*`, `kb.extraCall`, `kb.rowCount` and `kb.inspect.*`. */
+/** Node labels of the chat diagram, from `kb.nodes.*`, `kb.extraCall` and `kb.inspect.*`. */
 export function chatFlowLabels(t: KbTranslate): FlowLabels {
   return {
     question: { label: t("nodes.question.label"), sublabel: t("nodes.question.sublabel") },
@@ -13,9 +13,10 @@ export function chatFlowLabels(t: KbTranslate): FlowLabels {
     database: { label: t("nodes.database.label"), sublabel: t("nodes.database.sublabel") },
     answer: { label: t("nodes.answer.label"), sublabel: t("nodes.answer.sublabel") },
     extraCall: (n) => t("extraCall", { n }),
-    rowCount: (count) => t("rowCount", { count }),
     callData: t("inspect.callTitle"),
+    callHint: t("inspect.callHint"),
     resultData: t("inspect.resultTitle"),
+    resultHint: t("inspect.resultHint"),
   };
 }
 

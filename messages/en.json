@@ -46,7 +46,6 @@
         "sublabel": "final answer"
       }
     },
-    "rowCount": "{count, plural, one {# row} other {# rows}}",
     "extraCall": "Tool call {n}",
     "statusLabels": {
       "idle": "Waiting",
@@ -96,7 +95,8 @@
       "resultTitle": "Result returned by Postgres",
       "open": "View details (JSON)",
       "close": "Close",
-      "hint": "Click to view JSON"
+      "callHint": "Arguments",
+      "resultHint": "Result"
     }
   },
   "twistfit": {
@@ -238,8 +238,7 @@
     },
     "inspect": {
       "open": "View details (JSON)",
-      "close": "Close",
-      "hint": "Click to view JSON"
+      "close": "Close"
     }
   },
   "groups": {

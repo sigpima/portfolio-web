@@ -61,7 +61,7 @@ export function KnowledgeBaseDemo({ onInviteRequired }: KnowledgeBaseDemoProps) 
   );
 
   const dataLabels = useMemo<FlowDataLabels>(
-    () => ({ open: t("inspect.open"), close: t("inspect.close"), hint: t("inspect.hint") }),
+    () => ({ open: t("inspect.open"), close: t("inspect.close") }),
     [t],
   );
 

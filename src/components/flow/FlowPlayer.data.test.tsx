@@ -11,7 +11,7 @@ const statusLabels: Record<NodeStatus, string> = {
   error: "Lỗi",
   skipped: "Bỏ qua",
 };
-const dataLabels: FlowDataLabels = { open: "Xem chi tiết (JSON)", close: "Đóng", hint: "Bấm để xem JSON" };
+const dataLabels: FlowDataLabels = { open: "Xem chi tiết (JSON)", close: "Đóng" };
 
 const state: FlowState = {
   rows: [
@@ -23,16 +23,14 @@ const state: FlowState = {
           id: "model-1",
           label: "Gemini chọn tool",
           status: "done",
-          detail: "find_quotations(limit: 1)",
-          data: { title: "Tool và tham số", value: { tool: "find_quotations", args: { limit: 1, vip: true, note: null } } },
+          data: { title: "Tool và tham số", hint: "Tham số", value: { tool: "find_quotations", args: { limit: 1, vip: true, note: null } } },
         },
-        { id: "tool-1", label: "MCP tool", status: "done", detail: "42 ms" },
+        { id: "tool-1", label: "MCP tool", status: "done", meta: "42 ms" },
         {
           id: "db-1",
           label: "Postgres",
           status: "done",
-          detail: "1 dòng",
-          data: { title: "Kết quả Postgres", value: { ok: true, row_count: 1, sql: "SELECT 1" } },
+          data: { title: "Kết quả Postgres", hint: "Kết quả", value: { ok: true, row_count: 1, sql: "SELECT 1" } },
         },
       ],
     },
@@ -76,17 +74,36 @@ describe("FlowPlayer rows", () => {
   });
 });
 
+describe("FlowPlayer equal-height rows", () => {
+  it("stretches the boxes of a row that carries chips, and leaves other rows alone", () => {
+    renderPlayer();
+    const call = document.querySelector('[data-row-id="call-1"] ol') as HTMLElement;
+    expect(call.className).toContain("items-stretch");
+    for (const li of Array.from(call.querySelectorAll("li"))) {
+      expect(li.className).toContain("flex-col");
+      const box = li.querySelector("button, div > div") as HTMLElement;
+      expect(box.className).toContain("h-full");
+    }
+    expect(document.querySelector('[data-row-id="start"] ol')?.className).not.toContain("items-stretch");
+  });
+});
+
 describe("FlowPlayer node data", () => {
-  it("makes only the nodes that carry data clickable, showing a readable summary instead of JSON", () => {
+  it("makes only the nodes that carry data clickable, with a named `{ }` chip and no JSON in view", () => {
     renderPlayer();
     const buttons = screen.getAllByRole("button");
     expect(buttons).toHaveLength(2);
     expect(buttons[0]).toHaveAttribute("aria-haspopup", "dialog");
-    expect(buttons[0]).toHaveTextContent("find_quotations(limit: 1)");
+    expect(buttons[0].querySelector('[data-role="node-data-chip"]')).toHaveTextContent("{ } Tham số");
+    expect(buttons[1].querySelector('[data-role="node-data-chip"]')).toHaveTextContent("{ } Kết quả");
     expect(buttons[0]).toHaveTextContent("Xem chi tiết (JSON)");
-    expect(buttons[1]).toHaveTextContent("1 dòng");
-    // The plain node has no button and no JSON in view.
-    expect(within(document.querySelector('li[data-node-id="tool-1"]') as HTMLElement).queryByRole("button")).toBeNull();
+    // No summary line, no old "click to view" wording.
+    expect(document.body).not.toHaveTextContent(/find_quotations\(|Bấm để xem/);
+    // The plain node has no button; its duration is a chip inside the box, next to the others' data chips.
+    const tool = document.querySelector('li[data-node-id="tool-1"]') as HTMLElement;
+    expect(within(tool).queryByRole("button")).toBeNull();
+    expect(tool.querySelector('[data-role="node-meta"]')).toHaveTextContent("42 ms");
+    expect(tool.querySelector("pre")).toBeNull();
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(document.body).not.toHaveTextContent('"tool"');
   });
@@ -156,7 +173,7 @@ describe("FlowPlayer node data", () => {
     const reset: FlowState = {
       rows: state.rows.map((row) => ({
         ...row,
-        nodes: row.nodes.map((n) => ({ ...n, data: undefined, status: "idle" as const })),
+        nodes: row.nodes.map((n) => ({ ...n, data: undefined, meta: undefined, status: "idle" as const })),
       })),
     };
     rerender(<FlowPlayer state={reset} label="Luồng" statusLabels={statusLabels} dataLabels={dataLabels} />);

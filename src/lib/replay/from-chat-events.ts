@@ -73,8 +73,9 @@ export function buildReplaySample(
       const prevVi = before.get("vi")!.get(vi.id);
       const prevEn = before.get("en")!.get(vi.id);
       const detailChanged = vi.detail !== prevVi?.detail || en?.detail !== prevEn?.detail;
+      const metaChanged = vi.meta !== prevVi?.meta || en?.meta !== prevEn?.meta;
       const dataChanged = JSON.stringify(vi.data) !== JSON.stringify(prevVi?.data);
-      if (vi.status === prevVi?.status && !detailChanged && !dataChanged) continue;
+      if (vi.status === prevVi?.status && !detailChanged && !metaChanged && !dataChanged) continue;
       steps.push({
         atMs: clock,
         nodeId: vi.id,
@@ -82,8 +83,17 @@ export function buildReplaySample(
         ...(detailChanged && (vi.detail !== undefined || en?.detail !== undefined)
           ? { detail: { vi: vi.detail ?? "", en: en?.detail ?? "" } }
           : {}),
+        ...(metaChanged && (vi.meta !== undefined || en?.meta !== undefined)
+          ? { meta: { vi: vi.meta ?? "", en: en?.meta ?? "" } }
+          : {}),
         ...(dataChanged && vi.data !== undefined
-          ? { data: { title: { vi: vi.data.title, en: en?.data?.title ?? vi.data.title }, value: vi.data.value } }
+          ? {
+              data: {
+                title: { vi: vi.data.title, en: en?.data?.title ?? vi.data.title },
+                hint: { vi: vi.data.hint, en: en?.data?.hint ?? vi.data.hint },
+                value: vi.data.value,
+              },
+            }
           : {}),
       });
     }

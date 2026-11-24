@@ -58,7 +58,10 @@ export function replayFlowAt(sample: ReplaySample, locale: Locale, count: number
         nodeId: step.nodeId,
         status: step.status,
         detail: step.detail?.[locale],
-        data: step.data ? { title: step.data.title[locale], value: step.data.value } : undefined,
+        meta: step.meta?.[locale],
+        data: step.data
+          ? { title: step.data.title[locale], hint: step.data.hint[locale], value: step.data.value }
+          : undefined,
       }),
     initialReplayFlow(sample, locale),
   );

@@ -169,7 +169,7 @@ export function ReplayDemo({ definition, kind, locale: _locale, footnote }: Repl
   const { flow, status, showResult, play } = useReplay(sample, locale, { reducedMotion });
 
   const dataLabels = useMemo<FlowDataLabels>(
-    () => ({ open: t("inspect.open"), close: t("inspect.close"), hint: t("inspect.hint") }),
+    () => ({ open: t("inspect.open"), close: t("inspect.close") }),
     [t],
   );
   const statusLabels = useMemo(

@@ -208,8 +208,7 @@ describe("KnowledgeBaseDemo", () => {
     await s.emit(result);
     expect(node("tool-1")).toHaveAttribute("data-status", "done");
     expect(node("db-1")).toHaveAttribute("data-status", "done");
-    expect(node("db-1")).toHaveTextContent("1 dòng");
-    expect(node("answer")).toHaveAttribute("data-status", "active");
+        expect(node("answer")).toHaveAttribute("data-status", "active");
 
     await s.emit(answer);
     expect(node("answer")).toHaveAttribute("data-status", "done");
@@ -295,7 +294,7 @@ describe("KnowledgeBaseDemo", () => {
     await waitFor(() => expect(node("answer")).toHaveAttribute("data-status", "done"));
 
     const model = within(node("model-1")).getByRole("button");
-    expect(model).toHaveTextContent("find_quotations(limit: 1)");
+    expect(model).toHaveTextContent(`{ } ${viMessages.kb.inspect.callHint}`);
     await user.click(model);
     const call = screen.getByRole("dialog", { name: viMessages.kb.inspect.callTitle });
     expect(call).toHaveTextContent('"tool": "find_quotations"');
@@ -303,7 +302,8 @@ describe("KnowledgeBaseDemo", () => {
     await user.keyboard("{Escape}");
 
     const db = within(node("db-1")).getByRole("button");
-    expect(db).toHaveTextContent("1 dòng");
+    expect(db).toHaveTextContent(`{ } ${viMessages.kb.inspect.resultHint}`);
+    expect(node("tool-1")).toHaveTextContent("42 ms");
     await user.click(db);
     const rows = screen.getByRole("dialog", { name: viMessages.kb.inspect.resultTitle });
     expect(rows).toHaveTextContent('"sql": "SELECT 1"');

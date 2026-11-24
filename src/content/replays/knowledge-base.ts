@@ -55,30 +55,27 @@ export const placeholderSample: ReplaySample = {
       atMs: 1400,
       nodeId: "model-1",
       status: "done",
-      detail: {
-        vi: `${TOOL}(order_by: issue_date_desc, limit: 1) (minh hoạ)`,
-        en: `${TOOL}(order_by: issue_date_desc, limit: 1) (illustrative)`,
-      },
       data: {
         title: {
           vi: "Tool mà Gemini chọn và tham số (minh hoạ)",
           en: "Tool chosen by Gemini and its arguments (illustrative)",
         },
+        hint: { vi: "Tham số", en: "Arguments" },
         value: { tool: TOOL, args: ARGS },
       },
     },
     { atMs: 1400, nodeId: "tool-1", status: "active" },
-    { atMs: 1500, nodeId: "tool-1", status: "done", detail: { vi: "60 ms (minh hoạ)", en: "60 ms (illustrative)" } },
+    { atMs: 1500, nodeId: "tool-1", status: "done", meta: { vi: "60 ms (minh hoạ)", en: "60 ms (illustrative)" } },
     {
       atMs: 1500,
       nodeId: "db-1",
       status: "done",
-      detail: { vi: "1 dòng (minh hoạ)", en: "1 row (illustrative)" },
       data: {
         title: {
           vi: "Kết quả Postgres trả về (minh hoạ)",
           en: "Result returned by Postgres (illustrative)",
         },
+        hint: { vi: "Kết quả", en: "Result" },
         value: {
           ok: true,
           row_count: 1,

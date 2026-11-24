@@ -4,6 +4,8 @@ export type NodeStatus = "idle" | "active" | "done" | "error" | "skipped";
 export interface FlowNodeData {
   /** Heading of the popup, already localized. */
   title: string;
+  /** Short name of the chip on the node that opens it (next to the `{ }` icon), e.g. "Arguments". */
+  hint: string;
   /** Any JSON-serializable value. */
   value: unknown;
 }
@@ -13,8 +15,10 @@ export interface FlowNode {
   label: string;
   sublabel?: string;
   status: NodeStatus;
-  /** Short readable text under the node. Without `data` it is shown as a plain text block. */
+  /** Plain text block under the node (used by the demos whose nodes carry no structured data). */
   detail?: string;
+  /** Short text (a duration) shown as a chip inside the node, on the same line as the data chip. */
+  meta?: string;
   /** When present the node is clickable and opens `value` as highlighted JSON. */
   data?: FlowNodeData;
 }
@@ -30,13 +34,13 @@ export interface FlowState {
 }
 
 export type FlowPatch =
-  | { type: "set"; nodeId: string; status: NodeStatus; detail?: string; data?: FlowNodeData }
+  | { type: "set"; nodeId: string; status: NodeStatus; detail?: string; meta?: string; data?: FlowNodeData }
   | { type: "addRow"; row: FlowRow; /** Insert before the row with this id (append when missing). */ before?: string }
   | { type: "rowTitle"; rowId: string; title: string };
 
 /**
  * Applies one patch without mutating `state`. A `set` keeps the node's current
- * detail and data when the patch has none; an unknown node or row id leaves the state untouched.
+ * detail, meta and data when the patch has none; an unknown node or row id leaves the state untouched.
  */
 export function applyPatch(state: FlowState, patch: FlowPatch): FlowState {
   if (patch.type === "addRow") {
@@ -63,6 +67,7 @@ export function applyPatch(state: FlowState, patch: FlowPatch): FlowState {
               ...node,
               status: patch.status,
               detail: patch.detail ?? node.detail,
+              meta: patch.meta ?? node.meta,
               data: patch.data ?? node.data,
             }
           : node,
