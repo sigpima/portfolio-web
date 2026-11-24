@@ -20,9 +20,9 @@ function renderCard(slugOrProject: string | Project, locale: Locale) {
 describe("ProjectCard", () => {
   it("shows the Vietnamese title and links to /vi/projects/{slug}", () => {
     renderCard("knowledge-base", "vi");
-    const link = screen.getByRole("link", { name: /Knowledge Base: hỏi đáp báo giá thi công sơn/ });
+    const link = screen.getByRole("link", { name: /Knowledge Base: hỏi đáp báo giá và chính sách thi công sơn/ });
     expect(link).toHaveAttribute("href", "/vi/projects/knowledge-base");
-    expect(screen.queryByText("Knowledge Base: paint-contracting quotation Q&A")).toBeNull();
+    expect(screen.queryByText("Knowledge Base: paint-contracting quotation and policy Q&A")).toBeNull();
     expect(screen.getByText("AI / LLM / Agent")).toBeInTheDocument();
     expect(screen.getByText("Chạy thật · cần link mời")).toBeInTheDocument();
     expect(screen.queryByText("Chạy thật", { exact: true })).toBeNull();

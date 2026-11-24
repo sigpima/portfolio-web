@@ -39,6 +39,41 @@ describe("Knowledge Base project copy (policy RAG)", () => {
   });
 });
 
+describe("Knowledge Base project copy tells the whole story, not only the quotations", () => {
+  it("names policy in the title", () => {
+    expect(knowledgeBase.title.vi).toMatch(/chính sách/);
+    expect(knowledgeBase.title.en).toMatch(/polic/i);
+    expect(knowledgeBase.title.vi).toMatch(/báo giá/);
+    expect(knowledgeBase.title.en).toMatch(/quotation/i);
+  });
+
+  it("puts the RAG highlight among the first three, because the home page shows only three", () => {
+    for (const locale of ["vi", "en"] as const) {
+      const firstThree = knowledgeBase.highlights[locale].slice(0, 3);
+      expect(firstThree.some((h) => /RAG/.test(h) && /Milvus/.test(h)), locale).toBe(true);
+    }
+  });
+
+  it("states the problem for both kinds of question, figures and rules, and the one that needs both", () => {
+    expect(knowledgeBase.problem.vi).toMatch(/số liệu/);
+    expect(knowledgeBase.problem.vi).toMatch(/quy định|chính sách/);
+    expect(knowledgeBase.problem.vi).toMatch(/cả hai/);
+    expect(knowledgeBase.problem.en).toMatch(/figures/i);
+    expect(knowledgeBase.problem.en).toMatch(/polic|rules/i);
+    expect(knowledgeBase.problem.en).toMatch(/both/i);
+  });
+
+  it("describes the two data sources in the summary and how a policy answer is made in the approach", () => {
+    for (const locale of ["vi", "en"] as const) {
+      expect(knowledgeBase.summary[locale], locale).toMatch(/Postgres/);
+      expect(knowledgeBase.summary[locale], locale).toMatch(/Milvus/);
+      expect(knowledgeBase.approach[locale], locale).toMatch(/search_policies/);
+      expect(knowledgeBase.approach[locale], locale).toMatch(/0[.,]65/);
+      expect(knowledgeBase.approach[locale], locale).toMatch(locale === "vi" ? /trích nguồn/ : /cites?/);
+    }
+  });
+});
+
 describe("Knowledge Base demo copy", () => {
   it("offers policy suggestions, and the hints and notes mention policy", () => {
     for (const [locale, kb] of [["vi", vi.kb], ["en", en.kb]] as const) {
