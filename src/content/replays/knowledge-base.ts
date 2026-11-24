@@ -14,19 +14,30 @@ import type { ReplayDefinition, ReplaySample } from "./types";
  * Node ids and labels match the live diagram (`initialChatFlow`, `kb.nodes.*`).
  */
 
+const START = { id: "start" };
+const CALL_1 = { id: "call-1" };
+const END = { id: "end" };
+
 const nodes: ReplaySample["nodes"] = [
-  { id: "question", label: { vi: "Câu hỏi", en: "Question" }, sublabel: { vi: "của bạn", en: "yours" } },
+  { id: "question", label: { vi: "Câu hỏi", en: "Question" }, sublabel: { vi: "của bạn", en: "yours" }, row: START },
   {
     id: "model-1",
     label: { vi: "Gemini chọn tool", en: "Gemini picks a tool" },
     sublabel: { vi: "function calling", en: "function calling" },
+    row: CALL_1,
   },
-  { id: "tool-1", label: { vi: "MCP tool", en: "MCP tool" }, sublabel: { vi: "chỉ đọc", en: "read-only" } },
-  { id: "db-1", label: { vi: "Postgres", en: "Postgres" }, sublabel: { vi: "role chỉ đọc", en: "read-only role" } },
-  { id: "answer", label: { vi: "Trả lời", en: "Answer" }, sublabel: { vi: "câu trả lời", en: "final answer" } },
+  { id: "tool-1", label: { vi: "MCP tool", en: "MCP tool" }, sublabel: { vi: "chỉ đọc", en: "read-only" }, row: CALL_1 },
+  {
+    id: "db-1",
+    label: { vi: "Postgres", en: "Postgres" },
+    sublabel: { vi: "role chỉ đọc", en: "read-only role" },
+    row: CALL_1,
+  },
+  { id: "answer", label: { vi: "Trả lời", en: "Answer" }, sublabel: { vi: "câu trả lời", en: "final answer" }, row: END },
 ];
 
-const CALL = 'find_quotations {"order_by":"issue_date_desc","limit":1}';
+const TOOL = "find_quotations";
+const ARGS = { order_by: "issue_date_desc", limit: 1 };
 
 export const placeholderSample: ReplaySample = {
   id: "latest-quotation-placeholder",
@@ -44,7 +55,17 @@ export const placeholderSample: ReplaySample = {
       atMs: 1400,
       nodeId: "model-1",
       status: "done",
-      detail: { vi: `${CALL} (minh hoạ)`, en: `${CALL} (illustrative)` },
+      detail: {
+        vi: `${TOOL}(order_by: issue_date_desc, limit: 1) (minh hoạ)`,
+        en: `${TOOL}(order_by: issue_date_desc, limit: 1) (illustrative)`,
+      },
+      data: {
+        title: {
+          vi: "Tool mà Gemini chọn và tham số (minh hoạ)",
+          en: "Tool chosen by Gemini and its arguments (illustrative)",
+        },
+        value: { tool: TOOL, args: ARGS },
+      },
     },
     { atMs: 1400, nodeId: "tool-1", status: "active" },
     { atMs: 1500, nodeId: "tool-1", status: "done", detail: { vi: "60 ms (minh hoạ)", en: "60 ms (illustrative)" } },
@@ -52,9 +73,17 @@ export const placeholderSample: ReplaySample = {
       atMs: 1500,
       nodeId: "db-1",
       status: "done",
-      detail: {
-        vi: "1 dòng (minh hoạ)\nmột báo giá, ngày phát hành gần nhất",
-        en: "1 row (illustrative)\none quotation, latest issue date",
+      detail: { vi: "1 dòng (minh hoạ)", en: "1 row (illustrative)" },
+      data: {
+        title: {
+          vi: "Kết quả Postgres trả về (minh hoạ)",
+          en: "Result returned by Postgres (illustrative)",
+        },
+        value: {
+          ok: true,
+          row_count: 1,
+          preview: { note: "một báo giá, ngày phát hành gần nhất (minh hoạ, không phải dữ liệu thật)" },
+        },
       },
     },
     { atMs: 1500, nodeId: "answer", status: "active" },

@@ -90,7 +90,14 @@
     },
     "replayNotice": "Bạn đang xem bản phát lại. Mở link mời để thử trực tiếp.",
     "replayNoticeNoChat": "Tính năng trò chuyện trực tiếp hiện chưa bật cho link của bạn. Bạn đang xem bản phát lại.",
-    "modeLoading": "Đang tải demo…"
+    "modeLoading": "Đang tải demo…",
+    "inspect": {
+      "callTitle": "Tool mà Gemini chọn và tham số",
+      "resultTitle": "Kết quả Postgres trả về",
+      "open": "Xem chi tiết (JSON)",
+      "close": "Đóng",
+      "hint": "Bấm để xem JSON"
+    }
   },
   "twistfit": {
     "replayNotice": "Bạn đang xem bản phát lại một lượt mẫu. Mở link mời của chủ trang để thử tạo ảnh thật.",
@@ -228,6 +235,11 @@
     },
     "soon": {
       "label": "Demo sắp có"
+    },
+    "inspect": {
+      "open": "Xem chi tiết (JSON)",
+      "close": "Đóng",
+      "hint": "Bấm để xem JSON"
     }
   },
   "groups": {

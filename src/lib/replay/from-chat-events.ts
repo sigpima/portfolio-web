@@ -73,13 +73,17 @@ export function buildReplaySample(
       const prevVi = before.get("vi")!.get(vi.id);
       const prevEn = before.get("en")!.get(vi.id);
       const detailChanged = vi.detail !== prevVi?.detail || en?.detail !== prevEn?.detail;
-      if (vi.status === prevVi?.status && !detailChanged) continue;
+      const dataChanged = JSON.stringify(vi.data) !== JSON.stringify(prevVi?.data);
+      if (vi.status === prevVi?.status && !detailChanged && !dataChanged) continue;
       steps.push({
         atMs: clock,
         nodeId: vi.id,
         status: vi.status,
         ...(detailChanged && (vi.detail !== undefined || en?.detail !== undefined)
           ? { detail: { vi: vi.detail ?? "", en: en?.detail ?? "" } }
+          : {}),
+        ...(dataChanged && vi.data !== undefined
+          ? { data: { title: { vi: vi.data.title, en: en?.data?.title ?? vi.data.title }, value: vi.data.value } }
           : {}),
       });
     }

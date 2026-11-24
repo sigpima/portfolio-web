@@ -97,9 +97,9 @@ function botBubbles() {
   return Array.from(document.querySelectorAll<HTMLElement>('[data-role="bot"]'));
 }
 
-/** The visual, typed-out text of the latest bot bubble. */
-function typed() {
-  return botBubbles().at(-1)?.querySelector<HTMLElement>("[data-typed]") ?? null;
+/** The rendered (Markdown) answer inside the latest bot bubble. */
+function answerText() {
+  return botBubbles().at(-1)?.querySelector<HTMLElement>('[data-role="markdown"]') ?? null;
 }
 
 function live() {
@@ -125,12 +125,6 @@ async function readyInput(name = "Câu hỏi của bạn") {
   const input = await screen.findByRole("textbox", { name });
   await waitFor(() => expect(input).toBeEnabled());
   return input;
-}
-
-async function finishTyping() {
-  await act(async () => {
-    await vi.advanceTimersByTimeAsync(20_000);
-  });
 }
 
 beforeEach(() => {
@@ -188,7 +182,7 @@ describe("KnowledgeBaseDemo", () => {
     }
   });
 
-  it("progresses the diagram nodes in order and types out the answer", async () => {
+  it("progresses the diagram nodes in order and shows the whole answer at once", async () => {
     const s = controlledStream();
     mockStream.mockImplementation(s.gen);
     const { user } = await renderDemo();
@@ -219,39 +213,103 @@ describe("KnowledgeBaseDemo", () => {
 
     await s.emit(answer);
     expect(node("answer")).toHaveAttribute("data-status", "done");
-    // Typing out: the visual text is not complete right away and is hidden from assistive tech...
-    expect(typed()?.textContent).not.toBe(ANSWER);
-    expect(typed()).toHaveAttribute("aria-hidden", "true");
-    // ...while the live region holds the full answer from the start, never a prefix.
+    // The answer is shown in full at once, and the live region holds it too (never a prefix).
+    expect(answerText()).toHaveTextContent(ANSWER);
     expect(live()).toHaveAttribute("aria-live", "polite");
     expect(live().textContent).toBe(ANSWER);
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(80);
-    });
-    expect(typed()?.textContent?.length).toBeGreaterThan(0);
-    expect(typed()?.textContent).not.toBe(ANSWER);
-    expect(live().textContent).toBe(ANSWER);
-    // The bubble itself still exposes the full answer to screen readers (not live).
-    expect(botBubbles().at(-1)?.querySelector(".sr-only")).toHaveTextContent(ANSWER);
 
     await s.emit(done);
     await s.end();
-    await finishTyping();
-    expect(typed()).toHaveTextContent(ANSWER);
+    expect(answerText()).toHaveTextContent(ANSWER);
     expect(botBubbles().at(-1)?.closest("[aria-live]")).toBeNull();
     // The echoed question is not announced.
     expect(document.querySelector('[data-role="user"]')?.closest("[aria-live]")).toBeNull();
     expect(live().textContent).toBe(ANSWER);
   });
 
-  it("shows the answer at once when reduced motion is preferred", async () => {
-    mockMatchMedia(true);
-    mockStream.mockImplementation(streamOf(happyEvents()));
+  it("renders the answer as Markdown (bold, list, table, safe link) and never as raw HTML", async () => {
+    const markdown = [
+      "**Báo giá mới nhất** là `BG-031`:",
+      "",
+      "- Tổng: 1,24 tỷ",
+      "- Nhân công: 38%",
+      "",
+      "| Hạng mục | Tiền |",
+      "| --- | --- |",
+      "| Chống thấm | 120 |",
+      "",
+      "Xem [chi tiết](https://example.com/bg) <script>alert(1)</script> ![x](https://evil.test/p.png)",
+    ].join("\n");
+    mockStream.mockImplementation(streamOf(happyEvents("s-1", markdown)));
     const { user } = await renderDemo();
     const input = await readyInput();
-    await user.type(input, "hi");
-    await user.click(screen.getByRole("button", { name: "Gửi" }));
-    await waitFor(() => expect(typed()).toHaveTextContent(ANSWER));
+    await user.type(input, "hi{Enter}");
+    await waitFor(() => expect(answerText()).not.toBeNull());
+    const root = answerText()!;
+    expect(root.querySelector("strong")).toHaveTextContent("Báo giá mới nhất");
+    expect(root.querySelector("code")).toHaveTextContent("BG-031");
+    expect(root.querySelectorAll("ul > li")).toHaveLength(2);
+    expect(root.querySelector("table th")).toHaveTextContent("Hạng mục");
+    expect(root.querySelector("table td")).toHaveTextContent("Chống thấm");
+    const link = root.querySelector("a")!;
+    expect(link).toHaveAttribute("href", "https://example.com/bg");
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link.getAttribute("rel")).toMatch(/noopener/);
+    expect(root.querySelector("script")).toBeNull();
+    expect(root.querySelector("img")).toBeNull();
+    // The announcement has no Markdown symbols.
+    expect(live().textContent).not.toMatch(/[*|`#]/);
+    expect(live().textContent).toContain("Báo giá mới nhất là BG-031");
+  });
+
+  it("lays out the question, one row per tool call, then the answer, as the calls arrive", async () => {
+    const s = controlledStream();
+    mockStream.mockImplementation(s.gen);
+    const { user } = await renderDemo();
+    await user.type(await readyInput(), "hi{Enter}");
+    const rowIds = () => Array.from(document.querySelectorAll("[data-row-id]")).map((el) => el.getAttribute("data-row-id"));
+    expect(rowIds()).toEqual(["start", "call-1", "end"]);
+
+    const result = (id: number): ChatEvent => ({
+      type: "tool_result", call_id: id, tool: "t", ok: true, duration_ms: 5, row_count: id, sql: null, preview: "",
+    });
+    await s.emit({ type: "tool_call", call_id: 1, tool: "t", args: {} });
+    await s.emit(result(1));
+    await s.emit({ type: "tool_call", call_id: 2, tool: "t", args: { page: 2 } });
+    // The second call goes above the answer row, and the call rows are titled from now on.
+    expect(rowIds()).toEqual(["start", "call-1", "call-2", "end"]);
+    expect(screen.getByText("Lần gọi tool 1")).toBeInTheDocument();
+    expect(screen.getByText("Lần gọi tool 2")).toBeInTheDocument();
+    expect(node("answer")).toHaveAttribute("data-status", "idle");
+    await s.emit(result(2));
+    await s.emit({ type: "answer", text: "xong" });
+    expect(rowIds().at(-1)).toBe("end");
+    expect(node("answer")).toHaveAttribute("data-status", "done");
+    await s.end();
+  });
+
+  it("opens the tool call and the Postgres result as JSON in a popup when their nodes are clicked", async () => {
+    mockStream.mockImplementation(streamOf(happyEvents()));
+    const { user } = await renderDemo();
+    await user.type(await readyInput(), "hi{Enter}");
+    await waitFor(() => expect(node("answer")).toHaveAttribute("data-status", "done"));
+
+    const model = within(node("model-1")).getByRole("button");
+    expect(model).toHaveTextContent("find_quotations(limit: 1)");
+    await user.click(model);
+    const call = screen.getByRole("dialog", { name: viMessages.kb.inspect.callTitle });
+    expect(call).toHaveTextContent('"tool": "find_quotations"');
+    expect(call).toHaveTextContent('"limit": 1');
+    await user.keyboard("{Escape}");
+
+    const db = within(node("db-1")).getByRole("button");
+    expect(db).toHaveTextContent("1 dòng");
+    await user.click(db);
+    const rows = screen.getByRole("dialog", { name: viMessages.kb.inspect.resultTitle });
+    expect(rows).toHaveTextContent('"sql": "SELECT 1"');
+    expect(rows).toHaveTextContent('"preview": "total 1240000000"');
+    await user.click(within(rows).getByRole("button", { name: viMessages.kb.inspect.close }));
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 
   it("does not call streamChat for an empty or whitespace-only question", async () => {
@@ -330,7 +388,7 @@ describe("KnowledgeBaseDemo", () => {
       expect(live().textContent).toBe(text);
       await waitFor(() => expect(input).toBeEnabled());
       await user.type(input, "Hai{Enter}");
-      await waitFor(() => expect(typed()).toHaveTextContent(ANSWER));
+      await waitFor(() => expect(answerText()).toHaveTextContent(ANSWER));
     });
   }
 
@@ -378,7 +436,7 @@ describe("KnowledgeBaseDemo", () => {
     const { user } = await renderDemo();
     const input = await readyInput();
     await user.type(input, "Một{Enter}");
-    await waitFor(() => expect(typed()).toHaveTextContent(ANSWER));
+    await waitFor(() => expect(answerText()).toHaveTextContent(ANSWER));
     await user.type(input, "Hai{Enter}");
     expect(mockStream).toHaveBeenLastCalledWith(
       { message: "Hai", sessionId: "s-full" },

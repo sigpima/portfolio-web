@@ -2,7 +2,8 @@
 
 import { useId, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { FlowPlayer } from "@/components/flow/FlowPlayer";
+import { FlowPlayer, type FlowDataLabels } from "@/components/flow/FlowPlayer";
+import { Markdown } from "@/components/Markdown";
 import { placeholderVariantOf } from "@/content/replays/placeholder";
 import type { ReplayDefinition, ReplaySample } from "@/content/replays/types";
 import type { Locale, Localized } from "@/content/types";
@@ -167,6 +168,10 @@ export function ReplayDemo({ definition, kind, locale: _locale, footnote }: Repl
   const reducedMotion = useSyncExternalStore(subscribeReducedMotion, prefersReducedMotion, () => false);
   const { flow, status, showResult, play } = useReplay(sample, locale, { reducedMotion });
 
+  const dataLabels = useMemo<FlowDataLabels>(
+    () => ({ open: t("inspect.open"), close: t("inspect.close"), hint: t("inspect.hint") }),
+    [t],
+  );
   const statusLabels = useMemo(
     () => Object.fromEntries(NODE_STATUSES.map((s) => [s, t(`statusLabels.${s}`)])) as Record<NodeStatus, string>,
     [t],
@@ -270,7 +275,7 @@ export function ReplayDemo({ definition, kind, locale: _locale, footnote }: Repl
             {status === "done" ? t("replay") : t("play")}
           </button>
         </div>
-        <FlowPlayer state={flow} label={t("flowLabel")} statusLabels={statusLabels} />
+        <FlowPlayer state={flow} label={t("flowLabel")} statusLabels={statusLabels} dataLabels={dataLabels} />
       </div>
 
       <section aria-labelledby={resultHeadingId} className="flex flex-col gap-2">
@@ -282,14 +287,14 @@ export function ReplayDemo({ definition, kind, locale: _locale, footnote }: Repl
         ) : sample.result.kind === "images" ? (
           <ImageGrid items={sample.result.items} locale={locale} placeholder={placeholder} ribbon={ribbon} />
         ) : sample.result.kind === "text" ? (
-          <p
+          <div
             data-role="bot"
             lang={sample.result.lang}
-            className="max-w-[82%] self-start rounded-xl border border-primary-container/50 bg-primary-container/20 px-3.5 py-2.5 text-body-md break-words whitespace-pre-wrap text-on-surface"
+            className="w-full max-w-[92%] self-start rounded-xl border border-primary-container/50 bg-primary-container/20 px-3.5 py-2.5 text-body-md text-on-surface sm:max-w-[82%]"
           >
             <span className="sr-only">{t("chat.bot")}: </span>
-            {sample.result.text[locale]}
-          </p>
+            <Markdown>{sample.result.text[locale]}</Markdown>
+          </div>
         ) : (
           <PeopleResult people={sample.result.people} />
         )}

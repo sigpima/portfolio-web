@@ -41,6 +41,10 @@
   --color-on-tertiary: #131e8c;
   --color-tertiary-container: #7c87f3;
   --color-on-tertiary-container: #081486;
+  /* Syntax colours of the JSON viewer (keys reuse --color-secondary). */
+  --color-syntax-string: #8fe3b0;
+  --color-syntax-number: #ffb86b;
+  --color-syntax-boolean: #ff8fb1;
   --color-error: #ffb4ab;
   --color-on-error: #690005;
   --color-error-container: #93000a;

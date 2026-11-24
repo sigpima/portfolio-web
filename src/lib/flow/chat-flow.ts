@@ -14,9 +14,21 @@ export interface FlowLabels {
   tool: NodeLabel;
   database: NodeLabel;
   answer: NodeLabel;
+  /** Title of the row of tool call `n`; shown only once there is more than one call. */
   extraCall: (n: number) => string;
   rowCount: (n: number) => string;
+  /** Popup headings for the structured details. */
+  callData: string;
+  resultData: string;
 }
+
+/** Row ids: the question first, one row per tool call, the answer last. */
+export const START_ROW = "start";
+export const END_ROW = "end";
+export const callRowId = (n: number) => `call-${n}`;
+
+/** Longest one-line summary shown inside a node. The full value is one click away. */
+const SUMMARY_MAX_CHARS = 90;
 
 function makeNode(id: string, text: NodeLabel): FlowNode {
   return { id, label: text.label, sublabel: text.sublabel, status: "idle" };
@@ -33,14 +45,9 @@ function callNodes(n: number, labels: FlowLabels): FlowNode[] {
 export function initialChatFlow(labels: FlowLabels): FlowState {
   return {
     rows: [
-      {
-        id: "r1",
-        nodes: [
-          makeNode("question", labels.question),
-          ...callNodes(1, labels),
-          makeNode("answer", labels.answer),
-        ],
-      },
+      { id: START_ROW, nodes: [makeNode("question", labels.question)] },
+      { id: callRowId(1), nodes: callNodes(1, labels) },
+      { id: END_ROW, nodes: [makeNode("answer", labels.answer)] },
     ],
   };
 }
@@ -49,12 +56,20 @@ function patchAll(state: FlowState, patches: FlowPatch[]): FlowState {
   return patches.reduce(applyPatch, state);
 }
 
-/** Makes sure the row for call `n` exists (r1 always does); extra calls get their own titled row. */
+/**
+ * Makes sure the row for call `n` exists (call 1 always does). A new call row goes
+ * above the answer row; from the second call on every call row is titled.
+ */
 function ensureCallRow(state: FlowState, n: number, labels: FlowLabels): FlowState {
-  const id = `r${n}`;
+  const id = callRowId(n);
   if (n <= 1 || state.rows.some((row) => row.id === id)) return state;
-  const row: FlowRow = { id, title: labels.extraCall(n), nodes: callNodes(n, labels) };
-  return applyPatch(state, { type: "addRow", row });
+  const row: FlowRow = { id, nodes: callNodes(n, labels) };
+  let next = applyPatch(state, { type: "addRow", row, before: END_ROW });
+  for (const r of next.rows) {
+    const m = /^call-(\d+)$/.exec(r.id);
+    if (m) next = applyPatch(next, { type: "rowTitle", rowId: r.id, title: labels.extraCall(Number(m[1])) });
+  }
+  return next;
 }
 
 function statusOf(state: FlowState, nodeId: string): FlowNode["status"] | undefined {
@@ -65,12 +80,43 @@ function statusOf(state: FlowState, nodeId: string): FlowNode["status"] | undefi
   return undefined;
 }
 
-function dbDetail(event: Extract<ChatEvent, { type: "tool_result" }>, labels: FlowLabels): string {
-  const parts: string[] = [];
-  if (event.row_count !== null) parts.push(labels.rowCount(event.row_count));
-  if (event.sql !== null && event.sql !== "") parts.push(event.sql);
-  if (event.preview !== "") parts.push(event.preview);
-  return parts.join("\n");
+function truncate(text: string, max: number): string {
+  const chars = Array.from(text);
+  return chars.length > max ? `${chars.slice(0, max - 1).join("")}…` : text;
+}
+
+/** `tool(key: value, ...)`: readable at a glance, without braces or quotes. */
+export function callSummary(tool: string, args: Record<string, unknown>): string {
+  const parts = Object.entries(args ?? {}).map(
+    ([key, value]) => `${key}: ${typeof value === "string" ? value : JSON.stringify(value)}`,
+  );
+  return truncate(`${tool}(${parts.join(", ")})`, SUMMARY_MAX_CHARS);
+}
+
+/** The preview as a value: parsed when it is JSON (it may be cut off, then it stays text). */
+function parsePreview(preview: string): unknown {
+  const text = preview.trim();
+  if (text.startsWith("{") || text.startsWith("[")) {
+    try {
+      return JSON.parse(text) as unknown;
+    } catch {
+      return preview;
+    }
+  }
+  return preview;
+}
+
+function resultSummary(event: Extract<ChatEvent, { type: "tool_result" }>, labels: FlowLabels): string | undefined {
+  if (event.ok && event.row_count !== null) return labels.rowCount(event.row_count);
+  const firstLine = event.preview.split("\n", 1)[0]?.trim() ?? "";
+  return firstLine === "" ? undefined : truncate(firstLine, SUMMARY_MAX_CHARS);
+}
+
+function resultValue(event: Extract<ChatEvent, { type: "tool_result" }>): Record<string, unknown> {
+  const value: Record<string, unknown> = { ok: event.ok, row_count: event.row_count };
+  if (event.sql !== null && event.sql !== "") value.sql = event.sql;
+  if (event.preview !== "") value.preview = parsePreview(event.preview);
+  return value;
 }
 
 /**
@@ -94,7 +140,8 @@ export function reduceChatFlow(state: FlowState, event: FlowEvent, labels: FlowL
           type: "set",
           nodeId: `model-${n}`,
           status: "done",
-          detail: `${event.tool} ${JSON.stringify(event.args)}`,
+          detail: callSummary(event.tool, event.args),
+          data: { title: labels.callData, value: { tool: event.tool, args: event.args } },
         },
         { type: "set", nodeId: `tool-${n}`, status: "active" },
         { type: "set", nodeId: "answer", status: "idle" },
@@ -107,7 +154,13 @@ export function reduceChatFlow(state: FlowState, event: FlowEvent, labels: FlowL
       const status = event.ok ? "done" : "error";
       return patchAll(ensureCallRow(state, n, labels), [
         { type: "set", nodeId: `tool-${n}`, status, detail: `${event.duration_ms} ms` },
-        { type: "set", nodeId: `db-${n}`, status, detail: dbDetail(event, labels) },
+        {
+          type: "set",
+          nodeId: `db-${n}`,
+          status,
+          detail: resultSummary(event, labels),
+          data: { title: labels.resultData, value: resultValue(event) },
+        },
         { type: "set", nodeId: "answer", status: "active" },
       ]);
     }

@@ -90,7 +90,14 @@
     },
     "replayNotice": "You are watching a replay. Open an invite link to try it live.",
     "replayNoticeNoChat": "Live chat is not enabled for your invite link yet. You are watching a replay.",
-    "modeLoading": "Loading the demo…"
+    "modeLoading": "Loading the demo…",
+    "inspect": {
+      "callTitle": "Tool chosen by Gemini and its arguments",
+      "resultTitle": "Result returned by Postgres",
+      "open": "View details (JSON)",
+      "close": "Close",
+      "hint": "Click to view JSON"
+    }
   },
   "twistfit": {
     "replayNotice": "You are watching a replay of a sample run. Open the site owner's invite link to try a real one.",
@@ -228,6 +235,11 @@
     },
     "soon": {
       "label": "Demo coming soon"
+    },
+    "inspect": {
+      "open": "View details (JSON)",
+      "close": "Close",
+      "hint": "Click to view JSON"
     }
   },
   "groups": {

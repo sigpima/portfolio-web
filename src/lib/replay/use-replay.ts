@@ -27,11 +27,11 @@ interface ReplayState {
 }
 
 /**
- * Every node idle with its labels in `locale`: row `r1` first, then any extra rows
- * (`node.row`) in first-seen order.
+ * Every node idle with its labels in `locale`, grouped into rows (`node.row`, or `r1`
+ * when it has none) in first-seen order.
  */
 export function initialReplayFlow(sample: ReplaySample, locale: Locale): FlowState {
-  const rows: FlowRow[] = [{ id: "r1", nodes: [] }];
+  const rows: FlowRow[] = [];
   for (const node of sample.nodes) {
     const rowId = node.row?.id ?? "r1";
     let row = rows.find((r) => r.id === rowId);
@@ -58,6 +58,7 @@ export function replayFlowAt(sample: ReplaySample, locale: Locale, count: number
         nodeId: step.nodeId,
         status: step.status,
         detail: step.detail?.[locale],
+        data: step.data ? { title: step.data.title[locale], value: step.data.value } : undefined,
       }),
     initialReplayFlow(sample, locale),
   );

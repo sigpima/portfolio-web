@@ -2,17 +2,16 @@
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type FormEvent } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { FlowPlayer } from "@/components/flow/FlowPlayer";
+import { FlowPlayer, type FlowDataLabels } from "@/components/flow/FlowPlayer";
+import { Markdown } from "@/components/Markdown";
 import type { Locale } from "@/content/types";
 import { ChatHttpError, fetchChatStatus, streamChat } from "@/lib/chat/client";
 import { initialChatFlow, reduceChatFlow, type FlowLabels } from "@/lib/flow/chat-flow";
 import { chatErrorKey, chatFlowLabels, type ChatEventErrorKey } from "@/lib/flow/chat-flow-labels";
 import type { FlowState, NodeStatus } from "@/lib/flow/model";
+import { markdownToPlain } from "@/lib/markdown-plain";
 
 const MAX_QUESTION_CHARS = 500;
-const TYPING_INTERVAL_MS = 16;
-/** Long answers type faster so the whole text takes at most ~200 ticks. */
-const TYPING_MAX_TICKS = 200;
 
 type DemoStatus = "loading" | "enabled" | "paused";
 type ErrorKey = ChatEventErrorKey | "rateLimited" | "inviteRequired";
@@ -29,43 +28,8 @@ interface Turn {
 const NODE_STATUSES: NodeStatus[] = ["idle", "active", "done", "error", "skipped"];
 const CHIP_KEYS = ["c1", "c2", "c3"] as const;
 
-function prefersReducedMotion(): boolean {
-  if (typeof window === "undefined" || typeof window.matchMedia !== "function") return false;
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
-
 function isAbortError(err: unknown): boolean {
   return err instanceof Error && err.name === "AbortError";
-}
-
-/**
- * Types `text` out progressively (by code point), or shows it at once under reduced motion.
- * Purely visual: it is hidden from assistive tech, which gets the full text elsewhere.
- */
-function TypedText({ text }: { text: string }) {
-  const chars = useMemo(() => Array.from(text), [text]);
-  const [shown, setShown] = useState(() => (prefersReducedMotion() ? chars.length : 0));
-
-  const typing = shown < chars.length;
-
-  useEffect(() => {
-    if (!typing) return;
-    const step = Math.max(1, Math.ceil(chars.length / TYPING_MAX_TICKS));
-    const timer = setInterval(() => setShown((n) => Math.min(chars.length, n + step)), TYPING_INTERVAL_MS);
-    return () => clearInterval(timer);
-  }, [typing, chars]);
-
-  return (
-    <span aria-hidden="true" data-typed="">
-      {chars.slice(0, shown).join("")}
-      {typing ? (
-        <span
-          aria-hidden="true"
-          className="ml-0.5 inline-block h-3.5 w-1.5 animate-pulse bg-secondary align-[-2px] motion-reduce:animate-none"
-        />
-      ) : null}
-    </span>
-  );
 }
 
 export interface KnowledgeBaseDemoProps {
@@ -93,6 +57,11 @@ export function KnowledgeBaseDemo({ onInviteRequired }: KnowledgeBaseDemoProps) 
 
   const statusLabels = useMemo(
     () => Object.fromEntries(NODE_STATUSES.map((s) => [s, t(`statusLabels.${s}`)])) as Record<NodeStatus, string>,
+    [t],
+  );
+
+  const dataLabels = useMemo<FlowDataLabels>(
+    () => ({ open: t("inspect.open"), close: t("inspect.close"), hint: t("inspect.hint") }),
     [t],
   );
 
@@ -211,7 +180,7 @@ export function KnowledgeBaseDemo({ onInviteRequired }: KnowledgeBaseDemoProps) 
           if (event.type === "answer") {
             answered = true;
             updateTurn(turnId, { answer: event.text });
-            setAnnouncement(event.text);
+            setAnnouncement(markdownToPlain(event.text));
           }
         }
         if (!answered && !failed && !controller.signal.aborted) fail("generic");
@@ -296,7 +265,7 @@ export function KnowledgeBaseDemo({ onInviteRequired }: KnowledgeBaseDemoProps) 
             {t(`runStatus.${runStatus}`)}
           </span>
         </div>
-        <FlowPlayer state={flow} label={t("flowLabel")} statusLabels={statusLabels} />
+        <FlowPlayer state={flow} label={t("flowLabel")} statusLabels={statusLabels} dataLabels={dataLabels} />
       </div>
 
       <section
@@ -330,15 +299,13 @@ export function KnowledgeBaseDemo({ onInviteRequired }: KnowledgeBaseDemoProps) 
                     {turn.question}
                   </p>
                   {turn.answer !== null ? (
-                    <p
+                    <div
                       data-role="bot"
-                      className="max-w-[82%] self-start rounded-xl border border-primary-container/50 bg-primary-container/20 px-3.5 py-2.5 text-body-md break-words whitespace-pre-wrap text-on-surface"
+                      className="w-full max-w-[92%] self-start rounded-xl border border-primary-container/50 bg-primary-container/20 px-3.5 py-2.5 text-body-md text-on-surface sm:max-w-[82%]"
                     >
-                      <span className="sr-only">
-                        {t("bot")}: {turn.answer}
-                      </span>
-                      <TypedText text={turn.answer} />
-                    </p>
+                      <span className="sr-only">{t("bot")}: </span>
+                      <Markdown>{turn.answer}</Markdown>
+                    </div>
                   ) : null}
                   {turn.error ? (
                     <p

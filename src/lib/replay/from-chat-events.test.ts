@@ -71,16 +71,27 @@ describe("buildReplaySample", () => {
   it("carries localized details (vi and en) and replays to the live diagram's final state", () => {
     const sample = buildReplaySample(happy, options);
     const db = sample.steps.filter((s) => s.nodeId === "db-1" && s.detail).at(-1)!;
-    expect(db.detail!.vi).toContain("1 dòng");
-    expect(db.detail!.en).toContain("1 row");
-    expect(db.detail!.vi).toContain("BG-2026-031");
+    expect(db.detail!.vi).toBe("1 dòng");
+    expect(db.detail!.en).toBe("1 row");
+    expect(db.data!.title.vi).toBe(viMessages.kb.inspect.resultTitle);
+    expect(db.data!.title.en).toBe(enMessages.kb.inspect.resultTitle);
+    expect(JSON.stringify(db.data!.value)).toContain("BG-2026-031");
     const model = sample.steps.find((s) => s.nodeId === "model-1" && s.detail)!;
-    expect(model.detail).toEqual({
-      vi: 'find_quotations {"order_by":"issue_date_desc","limit":1}',
-      en: 'find_quotations {"order_by":"issue_date_desc","limit":1}',
+    const summary = "find_quotations(order_by: issue_date_desc, limit: 1)";
+    expect(model.detail).toEqual({ vi: summary, en: summary });
+    expect(model.data).toEqual({
+      title: { vi: viMessages.kb.inspect.callTitle, en: enMessages.kb.inspect.callTitle },
+      value: { tool: "find_quotations", args: { order_by: "issue_date_desc", limit: 1 } },
     });
     const final = replayFlowAt(sample, "en", sample.steps.length);
-    expect(final.rows[0].nodes.find((n) => n.id === "tool-1")?.detail).toBe("64 ms");
+    const nodeById = (id: string) => final.rows.flatMap((r) => r.nodes).find((n) => n.id === id);
+    expect(nodeById("tool-1")?.detail).toBe("64 ms");
+    // The data survives the replay, localized title and shared value.
+    expect(nodeById("db-1")?.data?.title).toBe(enMessages.kb.inspect.resultTitle);
+    expect(nodeById("model-1")?.data?.value).toEqual({
+      tool: "find_quotations",
+      args: { order_by: "issue_date_desc", limit: 1 },
+    });
   });
 
   it("sets the question input and the answer text result, and never marks itself a placeholder", () => {
@@ -116,7 +127,7 @@ describe("buildReplaySample", () => {
     expect(JSON.stringify(sample)).not.toContain("upstream said something");
   });
 
-  it("puts extra tool calls on their own titled row", () => {
+  it("puts the question first, each tool call on its own row, and the answer last", () => {
     const sample = buildReplaySample(
       timed([
         [0, { type: "start", session_id: "s" }],
@@ -130,11 +141,16 @@ describe("buildReplaySample", () => {
       options,
     );
     const model2 = sample.nodes.find((n) => n.id === "model-2")!;
-    expect(model2.row).toEqual({ id: "r2", title: { vi: "Lần gọi tool 2", en: "Tool call 2" } });
+    expect(model2.row).toEqual({ id: "call-2", title: { vi: "Lần gọi tool 2", en: "Tool call 2" } });
     const flow = replayFlowAt(sample, "vi", sample.steps.length);
-    expect(flow.rows.map((r) => r.id)).toEqual(["r1", "r2"]);
-    expect(flow.rows[1].title).toBe("Lần gọi tool 2");
-    expect(flow.rows[0].nodes.map((n) => n.id)).toEqual(["question", "model-1", "tool-1", "db-1", "answer"]);
+    expect(flow.rows.map((r) => r.id)).toEqual(["start", "call-1", "call-2", "end"]);
+    expect(flow.rows.map((r) => r.title)).toEqual([undefined, "Lần gọi tool 1", "Lần gọi tool 2", undefined]);
+    expect(flow.rows.map((r) => r.nodes.map((n) => n.id))).toEqual([
+      ["question"],
+      ["model-1", "tool-1", "db-1"],
+      ["model-2", "tool-2", "db-2"],
+      ["answer"],
+    ]);
     for (const node of sample.nodes) expect(lastStatus(sample).get(node.id), node.id).toBe("done");
   });
 

@@ -15,12 +15,19 @@ export interface ReplaySample {
      */
     | { kind: "question"; text: Localized; lang?: Locale };
   /**
-   * Diagram nodes in display order. Nodes without `row` sit on the first row (`r1`);
-   * the others are grouped into extra rows (e.g. a second tool call), in first-seen order.
+   * Diagram nodes in display order, grouped into rows by `row.id` in first-seen order
+   * (a chat run: the question, one row per tool call, the answer). Nodes without `row` share a row `r1`.
    */
   nodes: { id: string; label: Localized; sublabel?: Localized; row?: { id: string; title?: Localized } }[];
   /** Sorted by `atMs` (ms after "play"). */
-  steps: { atMs: number; nodeId: string; status: NodeStatus; detail?: Localized }[];
+  steps: {
+    atMs: number;
+    nodeId: string;
+    status: NodeStatus;
+    detail?: Localized;
+    /** Structured detail opened as JSON on click; `value` is the same in every language. */
+    data?: { title: Localized; value: unknown };
+  }[];
   result:
     | { kind: "images"; items: { src: string; alt: Localized }[] }
     | {
