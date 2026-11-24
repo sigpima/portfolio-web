@@ -1,5 +1,5 @@
 import type { ChatEvent } from "@/lib/chat/types";
-import { applyPatch, type FlowNode, type FlowPatch, type FlowRow, type FlowState } from "./model";
+import { applyPatch, type FlowNode, type FlowNodeData, type FlowPatch, type FlowRow, type FlowSource, type FlowState } from "./model";
 
 export type FlowEvent = ChatEvent | { type: "submit" };
 
@@ -21,7 +21,14 @@ export interface FlowLabels {
   callHint: string;
   resultData: string;
   resultHint: string;
+  /** The third node of a call to the policy search: a vector store, not Postgres. */
+  policyStore: NodeLabel;
+  policyResultData: string;
+  policyResultHint: string;
 }
+
+/** The MCP tool that searches the policy documents (RAG). */
+export const POLICY_TOOL = "search_policies";
 
 /** Row ids: the question first, one row per tool call, the answer last. */
 export const START_ROW = "start";
@@ -78,6 +85,37 @@ function statusOf(state: FlowState, nodeId: string): FlowNode["status"] | undefi
   return undefined;
 }
 
+/**
+ * The chat service lists the passages of a policy search one per line, `<slug> › <section> · <score>`.
+ * The slug ends at the first separator and the score starts at the last dot, because the section is
+ * itself a path that contains the separator. Anything else (an error text, an odd line) gives null.
+ */
+export function parsePolicyPreview(preview: string): FlowSource[] | null {
+  const lines = preview.split("\n").filter((line) => line.trim() !== "");
+  if (lines.length === 0) return null;
+  const sources: FlowSource[] = [];
+  for (const line of lines) {
+    const slugEnd = line.indexOf(" › ");
+    const scoreStart = line.lastIndexOf(" · ");
+    if (slugEnd <= 0 || scoreStart <= slugEnd + 3) return null;
+    const scoreText = line.slice(scoreStart + 3).trim();
+    const score = Number(scoreText);
+    const section = line.slice(slugEnd + 3, scoreStart);
+    if (scoreText === "" || !Number.isFinite(score) || section.trim() === "") return null;
+    sources.push({ slug: line.slice(0, slugEnd), section, score });
+  }
+  return sources;
+}
+
+/** The data of a policy search result: the passages when they parse, an error text when it failed. */
+function policyData(event: Extract<ChatEvent, { type: "tool_result" }>, labels: FlowLabels): FlowNodeData | null {
+  const base = { title: labels.policyResultData, hint: labels.policyResultHint };
+  if (!event.ok) return { ...base, value: { ok: false, error: event.preview } };
+  const sources = parsePolicyPreview(event.preview);
+  if (sources === null) return null;
+  return { ...base, sources, value: { ok: true, row_count: event.row_count, passages: sources } };
+}
+
 /** The preview as a value: parsed when it is JSON (it may be cut off, then it stays text). */
 function parsePreview(preview: string): unknown {
   const text = preview.trim();
@@ -122,6 +160,9 @@ export function reduceChatFlow(state: FlowState, event: FlowEvent, labels: FlowL
           data: { title: labels.callData, hint: labels.callHint, value: { tool: event.tool, args: event.args } },
         },
         { type: "set", nodeId: `tool-${n}`, status: "active" },
+        ...(event.tool === POLICY_TOOL
+          ? [{ type: "set", nodeId: `db-${n}`, status: "idle", ...labels.policyStore } as FlowPatch]
+          : []),
         { type: "set", nodeId: "answer", status: "idle" },
       ]);
     }
@@ -136,7 +177,12 @@ export function reduceChatFlow(state: FlowState, event: FlowEvent, labels: FlowL
           type: "set",
           nodeId: `db-${n}`,
           status,
-          data: { title: labels.resultData, hint: labels.resultHint, value: resultValue(event) },
+          data:
+            (event.tool === POLICY_TOOL ? policyData(event, labels) : null) ?? {
+              title: labels.resultData,
+              hint: labels.resultHint,
+              value: resultValue(event),
+            },
         },
         { type: "set", nodeId: "answer", status: "active" },
       ]);

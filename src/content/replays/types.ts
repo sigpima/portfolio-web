@@ -1,4 +1,4 @@
-import type { NodeStatus } from "@/lib/flow/model";
+import type { FlowSource, NodeStatus } from "@/lib/flow/model";
 import type { Locale, Localized } from "../types";
 
 export interface ReplaySample {
@@ -28,7 +28,7 @@ export interface ReplaySample {
     /** Short text shown as a chip inside the node (a duration). */
     meta?: Localized;
     /** Structured detail opened as JSON on click; `hint` names its chip; `value` is the same in every language. */
-    data?: { title: Localized; hint: Localized; value: unknown };
+    data?: { title: Localized; hint: Localized; value: unknown; sources?: FlowSource[] };
   }[];
   result:
     | { kind: "images"; items: { src: string; alt: Localized }[] }

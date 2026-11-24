@@ -156,4 +156,28 @@ describe("buildReplaySample", () => {
   it("the Knowledge Base placeholder sample uses the same nodes and labels as a recorded one", () => {
     expect(placeholderSample.nodes).toEqual(buildReplaySample(happy, options).nodes);
   });
+
+  it("keeps a policy search as Milvus with its sources, in both languages and through the replay", () => {
+    const preview = "chinh-sach-bao-hanh › Chính sách bảo hành › Giữ lại bảo hành · 0.78";
+    const sample = buildReplaySample(
+      timed([
+        [100, { type: "tool_call", call_id: 1, tool: "search_policies", args: { query: "bảo hành" } }],
+        [300, { type: "tool_result", call_id: 1, tool: "search_policies", ok: true, duration_ms: 90, row_count: 1, sql: null, preview }],
+        [900, { type: "answer", text: "ok [chinh-sach-bao-hanh › Giữ lại bảo hành]" }],
+      ]),
+      options,
+    );
+    const db = sample.nodes.find((n) => n.id === "db-1")!;
+    expect(db.label).toEqual({ vi: "Milvus", en: "Milvus" });
+    expect(db.sublabel).toEqual({ vi: viMessages.kb.nodes.policyStore.sublabel, en: enMessages.kb.nodes.policyStore.sublabel });
+    const step = sample.steps.find((s) => s.nodeId === "db-1" && s.data)!;
+    expect(step.data!.sources).toEqual([
+      { slug: "chinh-sach-bao-hanh", section: "Chính sách bảo hành › Giữ lại bảo hành", score: 0.78 },
+    ]);
+    expect(step.data!.hint).toEqual({ vi: viMessages.kb.inspect.policyResultHint, en: enMessages.kb.inspect.policyResultHint });
+    const final = replayFlowAt(sample, "en", sample.steps.length);
+    const data = final.rows.flatMap((r) => r.nodes).find((n) => n.id === "db-1")?.data;
+    expect(data?.sources).toHaveLength(1);
+    expect(data?.hint).toBe(enMessages.kb.inspect.policyResultHint);
+  });
 });

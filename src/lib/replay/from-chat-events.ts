@@ -92,6 +92,7 @@ export function buildReplaySample(
                 title: { vi: vi.data.title, en: en?.data?.title ?? vi.data.title },
                 hint: { vi: vi.data.hint, en: en?.data?.hint ?? vi.data.hint },
                 value: vi.data.value,
+                ...(vi.data.sources !== undefined ? { sources: vi.data.sources } : {}),
               },
             }
           : {}),

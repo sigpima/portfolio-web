@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ChatEvent } from "@/lib/chat/types";
-import { reduceChatFlow, initialChatFlow, type FlowEvent, type FlowLabels } from "./chat-flow";
+import { reduceChatFlow, initialChatFlow, parsePolicyPreview, type FlowEvent, type FlowLabels } from "./chat-flow";
 import { applyPatch, type FlowNode, type FlowState } from "./model";
 
 const labels: FlowLabels = {
@@ -14,6 +14,9 @@ const labels: FlowLabels = {
   callHint: "Arguments",
   resultData: "Result data",
   resultHint: "Result",
+  policyStore: { label: "Milvus", sublabel: "vector" },
+  policyResultData: "Policy data",
+  policyResultHint: "Sources",
 };
 
 function run(events: FlowEvent[], from: FlowState = initialChatFlow(labels)): FlowState {
@@ -218,6 +221,19 @@ describe("applyPatch", () => {
     expect(applyPatch(base, { type: "rowTitle", rowId: "nope", title: "t" })).toBe(base);
   });
 
+  it("sets a node's label and sublabel without touching its data or meta", () => {
+    const base = applyPatch(initialChatFlow(labels), {
+      type: "set",
+      nodeId: "db-1",
+      status: "done",
+      meta: "5 ms",
+      data: { title: "T", hint: "H", value: 1 },
+    });
+    const next = applyPatch(base, { type: "set", nodeId: "db-1", status: "done", label: "L", sublabel: "S" });
+    expect(node(next, "db-1")).toMatchObject({ label: "L", sublabel: "S", meta: "5 ms", data: { title: "T", hint: "H", value: 1 } });
+    expect(node(next, "db-1").label).not.toBe(node(base, "db-1").label);
+  });
+
   it("sets a row title and keeps a node's data when a later set has none", () => {
     const base = initialChatFlow(labels);
     const titled = applyPatch(base, { type: "rowTitle", rowId: "call-1", title: "Call 1" });
@@ -230,5 +246,70 @@ describe("applyPatch", () => {
     });
     const later = applyPatch(withData, { type: "set", nodeId: "model-1", status: "done" });
     expect(node(later, "model-1").data).toEqual({ title: "T", hint: "H", value: { a: 1 } });
+  });
+});
+
+const POLICY_PREVIEW =
+  "chinh-sach-bao-hanh › Chính sách bảo hành › Giữ lại bảo hành · 0.78\nxu-ly-be-mat › Xử lý bề mặt · 0.71";
+const POLICY_SOURCES = [
+  { slug: "chinh-sach-bao-hanh", section: "Chính sách bảo hành › Giữ lại bảo hành", score: 0.78 },
+  { slug: "xu-ly-be-mat", section: "Xử lý bề mặt", score: 0.71 },
+];
+const policyResult = (id: number, over: Partial<Extract<ChatEvent, { type: "tool_result" }>> = {}) =>
+  result(id, { tool: "search_policies", row_count: 2, sql: null, preview: POLICY_PREVIEW, ...over });
+
+describe("parsePolicyPreview", () => {
+  it("reads one source per line, keeping a section path that contains the separator", () => {
+    expect(parsePolicyPreview(POLICY_PREVIEW)).toEqual(POLICY_SOURCES);
+  });
+
+  it("returns null for an empty preview, an error text, or a line that does not fit", () => {
+    expect(parsePolicyPreview("")).toBeNull();
+    expect(parsePolicyPreview("boom")).toBeNull();
+    expect(parsePolicyPreview("a › b · x")).toBeNull();
+    expect(parsePolicyPreview(`${POLICY_PREVIEW}\nnot a source line`)).toBeNull();
+  });
+});
+
+describe("reduceChatFlow with search_policies", () => {
+  it("renames the third node of that call to the policy store, and leaves other tools alone", () => {
+    const policy = run([call(1, "search_policies", { query: "q" })]);
+    expect(node(policy, "db-1")).toMatchObject({ label: "Milvus", sublabel: "vector" });
+    const sql = run([call(1)]);
+    expect(node(sql, "db-1").label).toBe("Database");
+  });
+
+  it("puts the passages in the popup data and as sources", () => {
+    const state = run([call(1, "search_policies", { query: "q" }), policyResult(1)]);
+    expect(node(state, "db-1").data).toEqual({
+      title: "Policy data",
+      hint: "Sources",
+      sources: POLICY_SOURCES,
+      value: { ok: true, row_count: 2, passages: POLICY_SOURCES },
+    });
+  });
+
+  it("shows an error result as an error value without sources", () => {
+    const state = run([
+      call(1, "search_policies", { query: "q" }),
+      policyResult(1, { ok: false, row_count: null, preview: "Kho chính sách chưa được nạp" }),
+    ]);
+    const data = node(state, "db-1").data!;
+    expect(data.value).toEqual({ ok: false, error: "Kho chính sách chưa được nạp" });
+    expect(data.sources).toBeUndefined();
+    expect(node(state, "db-1").status).toBe("error");
+  });
+
+  it("keeps the generic result shape when a policy preview does not parse", () => {
+    const state = run([call(1, "search_policies"), policyResult(1, { preview: "???" })]);
+    const data = node(state, "db-1").data!;
+    expect(data.sources).toBeUndefined();
+    expect(data.value).toMatchObject({ ok: true, row_count: 2, preview: "???" });
+  });
+
+  it("a SQL call followed by a policy call: row 1 says Database, row 2 says Milvus", () => {
+    const state = run([call(1), result(1), call(2, "search_policies"), policyResult(2)]);
+    expect(node(state, "db-1").label).toBe("Database");
+    expect(node(state, "db-2").label).toBe("Milvus");
   });
 });

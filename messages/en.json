@@ -44,6 +44,10 @@
       "answer": {
         "label": "Answer",
         "sublabel": "final answer"
+      },
+      "policyStore": {
+        "label": "Milvus",
+        "sublabel": "vector search"
       }
     },
     "extraCall": "Tool call {n}",
@@ -96,7 +100,9 @@
       "open": "View details (JSON)",
       "close": "Close",
       "callHint": "Arguments",
-      "resultHint": "Result"
+      "resultHint": "Result",
+      "policyResultTitle": "Policy passages found",
+      "policyResultHint": "Sources"
     }
   },
   "twistfit": {

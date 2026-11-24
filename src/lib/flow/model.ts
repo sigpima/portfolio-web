@@ -1,5 +1,12 @@
 export type NodeStatus = "idle" | "active" | "done" | "error" | "skipped";
 
+/** One passage a policy search returned: which document, which section, how close it scored. */
+export interface FlowSource {
+  slug: string;
+  section: string;
+  score: number;
+}
+
 /** Structured detail of a node, opened on demand as highlighted JSON (a tool call, a query result). */
 export interface FlowNodeData {
   /** Heading of the popup, already localized. */
@@ -8,6 +15,8 @@ export interface FlowNodeData {
   hint: string;
   /** Any JSON-serializable value. */
   value: unknown;
+  /** Policy passages behind `value`, so the popup can offer to open each source. */
+  sources?: FlowSource[];
 }
 
 export interface FlowNode {
@@ -34,7 +43,16 @@ export interface FlowState {
 }
 
 export type FlowPatch =
-  | { type: "set"; nodeId: string; status: NodeStatus; detail?: string; meta?: string; data?: FlowNodeData }
+  | {
+      type: "set";
+      nodeId: string;
+      status: NodeStatus;
+      label?: string;
+      sublabel?: string;
+      detail?: string;
+      meta?: string;
+      data?: FlowNodeData;
+    }
   | { type: "addRow"; row: FlowRow; /** Insert before the row with this id (append when missing). */ before?: string }
   | { type: "rowTitle"; rowId: string; title: string };
 
@@ -66,6 +84,8 @@ export function applyPatch(state: FlowState, patch: FlowPatch): FlowState {
           ? {
               ...node,
               status: patch.status,
+              label: patch.label ?? node.label,
+              sublabel: patch.sublabel ?? node.sublabel,
               detail: patch.detail ?? node.detail,
               meta: patch.meta ?? node.meta,
               data: patch.data ?? node.data,

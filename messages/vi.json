@@ -44,6 +44,10 @@
       "answer": {
         "label": "Trả lời",
         "sublabel": "câu trả lời"
+      },
+      "policyStore": {
+        "label": "Milvus",
+        "sublabel": "tìm theo vector"
       }
     },
     "extraCall": "Lần gọi tool {n}",
@@ -96,7 +100,9 @@
       "open": "Xem chi tiết (JSON)",
       "close": "Đóng",
       "callHint": "Tham số",
-      "resultHint": "Kết quả"
+      "resultHint": "Kết quả",
+      "policyResultTitle": "Các đoạn chính sách tìm được",
+      "policyResultHint": "Nguồn"
     }
   },
   "twistfit": {

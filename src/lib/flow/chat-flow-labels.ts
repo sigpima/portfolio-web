@@ -17,6 +17,9 @@ export function chatFlowLabels(t: KbTranslate): FlowLabels {
     callHint: t("inspect.callHint"),
     resultData: t("inspect.resultTitle"),
     resultHint: t("inspect.resultHint"),
+    policyStore: { label: t("nodes.policyStore.label"), sublabel: t("nodes.policyStore.sublabel") },
+    policyResultData: t("inspect.policyResultTitle"),
+    policyResultHint: t("inspect.policyResultHint"),
   };
 }
 
