@@ -9,6 +9,8 @@ export interface FlowDataLabels {
   open: string;
   /** Label of the popup's close button. */
   close: string;
+  /** Note shown above a result that was cut off, e.g. "Long result: only the beginning is shown." */
+  partial: string;
 }
 
 export interface FlowPlayerProps {
@@ -313,6 +315,7 @@ export function FlowPlayer({ state, label, statusLabels, dataLabels, onOpenSourc
           closeLabel={dataLabels.close}
           onClose={() => setOpenId(null)}
           sources={openNode.data.sources}
+          note={openNode.data.partial ? dataLabels.partial : undefined}
           onOpenSource={
             onOpenSource
               ? (source) => {

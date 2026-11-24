@@ -104,7 +104,8 @@
       "callHint": "Arguments",
       "resultHint": "Result",
       "policyResultTitle": "Policy passages found",
-      "policyResultHint": "Sources"
+      "policyResultHint": "Sources",
+      "partial": "Long result: only the beginning is shown (results are cut at 800 characters)."
     },
     "policy": {
       "loading": "Loading the document…",
@@ -256,7 +257,8 @@
     },
     "inspect": {
       "open": "View details (JSON)",
-      "close": "Close"
+      "close": "Close",
+      "partial": "Long result: only the beginning is shown (results are cut at 800 characters)."
     }
   },
   "groups": {

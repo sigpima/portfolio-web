@@ -105,16 +105,34 @@ describe("reduceChatFlow", () => {
     expect(node(state, "answer").status).toBe("active");
   });
 
-  it("parses a JSON preview into the data, and keeps a cut-off one as text", () => {
+  it("parses a JSON preview into the data, and keeps the complete part of a cut-off one", () => {
     const parsed = node(run([call(1), result(1, { preview: '[{"id":1,"name":"A"}]' })]), "db-1");
     expect(parsed.data?.value).toEqual([{ id: 1, name: "A" }]);
     const cut = node(run([call(1), result(1, { preview: '[{"id":1,"na' })]), "db-1");
-    expect(cut.data?.value).toBe('[{"id":1,"na');
+    // A cut-off one keeps what was complete, flagged partial, instead of a raw string.
+    expect(cut.data?.value).toEqual([{ id: 1 }]);
+    expect(cut.data?.partial).toBe(true);
   });
 
   it("shows only the preview of a result: no ok, row_count or sql around it", () => {
     const value = node(run([call(1), result(1)]), "db-1").data!.value;
     expect(value).toBe("a | b");
+  });
+
+  it("formats a long result the chat service cut at 800 characters, and marks the data partial", () => {
+    const rows = Array.from({ length: 40 }, (_, i) => ({ id: i + 1, name: `Công trình số ${i + 1}`, total: 1240000000 + i }));
+    const preview = JSON.stringify({ rows }).slice(0, 800);
+    const data = node(run([call(1), result(1, { preview })]), "db-1").data!;
+    expect(data.partial).toBe(true);
+    const shown = (data.value as { rows: { id: number }[] }).rows;
+    expect(shown.length).toBeGreaterThan(3);
+    shown.forEach((row, i) => expect(rows[i]).toMatchObject(row));
+  });
+
+  it("does not mark a complete JSON result, a plain text result or an error as partial", () => {
+    expect(node(run([call(1), result(1, { preview: '{"a":1}' })]), "db-1").data!.partial).toBeFalsy();
+    expect(node(run([call(1), result(1, { preview: "a | b" })]), "db-1").data!.partial).toBeFalsy();
+    expect(node(run([call(1), result(1, { ok: false, preview: '{"a":1,"b":' })]), "db-1").data!.partial).toBeFalsy();
   });
 
   it("shows a failed result as just its error text", () => {

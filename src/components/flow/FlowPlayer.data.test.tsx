@@ -11,7 +11,11 @@ const statusLabels: Record<NodeStatus, string> = {
   error: "Lỗi",
   skipped: "Bỏ qua",
 };
-const dataLabels: FlowDataLabels = { open: "Xem chi tiết (JSON)", close: "Đóng" };
+const dataLabels: FlowDataLabels = {
+  open: "Xem chi tiết (JSON)",
+  close: "Đóng",
+  partial: "Kết quả dài nên chỉ hiện phần đầu.",
+};
 
 const state: FlowState = {
   rows: [
@@ -246,5 +250,39 @@ describe("FlowPlayer policy sources", () => {
     const dialog = screen.getByRole("dialog");
     expect(within(dialog).getAllByRole("button")).toHaveLength(1); // the close button
     expect(dialog).toHaveTextContent('"passages"');
+  });
+});
+
+describe("FlowPlayer partial results", () => {
+  const partialState = (partial: boolean | undefined): FlowState => ({
+    rows: [
+      {
+        id: "call-1",
+        nodes: [
+          {
+            id: "db-1",
+            label: "Postgres",
+            status: "done",
+            data: { title: "Kết quả", hint: "Kết quả", partial, value: { rows: [{ id: 1 }] } },
+          },
+        ],
+      },
+    ],
+  });
+  const open = async (partial: boolean | undefined) => {
+    const user = userEvent.setup();
+    render(<FlowPlayer state={partialState(partial)} label="L" statusLabels={statusLabels} dataLabels={dataLabels} />);
+    await user.click(screen.getByRole("button", { name: /Kết quả/ }));
+    return screen.getByRole("dialog");
+  };
+
+  it("says the result was cut when the data is partial", async () => {
+    const dialog = await open(true);
+    expect(within(dialog).getByText("Kết quả dài nên chỉ hiện phần đầu.")).toBeInTheDocument();
+  });
+
+  it("says nothing when the data is complete", async () => {
+    const dialog = await open(undefined);
+    expect(within(dialog).queryByText("Kết quả dài nên chỉ hiện phần đầu.")).toBeNull();
   });
 });

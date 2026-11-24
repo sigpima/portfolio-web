@@ -1,4 +1,5 @@
 import type { ChatEvent } from "@/lib/chat/types";
+import { parsePreview } from "./preview-json";
 import { applyPatch, type FlowNode, type FlowNodeData, type FlowPatch, type FlowRow, type FlowSource, type FlowState } from "./model";
 
 export type FlowEvent = ChatEvent | { type: "submit" };
@@ -126,22 +127,12 @@ function policyData(event: Extract<ChatEvent, { type: "tool_result" }>, labels: 
   return { ...base, sources, value: sources };
 }
 
-/** The preview as a value: parsed when it is JSON (it may be cut off, then it stays text). */
-function parsePreview(preview: string): unknown {
-  const text = preview.trim();
-  if (text.startsWith("{") || text.startsWith("[")) {
-    try {
-      return JSON.parse(text) as unknown;
-    } catch {
-      return preview;
-    }
-  }
-  return preview;
-}
-
-/** What the result popup shows: the preview (parsed when it is JSON), or the error text of a failed call. */
-function resultValue(event: Extract<ChatEvent, { type: "tool_result" }>): unknown {
-  return event.ok ? parsePreview(event.preview) : { error: event.preview };
+/** A result's popup data: the preview formatted as JSON when it is JSON (cut-off ones keep their complete part, flagged `partial`), or the error text. */
+function genericData(event: Extract<ChatEvent, { type: "tool_result" }>, labels: FlowLabels): FlowNodeData {
+  const base = { title: labels.resultData, hint: labels.resultHint };
+  if (!event.ok) return { ...base, value: { error: event.preview } };
+  const { value, partial } = parsePreview(event.preview);
+  return { ...base, value, ...(partial ? { partial: true } : {}) };
 }
 
 /**
@@ -185,12 +176,7 @@ export function reduceChatFlow(state: FlowState, event: FlowEvent, labels: FlowL
           type: "set",
           nodeId: `db-${n}`,
           status,
-          data:
-            (event.tool === POLICY_TOOL ? policyData(event, labels) : null) ?? {
-              title: labels.resultData,
-              hint: labels.resultHint,
-              value: resultValue(event),
-            },
+          data: (event.tool === POLICY_TOOL ? policyData(event, labels) : null) ?? genericData(event, labels),
         },
         { type: "set", nodeId: "answer", status: "active" },
       ]);

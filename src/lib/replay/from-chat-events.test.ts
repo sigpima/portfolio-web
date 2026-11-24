@@ -180,4 +180,21 @@ describe("buildReplaySample", () => {
     expect(data?.sources).toHaveLength(1);
     expect(data?.hint).toBe(enMessages.kb.inspect.policyResultHint);
   });
+
+  it("keeps the partial flag of a cut result through the replay", () => {
+    const rows = Array.from({ length: 40 }, (_, i) => ({ id: i + 1, name: `Công trình số ${i + 1}` }));
+    const preview = JSON.stringify({ rows }).slice(0, 800);
+    const sample = buildReplaySample(
+      timed([
+        [100, { type: "tool_call", call_id: 1, tool: "run_readonly_sql", args: { query: "SELECT 1" } }],
+        [300, { type: "tool_result", call_id: 1, tool: "run_readonly_sql", ok: true, duration_ms: 20, row_count: 40, sql: "SELECT 1", preview }],
+        [900, { type: "answer", text: "ok" }],
+      ]),
+      options,
+    );
+    const step = sample.steps.find((s) => s.nodeId === "db-1" && s.data)!;
+    expect(step.data!.partial).toBe(true);
+    const final = replayFlowAt(sample, "vi", sample.steps.length);
+    expect(final.rows.flatMap((r) => r.nodes).find((n) => n.id === "db-1")?.data?.partial).toBe(true);
+  });
 });

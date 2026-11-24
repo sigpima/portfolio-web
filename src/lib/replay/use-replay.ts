@@ -64,6 +64,7 @@ export function replayFlowAt(sample: ReplaySample, locale: Locale, count: number
               title: step.data.title[locale],
               hint: step.data.hint[locale],
               value: step.data.value,
+              partial: step.data.partial,
               sources: step.data.sources,
             }
           : undefined,

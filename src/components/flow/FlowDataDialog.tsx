@@ -14,6 +14,8 @@ export interface FlowDataDialogProps {
   /** Policy passages behind the JSON; with `onOpenSource` each one is offered as a button above it. */
   sources?: FlowSource[];
   onOpenSource?: (source: FlowSource) => void;
+  /** A line above the JSON, e.g. that the result was cut off. */
+  note?: string;
 }
 
 /** One node's structured data as highlighted JSON, in a modal. */
@@ -25,6 +27,7 @@ export function FlowDataDialog({
   onClose,
   sources,
   onOpenSource,
+  note,
 }: FlowDataDialogProps) {
   return (
     <Modal title={title} subtitle={subtitle} closeLabel={closeLabel} onClose={onClose}>
@@ -42,6 +45,14 @@ export function FlowDataDialog({
             </li>
           ))}
         </ul>
+      ) : null}
+      {note ? (
+        <p
+          data-role="partial-note"
+          className="mb-3 rounded-lg border border-outline-variant px-3 py-2 text-body-md text-on-surface-variant"
+        >
+          {note}
+        </p>
       ) : null}
       <JsonView value={value} />
     </Modal>

@@ -15,6 +15,8 @@ export interface FlowNodeData {
   hint: string;
   /** Any JSON-serializable value. */
   value: unknown;
+  /** True when `value` is only the complete beginning of a result the chat service cut off. */
+  partial?: boolean;
   /** Policy passages behind `value`, so the popup can offer to open each source. */
   sources?: FlowSource[];
 }

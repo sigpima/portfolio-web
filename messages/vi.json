@@ -104,7 +104,8 @@
       "callHint": "Tham số",
       "resultHint": "Kết quả",
       "policyResultTitle": "Các đoạn chính sách tìm được",
-      "policyResultHint": "Nguồn"
+      "policyResultHint": "Nguồn",
+      "partial": "Kết quả dài nên chỉ hiện phần đầu (kết quả bị cắt ở 800 ký tự)."
     },
     "policy": {
       "loading": "Đang tải tài liệu…",
@@ -256,7 +257,8 @@
     },
     "inspect": {
       "open": "Xem chi tiết (JSON)",
-      "close": "Đóng"
+      "close": "Đóng",
+      "partial": "Kết quả dài nên chỉ hiện phần đầu (kết quả bị cắt ở 800 ký tự)."
     }
   },
   "groups": {
