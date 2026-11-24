@@ -26,7 +26,7 @@ interface Turn {
 }
 
 const NODE_STATUSES: NodeStatus[] = ["idle", "active", "done", "error", "skipped"];
-const CHIP_KEYS = ["c1", "c2", "c3"] as const;
+const CHIP_KEYS = ["c1", "c2", "c3", "c4", "c5"] as const;
 
 function isAbortError(err: unknown): boolean {
   return err instanceof Error && err.name === "AbortError";

@@ -33,13 +33,15 @@ function deps(fetchImpl: (url: string, init?: RequestInit) => Promise<Response>)
 }
 
 describe("kb-replay-questions.json", () => {
-  it("holds the three Vietnamese suggestion chips, with unique ids and bilingual titles", () => {
+  it("holds the five Vietnamese suggestion chips, with unique ids and bilingual titles", () => {
     expect(questions.map((q) => q.question)).toEqual([
       viMessages.kb.chips.c1,
       viMessages.kb.chips.c2,
       viMessages.kb.chips.c3,
+      viMessages.kb.chips.c4,
+      viMessages.kb.chips.c5,
     ]);
-    expect(new Set(questions.map((q) => q.id)).size).toBe(3);
+    expect(new Set(questions.map((q) => q.id)).size).toBe(5);
     for (const q of questions) {
       expect(q.title.vi.length).toBeGreaterThan(0);
       expect(q.title.en.length).toBeGreaterThan(0);
@@ -58,7 +60,7 @@ describe("record-kb-replay", () => {
     const d = deps(async (url) => (url.endsWith("/chat/status") ? Response.json({ enabled: true }) : sse(HAPPY)));
     expect(await main(["--url", "http://chat:8003"], d)).toBe(0);
     const streamCalls = d.fetch.mock.calls.filter(([url]) => url === "http://chat:8003/chat/stream");
-    expect(streamCalls).toHaveLength(3);
+    expect(streamCalls).toHaveLength(5);
     for (const [, init] of streamCalls) {
       expect(JSON.parse(String(init?.body))).toMatchObject({ session_id: null });
     }
@@ -68,8 +70,8 @@ describe("record-kb-replay", () => {
     expect(text).toContain("export const recordedSamples: ReplaySample[] =");
     expect(text).not.toContain("placeholder");
     expect(text).toContain("Câu trả lời thật.");
-    // Vietnamese questions and answers are marked as such for the English UI.
-    expect(text.match(/"lang": "vi"/g)).toHaveLength(6);
+    // Vietnamese questions and answers (two per sample, five samples) are marked as such for the English UI.
+    expect(text.match(/"lang": "vi"/g)).toHaveLength(10);
   });
 
   for (const [name, impl, message] of [

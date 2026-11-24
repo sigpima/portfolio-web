@@ -61,16 +61,18 @@
     "chatLabel": "Chat with the bot",
     "you": "You",
     "bot": "Bot",
-    "emptyHint": "Ask the bot about Sơn Việt Demo Co.'s quotations, or pick a suggested question below.",
+    "emptyHint": "Ask the bot about Sơn Việt Demo Co.'s quotations or policies, or pick a suggested question below.",
     "thinking": "The bot is working…",
     "inputLabel": "Your question",
-    "placeholder": "Ask about the quotations…",
+    "placeholder": "Ask about quotations or policies…",
     "send": "Send",
     "chipsLabel": "Suggested questions",
     "chips": {
       "c1": "How much is the latest quotation?",
       "c2": "Why is the rooftop waterproofing unit price at Biệt thự Sen Vàng higher than at Biệt thự Lúa Non?",
-      "c3": "What percentage of the largest quotation is labour?"
+      "c3": "What percentage of the largest quotation is labour?",
+      "c4": "How long is the warranty on premium waterproofing?",
+      "c5": "Is the warranty counted from the contract date or from another date?"
     },
     "newConversation": "New conversation",
     "loading": "Checking the demo status…",
@@ -79,7 +81,7 @@
       "body": "The Q&A bot is paused right now. You can still read the project write-up; please check back later."
     },
     "notes": {
-      "synthetic": "All data is synthetic: the company \"Sơn Việt Demo Co.\", 24 projects, 126 work items.",
+      "synthetic": "All data is synthetic: the company \"Sơn Việt Demo Co.\", 24 projects, 126 work items and 12 policy documents.",
       "privacy": "Your questions are not stored. The system only records which feature your invite link used, and when. Each question is sent to Google Gemini to produce the answer."
     },
     "errors": {

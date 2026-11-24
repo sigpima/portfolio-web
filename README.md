@@ -1,7 +1,7 @@
 # portfolio-web
 
 **EN:** Bilingual (Vietnamese / English) portfolio website built with Next.js 16 (`output: "standalone"`).
-Projects are registry-driven (`src/content`). The Knowledge Base demo runs live only for visitors who opened an
+Projects are registry-driven (`src/content`). The Knowledge Base demo (quotation figures from Postgres, and policy questions answered with RAG over Milvus, citations shown as chips) runs live only for visitors who opened an
 invite link (`/i/<token>`) with that feature enabled; everyone else sees a replay. Twistfit and Gia pha currently show "demo coming soon" and link to their real websites (`website`, `demoSoon` in `src/content/projects`); their demo code is kept dormant. Replays are labelled placeholder samples until real runs are recorded (none are yet). The server-side routes talk to the
 internal `portfolio-api` service (invite links, sessions, per-link usage log, admin at `/admin`), which is the only
 thing that calls the chat bot and Flux.

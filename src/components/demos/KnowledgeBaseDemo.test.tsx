@@ -467,6 +467,16 @@ describe("KnowledgeBaseDemo", () => {
     expect(mockStream).toHaveBeenLastCalledWith({ message: "Ba", sessionId: null }, expect.any(AbortSignal));
   });
 
+  it("offers five suggestions, three on quotations and two on policy, and sends a policy one as written", async () => {
+    mockStream.mockImplementation(streamOf(happyEvents()));
+    const { user } = await renderDemo();
+    await readyInput();
+    const group = screen.getByRole("group", { name: viMessages.kb.chipsLabel });
+    expect(within(group).getAllByRole("button")).toHaveLength(5);
+    await user.click(within(group).getByRole("button", { name: viMessages.kb.chips.c4 }));
+    expect(mockStream).toHaveBeenCalledWith({ message: viMessages.kb.chips.c4, sessionId: null }, expect.any(AbortSignal));
+  });
+
   it("sends exactly the chip text when a chip is clicked", async () => {
     mockStream.mockImplementation(streamOf(happyEvents()));
     const { user } = await renderDemo();

@@ -1,17 +1,42 @@
 [
   {
     "id": "latest-quotation",
-    "title": { "vi": "Báo giá mới nhất", "en": "Latest quotation" },
+    "title": {
+      "vi": "Báo giá mới nhất",
+      "en": "Latest quotation"
+    },
     "question": "Báo giá mới nhất có giá bao nhiêu?"
   },
   {
     "id": "waterproofing-price-gap",
-    "title": { "vi": "Vì sao chống thấm Sen Vàng đắt hơn", "en": "Why Sen Vàng's waterproofing costs more" },
+    "title": {
+      "vi": "Vì sao chống thấm Sen Vàng đắt hơn",
+      "en": "Why Sen Vàng's waterproofing costs more"
+    },
     "question": "Vì sao đơn giá chống thấm sân thượng ở Biệt thự Sen Vàng cao hơn Biệt thự Lúa Non?"
   },
   {
     "id": "largest-quotation-labour",
-    "title": { "vi": "Tỷ trọng nhân công", "en": "Labour share" },
+    "title": {
+      "vi": "Tỷ trọng nhân công",
+      "en": "Labour share"
+    },
     "question": "Nhân công chiếm bao nhiêu % ở báo giá lớn nhất?"
+  },
+  {
+    "id": "warranty-premium-waterproofing",
+    "title": {
+      "vi": "Bảo hành chống thấm cao cấp",
+      "en": "Premium waterproofing warranty"
+    },
+    "question": "Bảo hành chống thấm hệ cao cấp được bao lâu?"
+  },
+  {
+    "id": "warranty-start-date",
+    "title": {
+      "vi": "Bảo hành tính từ khi nào",
+      "en": "When the warranty starts"
+    },
+    "question": "Thời hạn bảo hành được tính từ ngày ký hợp đồng hay từ ngày nào?"
   }
 ]

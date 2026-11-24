@@ -172,6 +172,11 @@ curl -s localhost:8003/chat/status        # {"enabled":true}
 `docker compose up` thường **không** khởi động `chat` (nó nằm sau profile `chat`); phải có `--profile chat`.
 Service `chat` chỉ publish `127.0.0.1:8003` và gắn vào mạng `knowledge_base_default`; `portfolio-api` gọi nó bằng tên `chat:8003` qua mạng đó.
 
+**Hỏi đáp chính sách (RAG).** Để bot trả lời được câu hỏi về bảo hành, nghiệm thu, định mức, quy trình thi công, `knowledge_base` phải chạy thêm profile `rag`
+(`docker compose --profile rag --profile chat up -d`, hoặc `COMPOSE_PROFILES=chat,rag` trong `.env` của server): Milvus, `policy-seed` (nạp 12 tài liệu, cần khoá Gemini để nhúng) và `mcp` có `GEMINI_API_KEY`.
+Thiếu một trong số đó thì chỉ câu hỏi chính sách bị ảnh hưởng: bot nói kho chính sách hiện không dùng được, còn câu hỏi báo giá vẫn chạy. Phía portfolio không cần cấu hình gì thêm:
+`portfolio-api` chuyển tiếp nguyên luồng sự kiện, nên lần gọi `search_policies` tự hiện trên sơ đồ với ô thứ ba là **Milvus** (các tool còn lại là Postgres).
+
 ## 5. Bật `portfolio-api`
 
 ```bash
@@ -459,7 +464,7 @@ Người xem không có link thấy bản phát lại. Cho tới khi bạn ghi m
    npm run record:kb -- --url http://<may>:8003         # nếu chat ở chỗ khác
    ```
 
-   Script gọi **thẳng** service `chat` (không qua `portfolio-api`, không cần link), hỏi từng câu trong `scripts/kb-replay-questions.json` ở một cuộc hội thoại mới,
+   Script gọi **thẳng** service `chat` (không qua `portfolio-api`, không cần link), hỏi từng câu trong `scripts/kb-replay-questions.json` (5 câu: 3 về báo giá, 2 về chính sách, nên `chat` phải có `rag` bật, xem phần 4) ở một cuộc hội thoại mới,
    rồi ghi đè `src/content/replays/knowledge-base.recorded.ts` với thời gian, chi tiết tool và câu trả lời thật. Nếu một câu lỗi hoặc `chat` không chạy, nó không ghi gì.
 3. Đọc lại câu trả lời trong file (đối chiếu như phần 14), chạy `npx vitest run src/content`, rồi **commit** `src/content/replays/knowledge-base.recorded.ts` và build lại image.
 

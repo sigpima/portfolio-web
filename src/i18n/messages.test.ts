@@ -59,10 +59,10 @@ describe("messages", () => {
     }
   });
 
-  it("has three suggested KB questions that name no placeholder projects", () => {
+  it("has five suggested KB questions that name no placeholder projects", () => {
     for (const messages of [vi, en]) {
       const chips = (messages as { kb: { chips: Record<string, string> } }).kb.chips;
-      expect(Object.keys(chips).sort()).toEqual(["c1", "c2", "c3"]);
+      expect(Object.keys(chips).sort()).toEqual(["c1", "c2", "c3", "c4", "c5"]);
       for (const text of Object.values(chips)) {
         expect(text.trim().length).toBeGreaterThan(10);
         expect(text).not.toMatch(/project [AB]\b|công trình [AB]\b/i);
