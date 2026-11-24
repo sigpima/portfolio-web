@@ -105,6 +105,16 @@
       "resultHint": "Result",
       "policyResultTitle": "Policy passages found",
       "policyResultHint": "Sources"
+    },
+    "policy": {
+      "loading": "Loading the document…",
+      "notFound": "This document could not be found.",
+      "synthetic": "Synthetic document for the demo; the company and the content are fictional (the text is in Vietnamese).",
+      "docType": {
+        "technical": "Technical",
+        "warranty": "Warranty"
+      },
+      "close": "Close"
     }
   },
   "twistfit": {

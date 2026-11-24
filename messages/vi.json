@@ -105,6 +105,16 @@
       "resultHint": "Kết quả",
       "policyResultTitle": "Các đoạn chính sách tìm được",
       "policyResultHint": "Nguồn"
+    },
+    "policy": {
+      "loading": "Đang tải tài liệu…",
+      "notFound": "Không tìm thấy tài liệu này.",
+      "synthetic": "Tài liệu giả lập cho bản demo; công ty và nội dung đều là bịa.",
+      "docType": {
+        "technical": "Kỹ thuật",
+        "warranty": "Bảo hành"
+      },
+      "close": "Đóng"
     }
   },
   "twistfit": {
