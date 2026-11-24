@@ -306,8 +306,8 @@ describe("KnowledgeBaseDemo", () => {
     expect(node("tool-1")).toHaveTextContent("42 ms");
     await user.click(db);
     const rows = screen.getByRole("dialog", { name: viMessages.kb.inspect.resultTitle });
-    expect(rows).toHaveTextContent('"sql": "SELECT 1"');
-    expect(rows).toHaveTextContent('"preview": "total 1240000000"');
+    expect(rows).toHaveTextContent('"total 1240000000"');
+    expect(rows).not.toHaveTextContent(/"ok"|row_count|"sql"|"preview"/);
     await user.click(within(rows).getByRole("button", { name: viMessages.kb.inspect.close }));
     expect(screen.queryByRole("dialog")).toBeNull();
   });

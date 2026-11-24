@@ -113,17 +113,17 @@ const PREVIEW_MAX_CHARS = 800;
 /** The data of a policy search result: the passages when they parse, an error text when it failed. */
 function policyData(event: Extract<ChatEvent, { type: "tool_result" }>, labels: FlowLabels): FlowNodeData | null {
   const base = { title: labels.policyResultData, hint: labels.policyResultHint };
-  if (!event.ok) return { ...base, value: { ok: false, error: event.preview } };
+  if (!event.ok) return { ...base, value: { error: event.preview } };
   // A search that found nothing sends an empty preview: still a policy result, with no passages.
   if (event.preview.trim() === "") {
-    return { ...base, sources: [], value: { ok: true, row_count: event.row_count ?? 0, passages: [] } };
+    return { ...base, sources: [], value: [] };
   }
   // A cut preview ends mid-line, and a score cut at "0.7" would still parse: drop that last line.
   const text =
     event.preview.length >= PREVIEW_MAX_CHARS ? event.preview.split("\n").slice(0, -1).join("\n") : event.preview;
   const sources = parsePolicyPreview(text);
   if (sources === null) return null;
-  return { ...base, sources, value: { ok: true, row_count: event.row_count, passages: sources } };
+  return { ...base, sources, value: sources };
 }
 
 /** The preview as a value: parsed when it is JSON (it may be cut off, then it stays text). */
@@ -139,11 +139,9 @@ function parsePreview(preview: string): unknown {
   return preview;
 }
 
-function resultValue(event: Extract<ChatEvent, { type: "tool_result" }>): Record<string, unknown> {
-  const value: Record<string, unknown> = { ok: event.ok, row_count: event.row_count };
-  if (event.sql !== null && event.sql !== "") value.sql = event.sql;
-  if (event.preview !== "") value.preview = parsePreview(event.preview);
-  return value;
+/** What the result popup shows: the preview (parsed when it is JSON), or the error text of a failed call. */
+function resultValue(event: Extract<ChatEvent, { type: "tool_result" }>): unknown {
+  return event.ok ? parsePreview(event.preview) : { error: event.preview };
 }
 
 /**

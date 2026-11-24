@@ -100,21 +100,31 @@ describe("reduceChatFlow", () => {
     expect(node(state, "db-1").data).toEqual({
       title: "Result data",
       hint: "Result",
-      value: { ok: true, row_count: 7, sql: "SELECT 1", preview: "a | b" },
+      value: "a | b",
     });
     expect(node(state, "answer").status).toBe("active");
   });
 
   it("parses a JSON preview into the data, and keeps a cut-off one as text", () => {
     const parsed = node(run([call(1), result(1, { preview: '[{"id":1,"name":"A"}]' })]), "db-1");
-    expect((parsed.data?.value as { preview: unknown }).preview).toEqual([{ id: 1, name: "A" }]);
+    expect(parsed.data?.value).toEqual([{ id: 1, name: "A" }]);
     const cut = node(run([call(1), result(1, { preview: '[{"id":1,"na' })]), "db-1");
-    expect((cut.data?.value as { preview: unknown }).preview).toBe('[{"id":1,"na');
+    expect(cut.data?.value).toBe('[{"id":1,"na');
+  });
+
+  it("shows only the preview of a result: no ok, row_count or sql around it", () => {
+    const value = node(run([call(1), result(1)]), "db-1").data!.value;
+    expect(value).toBe("a | b");
+  });
+
+  it("shows a failed result as just its error text", () => {
+    const state = run([call(1), result(1, { ok: false, preview: "boom" })]);
+    expect(node(state, "db-1").data!.value).toEqual({ error: "boom" });
   });
 
   it("omits sql from the data when it is absent", () => {
     const db = node(run([call(1), result(1, { sql: null, row_count: null })]), "db-1");
-    expect(db.data?.value).toEqual({ ok: true, row_count: null, preview: "a | b" });
+    expect(db.data?.value).toEqual("a | b");
   });
 
   it("failed tool_result marks tool and db as error", () => {
@@ -285,7 +295,7 @@ describe("reduceChatFlow with search_policies", () => {
       title: "Policy data",
       hint: "Sources",
       sources: POLICY_SOURCES,
-      value: { ok: true, row_count: 2, passages: POLICY_SOURCES },
+      value: POLICY_SOURCES,
     });
   });
 
@@ -295,7 +305,7 @@ describe("reduceChatFlow with search_policies", () => {
       policyResult(1, { ok: false, row_count: null, preview: "Kho chính sách chưa được nạp" }),
     ]);
     const data = node(state, "db-1").data!;
-    expect(data.value).toEqual({ ok: false, error: "Kho chính sách chưa được nạp" });
+    expect(data.value).toEqual({ error: "Kho chính sách chưa được nạp" });
     expect(data.sources).toBeUndefined();
     expect(node(state, "db-1").status).toBe("error");
   });
@@ -308,7 +318,7 @@ describe("reduceChatFlow with search_policies", () => {
       title: "Policy data",
       hint: "Sources",
       sources: [],
-      value: { ok: true, row_count: 0, passages: [] },
+      value: [],
     });
   });
 
@@ -334,7 +344,7 @@ describe("reduceChatFlow with search_policies", () => {
     const state = run([call(1, "search_policies"), policyResult(1, { preview: "???" })]);
     const data = node(state, "db-1").data!;
     expect(data.sources).toBeUndefined();
-    expect(data.value).toMatchObject({ ok: true, row_count: 2, preview: "???" });
+    expect(data.value).toBe("???");
   });
 
   it("a SQL call followed by a policy call: row 1 says Database, row 2 says Milvus", () => {
