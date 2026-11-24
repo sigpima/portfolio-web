@@ -1,6 +1,7 @@
-import type { ComponentProps } from "react";
-import ReactMarkdown, { type Components } from "react-markdown";
+import { useMemo, type ComponentProps } from "react";
+import ReactMarkdown, { defaultUrlTransform, type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { CITE_SCHEME, linkCitations, parseCitationHref, type Citation } from "@/lib/citations";
 
 /**
  * Element styles for a bot answer. No raw HTML is ever rendered (react-markdown escapes it),
@@ -58,12 +59,53 @@ const components: Components = {
   img: () => null,
 };
 
-/** A Markdown (GitHub flavoured) text rendered with the site's styles. */
-export function Markdown({ children }: { children: string }) {
+const CHIP = "rounded border border-secondary/60 px-1.5 py-0.5 font-mono text-[0.85em] text-secondary";
+
+/** Keeps our `cite:` links (react-markdown would drop an unknown scheme) and sanitizes everything else. */
+const urlTransform = (url: string) => (url.startsWith(CITE_SCHEME) ? url : defaultUrlTransform(url));
+
+export interface MarkdownProps {
+  children: string;
+  /** Called when a citation chip is clicked; without it chips are plain labels. */
+  onCite?: (citation: Citation) => void;
+  /** Says whether a citation points at something that can be opened; false keeps the chip a plain label. */
+  isCiteable?: (citation: Citation) => boolean;
+}
+
+/** A Markdown (GitHub flavoured) text rendered with the site's styles; `[slug › section]` becomes a chip. */
+export function Markdown({ children, onCite, isCiteable }: MarkdownProps) {
+  const text = useMemo(() => linkCitations(children), [children]);
+  const withCitations = useMemo<Components>(
+    () => ({
+      ...components,
+      a: (props: ComponentProps<"a">) => {
+        const citation = parseCitationHref(props.href);
+        if (citation === null) return (components.a as (p: ComponentProps<"a">) => React.ReactNode)(props);
+        if (onCite !== undefined && isCiteable?.(citation) !== false) {
+          return (
+            <button
+              type="button"
+              data-role="citation"
+              onClick={() => onCite(citation)}
+              className={`${CHIP} cursor-pointer hover:bg-secondary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary`}
+            >
+              {props.children}
+            </button>
+          );
+        }
+        return (
+          <span data-role="citation" className={CHIP}>
+            {props.children}
+          </span>
+        );
+      },
+    }),
+    [onCite, isCiteable],
+  );
   return (
     <div data-role="markdown" className="min-w-0 break-words">
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={components} skipHtml>
-        {children}
+      <ReactMarkdown remarkPlugins={[remarkGfm]} components={withCitations} urlTransform={urlTransform} skipHtml>
+        {text}
       </ReactMarkdown>
     </div>
   );

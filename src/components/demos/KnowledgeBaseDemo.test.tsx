@@ -312,6 +312,17 @@ describe("KnowledgeBaseDemo", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
+  it("draws a [slug › section] citation in the answer as a chip, and announces it as text", async () => {
+    const cited = "Khoản giữ lại trả sau 12 tháng [chinh-sach-bao-hanh › Giữ lại bảo hành].";
+    mockStream.mockImplementation(streamOf(happyEvents("s-1", cited)));
+    const { user } = await renderDemo();
+    await user.type(await readyInput(), "hi{Enter}");
+    await waitFor(() => expect(answerText()).not.toBeNull());
+    const chip = answerText()!.querySelector('[data-role="citation"]')!;
+    expect(chip).toHaveTextContent("chinh-sach-bao-hanh › Giữ lại bảo hành");
+    expect(live().textContent).toContain("chinh-sach-bao-hanh › Giữ lại bảo hành");
+  });
+
   it("does not call streamChat for an empty or whitespace-only question", async () => {
     const { user } = await renderDemo();
     const input = await readyInput();
